@@ -1,7 +1,6 @@
 [tool.scikit-build]
 build-dir = "build"
 wheel.packages = ["udf_plugin_viewer"]
-#sources = ["udf_plugin_viewer", "../py/common/descriptors.py"]
 
 [tool.scikit-build.cmake.define]
 CMAKE_CXX_STANDARD = "17"

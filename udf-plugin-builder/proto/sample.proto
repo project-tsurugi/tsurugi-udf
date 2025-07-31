@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package myapi;
+
+import "primitive_types.proto";
+import "complex_types.proto";
+
+service Greeter {
+  rpc SayHello (StringValue) returns (StringValue);
+  rpc IntAddInt (Int32Value) returns (Int32Value);
+}
+service Byer {
+  rpc SayWorld (StringValue) returns (StringValue);
+  rpc DecDecimal (tsurugidb.udf.value.Decimal) returns (tsurugidb.udf.value.LocalTime);
+}

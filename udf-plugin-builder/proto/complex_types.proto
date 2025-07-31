@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package tsurugidb.udf.value;
+
+message Decimal {
+    bytes unscaled_value = 1;
+    sint32 exponent      = 2;
+}
+
+message Date { sint32 days = 1; }
+
+message LocalTime { sint64 nanos = 1; }
+
+message LocalDatetime {
+    sint64 offset_seconds  = 1;
+    uint32 nano_adjustment = 2;
+}
+
+message OffsetDatetime {
+    sint64 offset_seconds   = 1;
+    uint32 nano_adjustment  = 2;
+    sint32 time_zone_offset = 3;
+}
+
+message BlobReference { bytes secret = 1; }
+
+message ClobReference { bytes secret = 1; }

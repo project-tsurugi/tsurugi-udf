@@ -1,0 +1,73 @@
+/*
+ * Copyright 2018-2025 Project Tsurugi.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "descriptor_impl.h"
+#include <vector>
+#include <string_view>
+using namespace plugin::udf;
+
+class plugin_api_impl : public plugin_api {
+  public:
+    plugin_api_impl() {
+{% for svc in services %}
+        {
+            std::vector<function_descriptor*> functions;
+
+{% for fn in svc.functions %}
+            {
+                std::vector<column_descriptor*> input_columns = {
+{% for col in fn.input_record.columns %}
+                    new column_descriptor_impl({{ col.index }}, "{{ col.column_name }}", type_kind_type::{{ col.type_kind }}),
+{% endfor %}
+                };
+
+                std::vector<column_descriptor*> output_columns = {
+{% for col in fn.output_record.columns %}
+                    new column_descriptor_impl({{ col.index }}, "{{ col.column_name }}", type_kind_type::{{ col.type_kind }}),
+{% endfor %}
+                };
+
+                auto input_record = new record_descriptor_impl(std::move(input_columns));
+                auto output_record = new record_descriptor_impl(std::move(output_columns));
+
+                auto fn = new function_descriptor_impl(
+                    {{ fn.function_index }},
+                    "{{ fn.function_name }}",
+                    function_kind_type::{{ fn.function_kind }},
+                    input_record,
+                    output_record
+                );
+
+                functions.push_back(fn);
+            }
+
+{% endfor %}
+            auto svc = new service_descriptor_impl({{ svc.service_index }}, "{{ svc.service_name }}", std::move(functions));
+            services_.push_back(svc);
+        }
+
+{% endfor %}
+    }
+
+    const std::vector<service_descriptor*>& services() const noexcept override { return services_; }
+
+  private:
+    std::vector<service_descriptor*> services_;
+};
+
+extern "C" plugin_api* create_plugin_api() {
+    return new plugin_api_impl();
+}
+

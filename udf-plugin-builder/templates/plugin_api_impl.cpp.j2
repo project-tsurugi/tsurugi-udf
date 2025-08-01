@@ -21,7 +21,11 @@ using namespace plugin::udf;
 class plugin_api_impl : public plugin_api {
   public:
     plugin_api_impl() {
-{% for svc in services %}
+{% for pkg in packages %}
+        {
+        std::vector<service_descriptor*> services;
+
+{% for svc in pkg.services %}
         {
             std::vector<function_descriptor*> functions;
 
@@ -55,16 +59,18 @@ class plugin_api_impl : public plugin_api {
 
 {% endfor %}
             auto svc = new service_descriptor_impl({{ svc.service_index }}, "{{ svc.service_name }}", std::move(functions));
-            services_.push_back(svc);
+            services.push_back(svc);
         }
-
+{% endfor %}
+            auto pkg = new package_descriptor_impl("{{ pkg.package_name }}", std::move(services));
+            packages_.push_back(pkg);
+        }
 {% endfor %}
     }
 
-    const std::vector<service_descriptor*>& services() const noexcept override { return services_; }
-
+    const std::vector<package_descriptor*>& packages() const noexcept override { return packages_; }
   private:
-    std::vector<service_descriptor*> services_;
+    std::vector<package_descriptor*> packages_;
 };
 
 extern "C" plugin_api* create_plugin_api() {

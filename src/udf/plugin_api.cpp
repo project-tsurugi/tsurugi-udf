@@ -1,0 +1,53 @@
+/*
+ * Copyright 2018-2025 Project Tsurugi.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <string>
+#include <udf/plugin_api.h>
+
+namespace plugin::udf {
+std::string to_string(function_kind_type kind) {
+    switch (kind) {
+        case function_kind_type::Unary: return "Unary";
+        case function_kind_type::ClientStreaming: return "ClientStreaming";
+        case function_kind_type::ServerStreaming: return "ServerStreaming";
+        case function_kind_type::BidirectionalStreaming: return "BidirectionalStreaming";
+        default: return "UnknownFunctionKind";
+    }
+}
+
+std::string to_string(type_kind_type kind) {
+    switch (kind) {
+        case type_kind_type::FLOAT8: return "FLOAT8";
+        case type_kind_type::FLOAT4: return "FLOAT4";
+        case type_kind_type::INT8: return "INT8";
+        case type_kind_type::UINT8: return "UINT8";
+        case type_kind_type::INT4: return "INT4";
+        case type_kind_type::FIXED8: return "FIXED8";
+        case type_kind_type::FIXED4: return "FIXED4";
+        case type_kind_type::BOOL: return "BOOL";
+        case type_kind_type::STRING: return "STRING";
+        case type_kind_type::GROUP: return "GROUP";
+        case type_kind_type::MESSAGE: return "MESSAGE";
+        case type_kind_type::BYTES: return "BYTES";
+        case type_kind_type::UINT4: return "UINT4";
+        case type_kind_type::ENUM: return "ENUM";
+        case type_kind_type::SINT4: return "SINT4";
+        case type_kind_type::SINT8: return "SINT8";
+        case type_kind_type::SFIXED8: return "SFIXED8";
+        case type_kind_type::SFIXED4: return "SFIXED4";
+        default: return "UnknownTypeKind";
+    }
+}
+} // namespace plugin::udf

@@ -73,3 +73,15 @@ class service_descriptor_impl : public service_descriptor {
     std::string_view name;
     std::vector<function_descriptor*> funcs;
 };
+
+class package_descriptor_impl : public package_descriptor {
+  public:
+    package_descriptor_impl(std::string_view n, std::vector<service_descriptor*> s)
+        : name(n), svcs(std::move(s)) {}
+    std::string_view package_name() const noexcept override { return name; }
+    const std::vector<service_descriptor*>& services() const noexcept override { return svcs; }
+
+  private:
+    std::string_view name;
+    std::vector<service_descriptor*> svcs;
+};

@@ -16,6 +16,7 @@ import sys
 import json
 
 from udf_plugin_viewer.descriptors import (
+    PackageDescriptor,
     ServiceDescriptor,
     FunctionDescriptor,
     RecordDescriptor,
@@ -30,6 +31,6 @@ def main():
         sys.exit(1)
 
     path = sys.argv[1]
-    services = udf_plugin.load_plugin(path)
-    json_output = json.dumps(services, indent=2)
+    packages = udf_plugin.load_plugin(path)
+    json_output = json.dumps(packages, indent=2)
     print(json_output)

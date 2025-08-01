@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 #include "udf/udf_loader.h"
+#include <iostream>
 #include <memory>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-
 namespace py = pybind11;
 using namespace plugin::udf;
 using namespace pybind11::literals;
@@ -82,11 +82,30 @@ py::dict service_to_dict(const service_descriptor* svc) {
         "functions"_a                 = functions_to_list(svc->functions()));
 }
 
-py::list services_to_list(const std::vector<plugin_api*>& apis) {
+py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
+    py::list result;
+    for (auto* svc : svcs) {
+        if (svc == nullptr) {
+            std::cerr << "Warning: null service_descriptor pointer encountered" << std::endl;
+            continue;
+        } else {
+            std::cerr << "svc is not nullptr" << std::endl;
+        }
+        result.append(service_to_dict(svc));
+    }
+    return result;
+}
+
+py::dict package_to_dict(const package_descriptor* pkg) {
+    return py::dict("package_name"_a = std::string(pkg->package_name()),
+        "services"_a                 = services_to_list(pkg->services()));
+}
+
+py::list package_to_list(const std::vector<plugin_api*>& apis) {
     py::list result;
     for (const auto* api : apis) {
-        for (const auto* svc : api->services()) {
-            result.append(service_to_dict(svc));
+        for (const auto* pkg : api->packages()) {
+            result.append(package_to_dict(pkg));
         }
     }
     return result;
@@ -97,6 +116,6 @@ PYBIND11_MODULE(udf_plugin, m) {
     m.def("load_plugin", [](const std::string& path) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
         loader->load(path);
-        return services_to_list(loader->apis());
+        return package_to_list(loader->apis());
     });
 }

@@ -31,13 +31,14 @@ from common.descriptors import (
     RecordDescriptor,
     FunctionDescriptor,
     ServiceDescriptor,
+    PackageDescriptor,
 )
 
 
-def parse_service_descriptor(
+def parse_package_descriptor(
     desc_set: descriptor_pb2.FileDescriptorSet,
-) -> List[ServiceDescriptor]:
-    services = []
+) -> List[PackageDescriptor]:
+    packages = []
     service_counter = 0
     function_counter = 0
 
@@ -93,6 +94,8 @@ def parse_service_descriptor(
         return RecordDescriptor(columns=columns)
 
     for file_proto in desc_set.file:
+        pkg = file_proto.package
+        services = []
         for service_proto in file_proto.service:
             functions = []
             for idx, method in enumerate(service_proto.method):
@@ -103,7 +106,6 @@ def parse_service_descriptor(
                     kind = "ClientStreaming"
                 elif method.server_streaming:
                     kind = "ServerStreaming"
-
                 func = FunctionDescriptor(
                     function_index=function_counter,
                     function_name=method.name,
@@ -121,7 +123,13 @@ def parse_service_descriptor(
             )
             services.append(service)
             service_counter += 1
-    return services
+        if services:
+            package = PackageDescriptor(
+                package_name=pkg,
+                services=services,
+            )
+            packages.append(package)
+    return packages
 
 
 def parse_args():
@@ -189,9 +197,9 @@ def generate_file() -> str:
     return descriptor_path
 
 
-def dump_services_json(services: List[ServiceDescriptor], output_path: str):
+def dump_packages_json(packages: List[PackageDescriptor], output_path: str):
     with open(output_path, "w") as f:
-        json.dump([asdict(svc) for svc in services], f, indent=2)
+        json.dump([asdict(pkg) for pkg in packages], f, indent=2)
 
 
 def load_descriptor(path: str) -> descriptor_pb2.FileDescriptorSet:
@@ -201,22 +209,32 @@ def load_descriptor(path: str) -> descriptor_pb2.FileDescriptorSet:
     desc_set.ParseFromString(data)
     return desc_set
 
-def generate_cpp_from_template(services: List[ServiceDescriptor], template_dir: str, template_file: str, output_cpp_path: str):
-    env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True)
+
+def generate_cpp_from_template(
+    packages: List[PackageDescriptor],
+    template_dir: str,
+    template_file: str,
+    output_cpp_path: str,
+):
+    env = Environment(
+        loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
+    )
     template = env.get_template(template_file)
-    rendered = template.render(services=[asdict(svc) for svc in services])
+    rendered = template.render(packages=[asdict(pkg) for pkg in packages])
 
     with open(output_cpp_path, "w") as f:
         f.write(rendered)
 
     print(f"[OK] Generated C++ file from template: {output_cpp_path}")
 
+
 if __name__ == "__main__":
     descriptor_path = generate_file()
     desc_set = load_descriptor(descriptor_path)
-    services = parse_service_descriptor(desc_set)
-    dump_services_json(services, "out/service_descriptors.json")
+    packages = parse_package_descriptor(desc_set)
+    dump_packages_json(packages, "out/service_descriptors.json")
     template_dir = "templates"
     template_file = "plugin_api_impl.cpp.j2"
     output_cpp_path = "out/plugin_api_impl.cpp"
-    generate_cpp_from_template(services, template_dir, template_file, output_cpp_path)
+    generate_cpp_from_template(packages, template_dir, template_file, output_cpp_path)
+

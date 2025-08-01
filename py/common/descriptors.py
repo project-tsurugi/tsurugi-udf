@@ -41,3 +41,9 @@ class ServiceDescriptor:
     service_index: int
     service_name: str
     functions: List[FunctionDescriptor]
+
+
+@dataclass
+class PackageDescriptor:
+    package_name: str
+    services: List[ServiceDescriptor]

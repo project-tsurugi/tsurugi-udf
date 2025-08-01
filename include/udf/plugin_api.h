@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #pragma once
+#include <string>
 #include <string_view>
 #include <vector>
 namespace plugin::udf {
@@ -44,6 +45,9 @@ enum class type_kind_type {
     SFIXED8,
     SFIXED4,
 };
+
+std::string to_string(function_kind_type kind);
+std::string to_string(type_kind_type kind);
 
 class column_descriptor {
   public:
@@ -82,10 +86,17 @@ class service_descriptor {
     virtual const std::vector<function_descriptor*>& functions() const noexcept = 0;
 };
 
+class package_descriptor {
+  public:
+    virtual ~package_descriptor()                                             = default;
+    virtual std::string_view package_name() const noexcept                    = 0;
+    virtual const std::vector<service_descriptor*>& services() const noexcept = 0;
+};
+
 class plugin_api {
   public:
     virtual ~plugin_api()                                                     = default;
-    virtual const std::vector<service_descriptor*>& services() const noexcept = 0;
+    virtual const std::vector<package_descriptor*>& packages() const noexcept = 0;
 };
 
 extern "C" plugin_api* create_plugin_api();

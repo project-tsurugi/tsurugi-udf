@@ -60,12 +60,21 @@ py::list record_to_list(const std::vector<column_descriptor*>& cols) {
     return result;
 }
 
+py::dict record_to_dict(const record_descriptor& record, const std::string& name) {
+    py::list columns;
+    for (auto* col : record.columns()) {
+        columns.append(column_to_dict(col));
+    }
+
+    return py::dict("record_name"_a = record.record_name(), "columns"_a = columns);
+}
+
 py::dict function_to_dict(const function_descriptor* fn) {
     return py::dict("function_index"_a = fn->function_index(),
         "function_name"_a              = std::string(fn->function_name()),
         "function_kind"_a              = static_cast<int>(fn->function_kind()),
-        "input_record"_a               = record_to_list(fn->input_record().columns()),
-        "output_record"_a              = record_to_list(fn->output_record().columns()));
+        "input_record"_a               = record_to_dict(fn->input_record(), "input_record"),
+        "output_record"_a              = record_to_dict(fn->output_record(), "output_record"));
 }
 
 py::list functions_to_list(const std::vector<function_descriptor*>& fns) {

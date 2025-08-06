@@ -25,6 +25,7 @@ class ColumnDescriptor:
 @dataclass
 class RecordDescriptor:
     columns: List[ColumnDescriptor]
+    record_name: str = ""
 
 
 @dataclass

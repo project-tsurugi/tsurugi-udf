@@ -80,7 +80,8 @@ def parse_package_descriptor(
                     ColumnDescriptor(
                         index=0, column_name="unknown", type_kind="UNKNOWN"
                     )
-                ]
+                ],
+                record_name=type_name.lstrip(".") ,
             )
         columns = []
         for idx, field in enumerate(descriptor.field):
@@ -91,7 +92,7 @@ def parse_package_descriptor(
                     type_kind=field_type_to_kind(field),
                 )
             )
-        return RecordDescriptor(columns=columns)
+        return RecordDescriptor(columns=columns, record_name=type_name.lstrip(".") )
 
     for file_proto in desc_set.file:
         pkg = file_proto.package
@@ -237,4 +238,3 @@ if __name__ == "__main__":
     template_file = "plugin_api_impl.cpp.j2"
     output_cpp_path = "out/plugin_api_impl.cpp"
     generate_cpp_from_template(packages, template_dir, template_file, output_cpp_path)
-

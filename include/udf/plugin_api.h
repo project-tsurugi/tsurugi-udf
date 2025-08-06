@@ -62,6 +62,7 @@ class column_descriptor {
 class record_descriptor {
   public:
     virtual ~record_descriptor()                                            = default;
+    virtual std::string_view record_name() const noexcept                   = 0;
     virtual const std::vector<column_descriptor*>& columns() const noexcept = 0;
 };
 

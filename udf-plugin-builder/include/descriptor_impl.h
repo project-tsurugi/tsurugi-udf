@@ -34,10 +34,13 @@ class column_descriptor_impl : public column_descriptor {
 
 class record_descriptor_impl : public record_descriptor {
   public:
-    record_descriptor_impl(std::vector<column_descriptor*> c) : cols(std::move(c)) {}
+    record_descriptor_impl(std::string_view n, std::vector<column_descriptor*> c)
+        : name(n), cols(std::move(c)) {}
     const std::vector<column_descriptor*>& columns() const noexcept override { return cols; }
+    std::string_view record_name() const noexcept override { return name; }
 
   private:
+    std::string_view name;
     std::vector<column_descriptor*> cols;
 };
 

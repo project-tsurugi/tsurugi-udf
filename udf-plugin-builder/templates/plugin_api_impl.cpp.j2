@@ -36,15 +36,13 @@ class plugin_api_impl : public plugin_api {
                     new column_descriptor_impl({{ col.index }}, "{{ col.column_name }}", type_kind_type::{{ col.type_kind }}),
 {% endfor %}
                 };
-
+                auto input_record = new record_descriptor_impl("{{fn.input_record.record_name}}",std::move(input_columns));
                 std::vector<column_descriptor*> output_columns = {
 {% for col in fn.output_record.columns %}
                     new column_descriptor_impl({{ col.index }}, "{{ col.column_name }}", type_kind_type::{{ col.type_kind }}),
 {% endfor %}
                 };
-
-                auto input_record = new record_descriptor_impl(std::move(input_columns));
-                auto output_record = new record_descriptor_impl(std::move(output_columns));
+                auto output_record = new record_descriptor_impl("{{fn.output_record.record_name}}",std::move(output_columns));
 
                 auto fn = new function_descriptor_impl(
                     {{ fn.function_index }},

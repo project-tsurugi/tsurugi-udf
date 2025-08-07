@@ -28,21 +28,22 @@ int main(int argc, char** argv) {
 
             for (const auto* svc : pkg->services()) {
                 std::cout << "  Service: " << svc->service_name() << std::endl;
-                std::cout << "    index: " << svc->service_index() << std::endl;
+                std::cout << "    Index: " << svc->service_index() << std::endl;
                 for (const auto* fn : svc->functions()) {
                     std::cout << "    Function: " << fn->function_name() << std::endl;
+                    std::cout << "      Index: " << fn->function_index() << std::endl;
                     std::cout << "      Kind: " << plugin::udf::to_string(fn->function_kind())
                               << std::endl;
 
                     const auto& input = fn->input_record();
-                    std::cout << "      Input record:" << std::endl;
+                    std::cout << "      Input record: " << input.record_name() << std::endl;
                     for (const auto* col : input.columns()) {
                         std::cout << "        - " << col->column_name() << " : "
                                   << plugin::udf::to_string(col->type_kind()) << std::endl;
                     }
 
                     const auto& output = fn->output_record();
-                    std::cout << "      Output record:" << std::endl;
+                    std::cout << "      Output record: " << output.record_name() << std::endl;
                     for (const auto* col : output.columns()) {
                         std::cout << "        - " << col->column_name() << " : "
                                   << plugin::udf::to_string(col->type_kind()) << std::endl;

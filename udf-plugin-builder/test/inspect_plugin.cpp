@@ -21,37 +21,52 @@ int main(int argc, char** argv) {
     loader->load(so_path);
     auto apis = loader->apis();
 
+    std::cout << "packages:" << std::endl;
+
     for (const auto* api : apis) {
         const auto& pkgs = api->packages();
         for (const auto* pkg : pkgs) {
-            std::cout << "Package: " << pkg->package_name() << std::endl;
+            std::cout << "  - package_name: " << pkg->package_name() << std::endl;
+            std::cout << "    services:" << std::endl;
 
             for (const auto* svc : pkg->services()) {
-                std::cout << "  Service: " << svc->service_name() << std::endl;
-                std::cout << "    Index: " << svc->service_index() << std::endl;
+                std::cout << "      - service_name: " << svc->service_name() << std::endl;
+                std::cout << "        service_index: " << svc->service_index() << std::endl;
+                std::cout << "        functions:" << std::endl;
+
                 for (const auto* fn : svc->functions()) {
-                    std::cout << "    Function: " << fn->function_name() << std::endl;
-                    std::cout << "      Index: " << fn->function_index() << std::endl;
-                    std::cout << "      Kind: " << plugin::udf::to_string(fn->function_kind())
+                    std::cout << "          - function_name: " << fn->function_name() << std::endl;
+                    std::cout << "            function_index: " << fn->function_index()
                               << std::endl;
+                    std::cout << "            function_kind: "
+                              << plugin::udf::to_string(fn->function_kind()) << std::endl;
 
                     const auto& input = fn->input_record();
-                    std::cout << "      Input record: " << input.record_name() << std::endl;
+                    std::cout << "            input_record:" << std::endl;
+                    std::cout << "              record_name: " << input.record_name() << std::endl;
+                    std::cout << "              columns:" << std::endl;
                     for (const auto* col : input.columns()) {
-                        std::cout << "        - " << col->column_name() << " : "
+                        std::cout << "                - column_name: " << col->column_name()
+                                  << std::endl;
+                        std::cout << "                  type_kind: "
                                   << plugin::udf::to_string(col->type_kind()) << std::endl;
                     }
 
                     const auto& output = fn->output_record();
-                    std::cout << "      Output record: " << output.record_name() << std::endl;
+                    std::cout << "            output_record:" << std::endl;
+                    std::cout << "              record_name: " << output.record_name() << std::endl;
+                    std::cout << "              columns:" << std::endl;
                     for (const auto* col : output.columns()) {
-                        std::cout << "        - " << col->column_name() << " : "
+                        std::cout << "                - column_name: " << col->column_name()
+                                  << std::endl;
+                        std::cout << "                  type_kind: "
                                   << plugin::udf::to_string(col->type_kind()) << std::endl;
                     }
                 }
             }
         }
     }
+
     loader->unload_all();
     return 0;
 }

@@ -81,7 +81,7 @@ def parse_package_descriptor(
                         index=0, column_name="unknown", type_kind="UNKNOWN"
                     )
                 ],
-                record_name=type_name.lstrip(".") ,
+                record_name=type_name.lstrip("."),
             )
         columns = []
         for idx, field in enumerate(descriptor.field):
@@ -92,7 +92,7 @@ def parse_package_descriptor(
                     type_kind=field_type_to_kind(field),
                 )
             )
-        return RecordDescriptor(columns=columns, record_name=type_name.lstrip(".") )
+        return RecordDescriptor(columns=columns, record_name=type_name.lstrip("."))
 
     for file_proto in desc_set.file:
         pkg = file_proto.package
@@ -168,7 +168,6 @@ def generate_file() -> str:
     args = parse_args()
 
     proto_path = args.proto_path
-    proto_file = args.proto_file
     out_dir = args.out
     descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
 
@@ -181,6 +180,14 @@ def generate_file() -> str:
         print("Error: grpc_cpp_plugin not found in PATH")
         sys.exit(1)
 
+    proto_files = list(Path(proto_path).rglob("*.proto"))
+
+    if not proto_files:
+        print(f"No .proto files found in {proto_path}")
+        sys.exit(1)
+
+    proto_files_str = [str(p) for p in proto_files]
+
     cmd = [
         "protoc",
         f"--proto_path={proto_path}",
@@ -189,8 +196,7 @@ def generate_file() -> str:
         f"--plugin=protoc-gen-grpc={grpc_plugin}",
         f"--descriptor_set_out={descriptor_path}",
         "--include_imports",
-        proto_file,
-    ]
+    ] + proto_files_str
 
     print("Running:", " ".join(cmd))
     subprocess.run(cmd, check=True)
@@ -234,7 +240,14 @@ if __name__ == "__main__":
     desc_set = load_descriptor(descriptor_path)
     packages = parse_package_descriptor(desc_set)
     dump_packages_json(packages, "out/service_descriptors.json")
+    out_dir = "out"
+    templates = {
+        "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",
+        "rpc_client.cpp.j2": "rpc_client.cpp",
+        "rpc_client.h.j2": "rpc_client.h",
+        "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
+    }
     template_dir = "templates"
-    template_file = "plugin_api_impl.cpp.j2"
-    output_cpp_path = "out/plugin_api_impl.cpp"
-    generate_cpp_from_template(packages, template_dir, template_file, output_cpp_path)
+    for template_file, output_file in templates.items():
+        output_path = f"{out_dir}/{output_file}"
+        generate_cpp_from_template(packages, template_dir, template_file, output_path)

@@ -1,8 +1,11 @@
 #include "descriptor_impl.h"
+#include "udf/generic_client_factory.h"
+#include "udf/generic_record_impl.h"
 #include "udf/plugin_api.h"
 #include "udf/plugin_loader.h"
 #include "udf/udf_loader.h"
 #include <dlfcn.h>
+#include <grpcpp/grpcpp.h>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -10,17 +13,7 @@
 
 using namespace plugin::udf;
 
-int main(int argc, char** argv) {
-    std::unique_ptr<plugin_loader> loader = std::make_unique<udf_loader>();
-    if (argc < 2) {
-        std::cerr << "Usage: inspect_plugin <path_to_plugin.so>" << std::endl;
-        return 1;
-    }
-
-    const char* so_path = argv[1];
-    loader->load(so_path);
-    auto apis = loader->apis();
-
+void print_plugin_info(const std::vector<plugin_api*>& apis) {
     std::cout << "packages:" << std::endl;
 
     for (const auto* api : apis) {
@@ -66,6 +59,20 @@ int main(int argc, char** argv) {
             }
         }
     }
+}
+
+int main(int argc, char** argv) {
+    std::unique_ptr<plugin_loader> loader = std::make_unique<udf_loader>();
+    if (argc < 2) {
+        std::cerr << "Usage: inspect_plugin <path_to_plugin.so>" << std::endl;
+        return 1;
+    }
+
+    const char* so_path = argv[1];
+    loader->load(so_path);
+    auto apis = loader->apis();
+
+    print_plugin_info(apis);
 
     loader->unload_all();
     return 0;

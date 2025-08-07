@@ -14,11 +14,19 @@ set(GENERATED_CPP_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/out/rpc_client.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/out/rpc_client_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/out/sample.grpc.pb.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/out/sample.pb.cc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/sample.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/complex_types.grpc.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/complex_types.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/primitive_types.grpc.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/primitive_types.pb.cc)
 
 set(GENERATED_HEADER_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/out/sample.grpc.pb.h
     ${CMAKE_CURRENT_SOURCE_DIR}/out/sample.pb.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/complex_types.grpc.pb.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/complex_types.pb.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/primitive_types.grpc.pb.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/out/primitive_types.pb.h
     ${CMAKE_CURRENT_SOURCE_DIR}/out/rpc_client.h)
 
 add_custom_command(

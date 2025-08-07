@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 #include "udf/udf_loader.h"
+#include "udf/generic_client_factory.h"
+
+#include "udf/generic_record_impl.h"
 #include <dlfcn.h>
 #include <filesystem>
+#include <grpcpp/grpcpp.h>
 #include <iostream>
-
 namespace fs = std::filesystem;
 using namespace plugin::udf;
 void udf_loader::load(std::string_view plugin_path) {
@@ -78,7 +81,17 @@ void udf_loader::create_api_from_handle(void* handle) {
         return;
     }
     apis_.emplace_back(api);
+    std::cerr << "  create_func2\n";
+    auto* create_func2 = reinterpret_cast<generic_client_factory* (*)(const char*)>(
+        dlsym(handle, "tsurugi_create_generic_client_factory"));
+    if (!create_func2) {
+        std::cerr << "  Failed to find symbol tsurugi_create_generic_client_factory\n";
+        return;
+    }
+    std::cerr << "  create_func2 found\n";
+    factory_ = create_func2("Greeter");
+
 }
 const std::vector<plugin_api*>& udf_loader::apis() const noexcept { return apis_; }
-
+generic_client_factory* udf_loader::get_factory() const noexcept { return factory_; }
 udf_loader::~udf_loader() { unload_all(); }

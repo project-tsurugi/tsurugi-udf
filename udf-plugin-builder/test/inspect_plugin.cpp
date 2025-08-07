@@ -67,13 +67,30 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: inspect_plugin <path_to_plugin.so>" << std::endl;
         return 1;
     }
-
     const char* so_path = argv[1];
     loader->load(so_path);
     auto apis = loader->apis();
-
     print_plugin_info(apis);
+    auto factory = loader->get_factory();
 
+    auto channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
+    std::unique_ptr<generic_client> client(factory->create(channel));
+    {
+        std::cout << "SayHello connect" << std::endl;
+        generic_record_impl request;
+        request.add_string("hello");
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 0}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_string()) {
+                std::cout << "Greeter received: " << *result << std::endl;
+            }
+        }
+    }
     loader->unload_all();
     return 0;
 }

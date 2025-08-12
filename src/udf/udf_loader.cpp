@@ -28,7 +28,7 @@ void udf_loader::load(std::string_view plugin_path) {
     if (fs::is_regular_file(path)) {
         if (path.extension() == ".so") {
             std::string full_path = path.string();
-            void* handle          = dlopen(full_path.c_str(), RTLD_LAZY);
+            void* handle          = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
             if (!handle) {
                 std::cerr << "Failed to load " << full_path << ": " << dlerror() << std::endl;
             } else {
@@ -90,7 +90,6 @@ void udf_loader::create_api_from_handle(void* handle) {
     }
     std::cerr << "  create_func2 found\n";
     factory_ = create_func2("Greeter");
-
 }
 const std::vector<plugin_api*>& udf_loader::apis() const noexcept { return apis_; }
 generic_client_factory* udf_loader::get_factory() const noexcept { return factory_; }

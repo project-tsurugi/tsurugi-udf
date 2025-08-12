@@ -97,8 +97,6 @@ py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
         if (svc == nullptr) {
             std::cerr << "Warning: null service_descriptor pointer encountered" << std::endl;
             continue;
-        } else {
-            std::cerr << "svc is not nullptr" << std::endl;
         }
         result.append(service_to_dict(svc));
     }

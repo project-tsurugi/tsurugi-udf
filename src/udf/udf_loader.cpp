@@ -81,14 +81,12 @@ void udf_loader::create_api_from_handle(void* handle) {
         return;
     }
     apis_.emplace_back(api);
-    std::cerr << "  create_func2\n";
     auto* create_func2 = reinterpret_cast<generic_client_factory* (*)(const char*)>(
         dlsym(handle, "tsurugi_create_generic_client_factory"));
     if (!create_func2) {
         std::cerr << "  Failed to find symbol tsurugi_create_generic_client_factory\n";
         return;
     }
-    std::cerr << "  create_func2 found\n";
     factory_ = create_func2("Greeter");
 }
 const std::vector<plugin_api*>& udf_loader::apis() const noexcept { return apis_; }

@@ -6,9 +6,6 @@
 #include <memory>
 #include <string>
 
-using myapi::Byer;
-using myapi::Greeter;
-
 using namespace plugin::udf;
 class rpc_client : public generic_client {
   public:
@@ -18,6 +15,13 @@ class rpc_client : public generic_client {
         generic_record& request, generic_record& response) const override;
 
   private:
-    std::unique_ptr<Greeter::Stub> greeter_stub_;
-    std::unique_ptr<Byer::Stub> byer_stub_;
+{% set stubs = [] %}
+{% for pkg in packages %}
+    {% for svc in pkg.services %}
+        {% set _ = stubs.append((pkg.package_name, svc.service_name)) %}
+    {% endfor %}
+{% endfor %}
+{% for pkg_name, svc_name in stubs %}
+    std::unique_ptr<{{ pkg_name }}::{{ svc_name }}::Stub> {{ svc_name }}_stub_;
+{% endfor %}
 };

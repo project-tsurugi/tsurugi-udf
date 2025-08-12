@@ -35,6 +35,30 @@ from common.descriptors import (
 )
 
 
+def fetch_add_name(type_kind: str) -> str:
+    mapping = {
+        "FLOAT8": "double",
+        "FLOAT4": "float",
+        "INT8": "int8",
+        "UINT8": "uint8",
+        "INT4": "int4",
+        "FIXED8": "int8",
+        "FIXED4": "int4",
+        "BOOL": "bool",
+        "STRING": "string",
+        "BYTES": "string",
+        "ENUM": "string",
+        "GROUP": "/* no fetch, GROUP type */",
+        "MESSAGE": "/* no fetch, MESSAGE type */",
+        "UINT4": "uint4",
+        "SINT4": "int4",
+        "SINT8": "int8",
+        "SFIXED8": "int8",
+        "SFIXED4": "int4",
+    }
+    return mapping.get(type_kind, "/* no fetch, unknown type */")
+
+
 def parse_package_descriptor(
     desc_set: descriptor_pb2.FileDescriptorSet,
 ) -> List[PackageDescriptor]:
@@ -226,6 +250,7 @@ def generate_cpp_from_template(
     env = Environment(
         loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
     )
+    env.globals["fetch_add_name"] = fetch_add_name
     template = env.get_template(template_file)
     rendered = template.render(packages=[asdict(pkg) for pkg in packages])
 

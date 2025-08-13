@@ -17,7 +17,7 @@ rpc_client::rpc_client(std::shared_ptr<grpc::Channel> channel)
 {% endfor %}
     :
 {% for pkg_name, svc_name in stubs %}
-    {{ svc_name }}_stub_(
+    {{ pkg_name }}_{{ svc_name }}_stub_(
         {{ pkg_name }}::{{ svc_name }}::NewStub(channel)
     ){% if not loop.last %},{% endif %}
 {% endfor %}
@@ -41,7 +41,7 @@ void rpc_client::call(ClientContext& context, function_index_type function_index
               if (!arg{{ col.index }}) { throw std::runtime_error("No input arg{{ col.index }}"); }
               req.set_{{ col.column_name }}(*arg{{ col.index }});
             {% endfor %}
-              Status status = {{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
+              Status status = {{ pkg.package_name }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
               if (status.ok()) {
             {% for col in fn.output_record.columns %}
                   response.add_{{ fetch_add_name(col.type_kind) }}(rep.{{ col.column_name }}());

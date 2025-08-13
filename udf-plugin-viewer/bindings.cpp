@@ -19,6 +19,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
+#include <tuple>
+#include <vector>
 namespace py = pybind11;
 using namespace plugin::udf;
 using namespace pybind11::literals;
@@ -123,6 +125,11 @@ PYBIND11_MODULE(udf_plugin, m) {
     m.def("load_plugin", [](const std::string& path) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
         loader->load(path);
-        return package_to_list(loader->apis());
+        auto plugins = loader->get_plugins();
+        std::vector<plugin_api*> apis;
+        for (const auto& plugin : plugins) {
+            apis.push_back(std::get<0>(plugin));
+        }
+        return package_to_list(apis);
     });
 }

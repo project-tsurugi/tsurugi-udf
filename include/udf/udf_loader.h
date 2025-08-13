@@ -19,20 +19,18 @@
 #include "plugin_loader.h"
 #include <string_view>
 #include <vector>
-
+#include <tuple>
 namespace plugin::udf {
 class udf_loader : public plugin_loader {
   public:
     void load(std::string_view dir_path) override;
     void unload_all() override;
-    const std::vector<plugin_api*>& apis() const noexcept override;
     ~udf_loader() override;
-    generic_client_factory* get_factory() const noexcept override;
+    const std::vector<std::tuple<plugin_api*, generic_client_factory*>>& get_plugins() const noexcept override;
 
   private:
     std::vector<void*> handles_;
-    std::vector<plugin_api*> apis_;
     void create_api_from_handle(void* handle);
-    generic_client_factory* factory_ = nullptr;
+    std::vector<std::tuple<plugin_api*, generic_client_factory*>> plugins_;
 };
 } // namespace plugin::udf

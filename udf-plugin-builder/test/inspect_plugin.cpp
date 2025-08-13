@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using namespace plugin::udf;
@@ -72,93 +73,97 @@ int main(int argc, char** argv) {
     {
         std::unique_ptr<plugin_loader> loader = std::make_unique<udf_loader>();
         loader->load(so_path);
-        auto factory = loader->get_factory();
-        if (!factory) {
-            std::cerr << "[main] Factory creation failed" << std::endl;
-            return 1;
-        }
-        std::cerr << "[main] Factory created: " << factory << std::endl;
-        auto channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
-        auto raw_client = factory->create(channel);
-        if (!raw_client) {
-            std::cerr << "[main] generic_client creation failed" << std::endl;
-            return 1;
-        }
-        std::unique_ptr<generic_client> client(raw_client);
-        try {
-            std::cout << "[main] SayHello connect" << std::endl;
-            generic_record_impl request;
-            request.add_string("hello");
-
-            generic_record_impl response;
-            grpc::ClientContext context;
-
-            client->call(context, {0, 0}, request, response);
-
-            if (auto cursor = response.cursor()) {
-                if (auto result = cursor->fetch_string()) {
-                    std::cout << "Greeter received: " << *result << std::endl;
-                }
+        auto plugins = loader->get_plugins();
+        for (const auto& plugin : plugins) {
+            auto factory = std::get<1>(plugin);
+            if (!factory) {
+                std::cerr << "[main] Factory creation failed" << std::endl;
+                return 1;
             }
-        } catch (const std::exception& ex) {
-            std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
-        }
-        try {
-            std::cout << "[main] AddIntOne connect" << std::endl;
-            generic_record_impl request;
-            request.add_int4(42);
-
-            generic_record_impl response;
-            grpc::ClientContext context;
-
-            client->call(context, {0, 1}, request, response);
-
-            if (auto cursor = response.cursor()) {
-                if (auto result = cursor->fetch_int4()) {
-                    std::cout << "Greeter received: " << *result << std::endl;
-                }
+            std::cerr << "[main] Factory created: " << factory << std::endl;
+            auto channel =
+                grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
+            auto raw_client = factory->create(channel);
+            if (!raw_client) {
+                std::cerr << "[main] generic_client creation failed" << std::endl;
+                return 1;
             }
-        } catch (const std::exception& ex) {
-            std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
-        }
-        try {
-            std::cout << "[main] SayWolrd connect" << std::endl;
-            generic_record_impl request;
-            request.add_string("world");
+            std::unique_ptr<generic_client> client(raw_client);
+            try {
+                std::cout << "[main] SayHello connect" << std::endl;
+                generic_record_impl request;
+                request.add_string("hello");
 
-            generic_record_impl response;
-            grpc::ClientContext context;
+                generic_record_impl response;
+                grpc::ClientContext context;
 
-            client->call(context, {0, 2}, request, response);
+                client->call(context, {0, 0}, request, response);
 
-            if (auto cursor = response.cursor()) {
-                if (auto result = cursor->fetch_string()) {
-                    std::cout << "Greeter received: " << *result << std::endl;
+                if (auto cursor = response.cursor()) {
+                    if (auto result = cursor->fetch_string()) {
+                        std::cout << "Greeter received: " << *result << std::endl;
+                    }
                 }
+            } catch (const std::exception& ex) {
+                std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
             }
-        } catch (const std::exception& ex) {
-            std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
-        }
-        try {
-            std::cout << "[main] DecDecimal connect" << std::endl;
-            generic_record_impl request;
-            request.add_string("Dec");
-            request.add_int4(3);
-            generic_record_impl response;
-            grpc::ClientContext context;
+            try {
+                std::cout << "[main] AddIntOne connect" << std::endl;
+                generic_record_impl request;
+                request.add_int4(42);
 
-            client->call(context, {0, 3}, request, response);
+                generic_record_impl response;
+                grpc::ClientContext context;
 
-            if (auto cursor = response.cursor()) {
-                if (auto result = cursor->fetch_int8()) {
-                    std::cout << "Greeter received: " << *result << std::endl;
+                client->call(context, {0, 1}, request, response);
+
+                if (auto cursor = response.cursor()) {
+                    if (auto result = cursor->fetch_int4()) {
+                        std::cout << "Greeter received: " << *result << std::endl;
+                    }
                 }
+            } catch (const std::exception& ex) {
+                std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
             }
-        } catch (const std::exception& ex) {
-            std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
+            try {
+                std::cout << "[main] SayWolrd connect" << std::endl;
+                generic_record_impl request;
+                request.add_string("world");
+
+                generic_record_impl response;
+                grpc::ClientContext context;
+
+                client->call(context, {0, 2}, request, response);
+
+                if (auto cursor = response.cursor()) {
+                    if (auto result = cursor->fetch_string()) {
+                        std::cout << "Greeter received: " << *result << std::endl;
+                    }
+                }
+            } catch (const std::exception& ex) {
+                std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
+            }
+            try {
+                std::cout << "[main] DecDecimal connect" << std::endl;
+                generic_record_impl request;
+                request.add_string("Dec");
+                request.add_int4(3);
+                generic_record_impl response;
+                grpc::ClientContext context;
+
+                client->call(context, {0, 3}, request, response);
+
+                if (auto cursor = response.cursor()) {
+                    if (auto result = cursor->fetch_int8()) {
+                        std::cout << "Greeter received: " << *result << std::endl;
+                    }
+                }
+            } catch (const std::exception& ex) {
+                std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
+            }
+            client.reset();
+            channel.reset();
         }
-        client.reset();
-        channel.reset();
         loader->unload_all();
         grpc_shutdown();
     }

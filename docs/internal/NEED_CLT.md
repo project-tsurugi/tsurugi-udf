@@ -8,7 +8,7 @@ package名から引数の要素名まで(つまりprotoファイルに載って�
 
 一般的な.protoとそれに対応する.cppファイルから必要なデータを考察する。必要なデータはコメントで記入
 
-service.proto
+[../../udf-plugin-builder/proto/sample.proto](../../udf-plugin-builder/proto/sample.proto)
 
 ```CPP
 syntax = "proto3";
@@ -23,12 +23,16 @@ service Greeter {
 }
 ```
 
-primitive_types.proto
+[../../udf-plugin-builder/proto/primitive_types.proto](../../udf-plugin-builder/proto/primitive_types.proto)
+
 
 ```CPP
 syntax = "proto3";
 message StringValue { string value = 1; }
 ```
+
+[../../udf-plugin-builder/proto/complex_types.proto](../../udf-plugin-builder/proto/complex_types.proto)
+
 
 rpc_client.h
 

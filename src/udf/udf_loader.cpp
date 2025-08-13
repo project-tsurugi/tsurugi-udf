@@ -25,40 +25,38 @@ namespace fs = std::filesystem;
 using namespace plugin::udf;
 void udf_loader::load(std::string_view plugin_path) {
     fs::path path(plugin_path);
-    if (fs::is_regular_file(path)) {
-        if (path.extension() == ".so") {
-            std::string full_path = path.string();
-            void* handle          = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
-            if (!handle) {
-                std::cerr << "Failed to load " << full_path << ": " << dlerror() << std::endl;
-            } else {
-                handles_.emplace_back(handle);
-                create_api_from_handle(handle);
-            }
-        } else {
-            std::cerr << "Specified file is not a .so plugin: " << path << std::endl;
-        }
+
+    std::vector<fs::path> files_to_load;
+    if (fs::is_regular_file(path) && path.extension() == ".so") {
+        files_to_load.push_back(path);
     } else if (fs::is_directory(path)) {
         for (const auto& entry : fs::directory_iterator(path)) {
-            if (!entry.is_regular_file()) continue;
-            if (entry.path().extension() != ".so") continue;
-
-            std::string full_path = entry.path().string();
-            void* handle          = dlopen(full_path.c_str(), RTLD_LAZY);
-            if (!handle) {
-                std::cerr << "Failed to load " << full_path << ": " << dlerror() << std::endl;
-            } else {
-                std::cout << "Loaded plugin: " << full_path << std::endl;
-                handles_.emplace_back(handle);
-                create_api_from_handle(handle);
+            if (entry.is_regular_file() && entry.path().extension() == ".so") {
+                files_to_load.push_back(entry.path());
             }
         }
     } else {
-        std::cerr << "Plugin path is not valid: " << path << std::endl;
+        std::cerr << "Plugin path is not valid or not a .so file: " << path << std::endl;
+        return;
+    }
+
+    for (const auto& file : files_to_load) {
+        std::string full_path = file.string();
+        dlerror();
+        void* handle    = dlopen(full_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+        const char* err = dlerror();
+        if (!handle || err) {
+            std::cerr << "Failed to load " << full_path << ": " << (err ? err : "unknown error")
+                      << std::endl;
+            continue;
+        }
+        handles_.emplace_back(handle);
+        create_api_from_handle(handle);
     }
 }
 
 void udf_loader::unload_all() {
+    plugins_.clear();
     for (void* handle : handles_) {
         if (handle) dlclose(handle);
     }
@@ -67,28 +65,37 @@ void udf_loader::unload_all() {
 void udf_loader::create_api_from_handle(void* handle) {
     if (!handle) return;
 
-    using create_func_type = plugin_api* (*)();
-    auto* create_func      = reinterpret_cast<create_func_type>(dlsym(handle, "create_plugin_api"));
+    using create_api_func     = plugin_api* (*)();
+    using create_factory_func = generic_client_factory* (*)(const char*);
 
-    if (!create_func) {
-        std::cerr << "  Failed to find symbol create_plugin_api\n";
+    auto* api_func = reinterpret_cast<create_api_func>(dlsym(handle, "create_plugin_api"));
+    if (!api_func) {
+        std::cerr << "Failed to find symbol create_plugin_api\n";
         return;
     }
 
-    plugin_api* api = create_func();
-    if (!api) {
-        std::cerr << "  create_plugin_api returned nullptr\n";
+    auto api_ptr = std::unique_ptr<plugin_api>(api_func());
+    if (!api_ptr) {
+        std::cerr << "create_plugin_api returned nullptr\n";
         return;
     }
-    auto* create_func2 = reinterpret_cast<generic_client_factory* (*)(const char*)>(
+
+    auto* factory_func = reinterpret_cast<create_factory_func>(
         dlsym(handle, "tsurugi_create_generic_client_factory"));
-    if (!create_func2) {
-        std::cerr << "  Failed to find symbol tsurugi_create_generic_client_factory\n";
+    if (!factory_func) {
+        std::cerr << "Failed to find symbol tsurugi_create_generic_client_factory\n";
         return;
     }
-    generic_client_factory* fac = create_func2("Greeter");
-    plugins_.emplace_back(api, fac);
+
+    auto factory_ptr = std::unique_ptr<generic_client_factory>(factory_func("Greeter"));
+    if (!factory_ptr) {
+        std::cerr << "tsurugi_create_generic_client_factory returned nullptr\n";
+        return;
+    }
+
+    plugins_.emplace_back(api_ptr.release(), factory_ptr.release());
 }
+
 const std::vector<std::tuple<plugin_api*, generic_client_factory*>>&
 udf_loader::get_plugins() const noexcept {
     return plugins_;

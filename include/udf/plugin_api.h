@@ -24,7 +24,8 @@ enum class function_kind_type {
     ServerStreaming,
     BidirectionalStreaming,
 };
-
+// @see
+// https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243
 enum class type_kind_type {
     FLOAT8,
     FLOAT4,
@@ -40,10 +41,10 @@ enum class type_kind_type {
     BYTES,
     UINT4,
     ENUM,
+    SFIXED4,
+    SFIXED8,
     SINT4,
     SINT8,
-    SFIXED8,
-    SFIXED4,
 };
 
 std::string to_string(function_kind_type kind);

@@ -1,12 +1,12 @@
-## gRPCクライアント生成に必要なもの
+# gRPC クライアント生成手順
 
-### 結論
+`udf-plugin-builder` における gRPC クライアント生成の流れを、例示を通して順を追って説明します。
 
-package名から引数の要素名まで(つまりprotoファイルに載ってる情報全部)
+______________________________________________________________________
 
-### 一般的な.protoとそれに対応する.cppファイル
+## 1. 例示: サンプル .proto ファイル、C++ファイル
 
-一般的な.protoとそれに対応する.cppファイルから必要なデータを考察する。必要なデータはコメントで記入
+まず、生成に必要な情報を理解するために、以下のサンプル .proto ファイルおよび対応するC++ファイルを見てみます。(生成に必要な情報はC++ファイルのコメント風に記入)
 
 [../../udf-plugin-builder/proto/sample.proto](../../udf-plugin-builder/proto/sample.proto)
 
@@ -25,14 +25,12 @@ service Greeter {
 
 [../../udf-plugin-builder/proto/primitive_types.proto](../../udf-plugin-builder/proto/primitive_types.proto)
 
-
 ```CPP
 syntax = "proto3";
 message StringValue { string value = 1; }
 ```
 
 [../../udf-plugin-builder/proto/complex_types.proto](../../udf-plugin-builder/proto/complex_types.proto)
-
 
 rpc_client.h
 
@@ -110,10 +108,21 @@ void rpc_client::call(ClientContext& context, function_index_type function_index
         }
 ```
 
-## 実装
+この例を見ると、gRPC クライアント生成に必要な情報は次のように自然に把握できます:
 
-Pythonの[jinja](https://jinja.palletsprojects.com/en/stable/)テンプレートを利用
+- package 名 (`myapi`)
+- service 名 (`Greeter`)
+- RPC メソッド名 (`SayHello`)
+- 引数の型 (`StringValue`) と戻り値の型 (`StringValue`)
+- 引数の各要素名 (`value`) と戻り値の要素名 (`value`)
 
+## 2. 実装: テンプレートによる自動生成
+
+Python の [Jinja2](https://jinja.palletsprojects.com/en/stable/) を用いて、上記の情報をもとに C++ コードを自動生成します。
+
+使用するテンプレート:
 
 - [../../udf-plugin-builder/templates/rpc_client.cpp.j2](../../udf-plugin-builder/templates/rpc_client.cpp.j2)
 - [../../udf-plugin-builder/templates/rpc_client.h.j2](../../udf-plugin-builder/templates/rpc_client.h.j2)
+
+これにより、`.proto` ファイルの package 名、service 名、RPC メソッド、引数と戻り値の情報から、自動的に C++ gRPC クライアントコードが生成されます。

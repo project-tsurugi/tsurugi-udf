@@ -73,6 +73,7 @@ def parse_package_descriptor(
             fqname = f".{pkg}.{msg.name}" if pkg else f".{msg.name}"
             message_type_map[fqname] = msg
 
+    # @sea https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243
     def field_type_to_kind(field):
         type_map = {
             1: "FLOAT8",
@@ -89,10 +90,10 @@ def parse_package_descriptor(
             12: "BYTES",
             13: "UINT4",
             14: "ENUM",
-            15: "SINT4",
-            16: "SINT8",
-            17: "SFIXED8",
-            18: "SFIXED4",
+            15: "SFIXED4",
+            16: "SFIXED8",
+            17: "SINT4",
+            18: "SINT8",
         }
         return type_map.get(field.type, f"TYPE_{field.type}")
 

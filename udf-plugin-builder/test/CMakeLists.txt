@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.14)
 project(plugin_api_test)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 find_package(Protobuf REQUIRED)
-find_package(gRPC CONFIG REQUIRED)
-
+find_package(gRPC REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 
-set(COMMON_LIBS gRPC::grpc++ protobuf::libprotobuf)
+set(COMMON_LIBS ${GRPC_LIBRARIES} protobuf::libprotobuf)
 
 set(COMMON_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include

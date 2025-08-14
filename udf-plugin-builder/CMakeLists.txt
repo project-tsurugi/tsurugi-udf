@@ -4,8 +4,9 @@ project(udf_app)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 find_package(Protobuf REQUIRED)
-find_package(gRPC CONFIG REQUIRED)
+find_package(gRPC REQUIRED)
 find_package(Python3 REQUIRED)
 
 set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/generate.py)
@@ -49,8 +50,9 @@ add_custom_target(
 
 add_library(proto_lib SHARED ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
                              ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
-target_include_directories(proto_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/out)
-target_link_libraries(proto_lib PUBLIC gRPC::grpc++ protobuf::libprotobuf)
+target_include_directories(proto_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/out
+                                            ${GRPC_INCLUDE_DIRS})
+target_link_libraries(proto_lib PUBLIC ${GRPC_LIBRARIES} protobuf::libprotobuf)
 set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_dependencies(proto_lib generate_plugin_api_cpp)
 
@@ -59,7 +61,7 @@ target_include_directories(
   plugin_api
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
           ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/out)
-target_link_libraries(plugin_api PRIVATE proto_lib gRPC::grpc++
+target_link_libraries(plugin_api PRIVATE proto_lib ${GRPC_LIBRARIES}
                                          protobuf::libprotobuf)
 add_dependencies(plugin_api generate_plugin_api_cpp)
 

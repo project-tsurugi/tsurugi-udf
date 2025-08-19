@@ -110,11 +110,17 @@ def parse_package_descriptor(
             )
         columns = []
         for idx, field in enumerate(descriptor.field):
+            kind = field_type_to_kind(field)
+            nested = None
+            if kind == "MESSAGE":
+                nested_type_name = field.type_name
+                nested = resolve_record_type(nested_type_name)
             columns.append(
                 ColumnDescriptor(
                     index=idx,
                     column_name=field.name,
-                    type_kind=field_type_to_kind(field),
+                    type_kind=kind,
+                    nested_record=nested,
                 )
             )
         return RecordDescriptor(columns=columns, record_name=type_name.lstrip("."))

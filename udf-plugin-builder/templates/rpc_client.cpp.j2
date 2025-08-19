@@ -8,6 +8,49 @@
 using grpc::ClientContext;
 using grpc::Status;
 using namespace plugin::udf;
+
+// =======================
+// Macros (recursive code)
+// =======================
+
+{# 入力: request(generic_record)→req(Proto) に詰める #}
+{% macro emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
+    {% for col in record.columns %}
+        {% if col.nested_record %}
+            // Nested message: {{ col.column_name }}
+            {
+                auto* nested = {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
+                {{ emit_setters("nested", col.nested_record, cursor_prefix ~ col.index ~ "_", True) }}
+            }
+        {% else %}
+            auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
+            if (!arg{{ cursor_prefix }}{{ col.index }}) {
+                throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
+            }
+            {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{# 出力: rep(Proto)→response(generic_record) にフラットに積む #}
+{% macro emit_response_add(parent, record, is_pointer=False) -%}
+    {% for col in record.columns %}
+        {% if col.nested_record %}
+            {
+                // Flatten nested message: {{ col.column_name }}
+                const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
+                {{ emit_response_add("nested", col.nested_record, False) }}
+            }
+        {% else %}
+            response.add_{{ fetch_add_name(col.type_kind) }}({{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %});
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+// =======================
+// Constructor: build stubs
+// =======================
+
 rpc_client::rpc_client(std::shared_ptr<grpc::Channel> channel)
 {% set stubs = [] %}
 {% for pkg in packages %}
@@ -21,39 +64,48 @@ rpc_client::rpc_client(std::shared_ptr<grpc::Channel> channel)
         {{ pkg_name }}::{{ svc_name }}::NewStub(channel)
     ){% if not loop.last %},{% endif %}
 {% endfor %}
-    {}
-void rpc_client::call(ClientContext& context, function_index_type function_index,
-    generic_record& request, generic_record& response) const {
+{}
+
+// =======================
+// Call dispatcher
+// =======================
+
+void rpc_client::call(ClientContext& context,
+                      function_index_type function_index,
+                      generic_record& request,
+                      generic_record& response) const {
     auto cursor = request.cursor();
     if (!cursor) { throw std::runtime_error("request cursor is null"); }
 
     response.reset();
     auto fail = [&response]() { response.add_string("RPC failed"); };
+
     switch (function_index.second) {
 {% for pkg in packages %}
   {% for svc in pkg.services %}
     {% for fn in svc.functions %}
         case {{ fn.function_index }}: {
-            {{ fn.input_record.record_name | replace('.', '::') }} req;
-            {{ fn.output_record.record_name | replace('.', '::') }} rep;
-            {% for col in fn.input_record.columns %}
-              auto arg{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-              if (!arg{{ col.index }}) { throw std::runtime_error("No input arg{{ col.index }}"); }
-              req.set_{{ col.column_name }}(*arg{{ col.index }});
-            {% endfor %}
-              Status status = {{ pkg.package_name }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
-              if (status.ok()) {
-            {% for col in fn.output_record.columns %}
-                  response.add_{{ fetch_add_name(col.type_kind) }}(rep.{{ col.column_name }}());
-            {% endfor %}
-              } else {
-                  fail();
-              }
-              break;
+            {{ fn.input_record.record_name  | replace('.', '::') }}  req;
+            {{ fn.output_record.record_name | replace('.', '::') }}  rep;
+
+            // Build request from generic_record (flatten -> nested)
+            {{ emit_setters("req", fn.input_record, "", False) }}
+
+            // Call
+            Status status = {{ pkg.package_name }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
+
+            if (status.ok()) {
+                // Write response into generic_record (nested -> flatten)
+                {{ emit_response_add("rep", fn.output_record, False) }}
+            } else {
+                fail();
+            }
+            break;
         }
     {% endfor %}
   {% endfor %}
 {% endfor %}
-        default: throw std::runtime_error("Unsupported function_index (only 1 or 2 allowed)");
+        default:
+            throw std::runtime_error("Unsupported function_index");
     }
 }

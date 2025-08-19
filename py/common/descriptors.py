@@ -11,21 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
 class ColumnDescriptor:
     index: int
     column_name: str
-    type_kind: str
+    type_kind: Optional[str] = None
+    nested_record: Optional[RecordDescriptor] = None
 
 
 @dataclass
 class RecordDescriptor:
     columns: List[ColumnDescriptor]
     record_name: str = ""
+
+    def __post_init__(self):
+        if self.columns is None:
+            self.columns = []
 
 
 @dataclass

@@ -21,6 +21,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+
 namespace py = pybind11;
 using namespace plugin::udf;
 using namespace pybind11::literals;
@@ -48,35 +49,34 @@ std::string type_kind_to_string(plugin::udf::type_kind_type kind) {
         default: return "UNKNOWN";
     }
 }
+py::dict record_to_dict(const record_descriptor& record);
 
 py::dict column_to_dict(const column_descriptor* col) {
-    return py::dict("index"_a = col->index(), "column_name"_a = std::string(col->column_name()),
+    py::dict d("index"_a = col->index(), "column_name"_a = std::string(col->column_name()),
         "type_kind"_a = type_kind_to_string(col->type_kind()));
-}
 
-py::list record_to_list(const std::vector<column_descriptor*>& cols) {
-    py::list result;
-    for (auto* col : cols) {
-        result.append(column_to_dict(col));
+    if (auto nested = col->nested()) {
+        d["nested_record"] = record_to_dict(*nested);
+    } else {
+        d["nested_record"] = py::none();
     }
-    return result;
+    return d;
 }
 
-py::dict record_to_dict(const record_descriptor& record, const std::string& name) {
-    py::list columns;
+py::dict record_to_dict(const record_descriptor& record) {
+    py::list cols;
     for (auto* col : record.columns()) {
-        columns.append(column_to_dict(col));
+        cols.append(column_to_dict(col));
     }
-
-    return py::dict("record_name"_a = record.record_name(), "columns"_a = columns);
+    return py::dict("record_name"_a = std::string(record.record_name()), "columns"_a = cols);
 }
 
 py::dict function_to_dict(const function_descriptor* fn) {
     return py::dict("function_index"_a = fn->function_index(),
         "function_name"_a              = std::string(fn->function_name()),
         "function_kind"_a              = static_cast<int>(fn->function_kind()),
-        "input_record"_a               = record_to_dict(fn->input_record(), "input_record"),
-        "output_record"_a              = record_to_dict(fn->output_record(), "output_record"));
+        "input_record"_a               = record_to_dict(fn->input_record()),
+        "output_record"_a              = record_to_dict(fn->output_record()));
 }
 
 py::list functions_to_list(const std::vector<function_descriptor*>& fns) {
@@ -96,7 +96,7 @@ py::dict service_to_dict(const service_descriptor* svc) {
 py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
     py::list result;
     for (auto* svc : svcs) {
-        if (svc == nullptr) {
+        if (!svc) {
             std::cerr << "Warning: null service_descriptor pointer encountered" << std::endl;
             continue;
         }
@@ -121,7 +121,7 @@ py::list package_to_list(const std::vector<plugin_api*>& apis) {
 }
 
 PYBIND11_MODULE(udf_plugin, m) {
-    m.doc() = "UDF Plugin Loader";
+    m.doc() = "UDF Plugin Loader (with nested record support)";
     m.def("load_plugin", [](const std::string& path) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
         loader->load(path);

@@ -49,7 +49,7 @@ enum class type_kind_type {
 
 std::string to_string(function_kind_type kind);
 std::string to_string(type_kind_type kind);
-
+class record_descriptor;
 class column_descriptor {
   public:
     using index_type             = std::size_t;
@@ -58,6 +58,7 @@ class column_descriptor {
     virtual index_type index() const noexcept             = 0;
     virtual std::string_view column_name() const noexcept = 0;
     virtual type_kind_type type_kind() const noexcept     = 0;
+    virtual record_descriptor* nested() const noexcept    = 0;
 };
 
 class record_descriptor {

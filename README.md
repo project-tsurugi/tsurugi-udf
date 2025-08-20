@@ -23,13 +23,17 @@ CMake により共有ライブラリ (`.so`) をビルドします。
 
 #### 依存関係
 
-- CMake 3.10 以降
-- Python 3.x
-- protobuf
-- jinja2
-- protoc (Protocol Buffers compiler)
-- grpc_cpp_plugin
-- C++17 対応コンパイラ (g++, clang++ など)
+- CMake 3.14 以降  
+- Python 3.8 以降  
+- protobuf  
+- jinja2  
+- protoc (Protocol Buffers compiler)  
+- grpc_cpp_plugin  
+- C++17 対応コンパイラ (g++, clang++)  
+- pybind11  
+- scikit-build-core  
+- ninja  
+- nlohmann_json  
 
 #### ビルド方法
 

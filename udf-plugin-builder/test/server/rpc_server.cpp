@@ -26,6 +26,16 @@ class GreeterServiceImpl final : public Greeter::Service {
         reply->set_value(sum);
         return Status::OK;
     }
+    Status SayGoodbye(
+        ServerContext* context, const ::myapi::Byebye* request, ::myapi::Byebye* reply) override {
+        std::string combined = request->bye().value() + request->bye().message();
+        combined += request->str();
+        ::myapi::Bye* new_bye = reply->mutable_bye();
+        new_bye->set_value(request->bye().value());
+        new_bye->set_message(request->bye().message());
+        reply->set_str(combined);
+        return Status::OK;
+    }
 };
 
 class ByerServiceImpl final : public Byer::Service {

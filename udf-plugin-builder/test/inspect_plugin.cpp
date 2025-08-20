@@ -125,15 +125,37 @@ int main(int argc, char** argv) {
             } catch (const std::exception& ex) {
                 std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
             }
+
             try {
-                std::cout << "[main] SayWolrd connect" << std::endl;
+                std::cout << "[main] SayGoodbye connect connect" << std::endl;
+                generic_record_impl request;
+                request.add_string("Alice");
+                request.add_string("See you!");
+                request.add_string("Goodbye string");
+
+                generic_record_impl response;
+                grpc::ClientContext context;
+
+                client->call(context, {0, 2}, request, response);
+
+                if (auto cursor = response.cursor()) {
+                    while (auto result = cursor->fetch_string()) {
+                        std::cout << "Greeter SayGoodbye received: " << *result << std::endl;
+                    }
+                }
+            } catch (const std::exception& ex) {
+                std::cerr << "[main] Exception during RPC call: " << ex.what() << std::endl;
+            }
+
+            try {
+                std::cout << "[main] SayWorld connect" << std::endl;
                 generic_record_impl request;
                 request.add_string("world");
 
                 generic_record_impl response;
                 grpc::ClientContext context;
 
-                client->call(context, {0, 2}, request, response);
+                client->call(context, {0, 3}, request, response);
 
                 if (auto cursor = response.cursor()) {
                     if (auto result = cursor->fetch_string()) {
@@ -151,7 +173,7 @@ int main(int argc, char** argv) {
                 generic_record_impl response;
                 grpc::ClientContext context;
 
-                client->call(context, {0, 3}, request, response);
+                client->call(context, {0, 4}, request, response);
 
                 if (auto cursor = response.cursor()) {
                     if (auto result = cursor->fetch_int8()) {

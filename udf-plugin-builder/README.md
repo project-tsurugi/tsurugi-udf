@@ -1,25 +1,36 @@
 # udf-plugin-builder
 
-**udf-plugin-builder** is a build system that automates the generation and compilation of a UDF (User-Defined Function) plugin for C++ using Protocol Buffers and gRPC. It parses `.proto` files to generate gRPC stubs and a plugin API implementation using a Python script with Jinja2 templates, and then builds the resulting C++ code into a shared library (`plugin_api.so`) using CMake.
+**udf-plugin-builder** は、Protocol Buffers と gRPC を利用して\
+C++ 向けの UDF (User-Defined Function) プラグインを自動生成・ビルドするためのビルドシステムです。
 
-## Dependencies
+`.proto` ファイルを解析し、gRPC スタブおよび Jinja2 テンプレートを用いた Python スクリプトによる\
+プラグイン API 実装を生成し、その後 CMake により共有ライブラリ (`plugin_api.so`) をビルドします。
 
-- CMake 3.10 or later
+______________________________________________________________________
+
+## 依存関係
+
+- CMake 3.10 以降
 - Python 3.x
   - `protobuf`
   - `jinja2`
-- `protoc` (Protocol Buffers compiler)
+- `protoc` (Protocol Buffers コンパイラ)
 - `grpc_cpp_plugin`
-- C++17-compatible compiler (`g++`, `clang++`, etc.)
+- C++17 対応コンパイラ (`g++`, `clang++` など)
 
-## Build
+______________________________________________________________________
 
-```
+## ビルド方法
+
+```bash
 mkdir build
 cd build
-cmake .
+cmake ..
 make
 ```
-## Output
 
-plugin_api.so: The shared library built by CMake
+______________________________________________________________________
+
+## 出力
+
+- **libplugin_api.so**: CMake によりビルドされる共有ライブラリ

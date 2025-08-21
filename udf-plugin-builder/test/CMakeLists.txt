@@ -22,7 +22,7 @@ endif()
 # inspect_plugin
 add_executable(
   inspect_plugin
-  ${CMAKE_CURRENT_SOURCE_DIR}/inspect_plugin.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/inspect_plugin.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/plugin_api.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/udf_loader.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/generic_record_impl.cpp)

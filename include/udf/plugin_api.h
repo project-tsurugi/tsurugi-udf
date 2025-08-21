@@ -101,6 +101,8 @@ class plugin_api {
     virtual ~plugin_api()                                                     = default;
     virtual const std::vector<package_descriptor*>& packages() const noexcept = 0;
 };
+void print_columns(const std::vector<column_descriptor*>& cols, int indent);
+void print_plugin_info(const plugin_api* api);
 
 extern "C" plugin_api* create_plugin_api();
 } // namespace plugin::udf

@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "udf/plugin_api.h"
+#include <iostream>
 #include <string>
-#include <udf/plugin_api.h>
+#include <string_view>
+#include <vector>
 
 namespace plugin::udf {
 std::string to_string(function_kind_type kind) {
@@ -48,6 +51,54 @@ std::string to_string(type_kind_type kind) {
         case type_kind_type::SFIXED8: return "SFIXED8";
         case type_kind_type::SFIXED4: return "SFIXED4";
         default: return "UnknownTypeKind";
+    }
+}
+void print_columns(const std::vector<column_descriptor*>& cols, int indent = 0) {
+    std::string indent_str(indent, ' ');
+
+    for (const auto* col : cols) {
+        std::cout << indent_str << "- column_name: " << col->column_name() << std::endl;
+        std::cout << indent_str << "  type_kind: " << plugin::udf::to_string(col->type_kind())
+                  << std::endl;
+
+        if (auto nested = col->nested()) {
+            std::cout << indent_str << "  nested_record:" << std::endl;
+            std::cout << indent_str << "    record_name: " << nested->record_name() << std::endl;
+            std::cout << indent_str << "    columns:" << std::endl;
+            print_columns(nested->columns(), indent + 6);
+        }
+    }
+}
+
+void print_plugin_info(const plugin_api* api) {
+    const auto& pkgs = api->packages();
+    for (const auto* pkg : pkgs) {
+        std::cout << "  - package_name: " << pkg->package_name() << std::endl;
+        std::cout << "    services:" << std::endl;
+        for (const auto* svc : pkg->services()) {
+            std::cout << "      - service_name: " << svc->service_name() << std::endl;
+            std::cout << "        service_index: " << svc->service_index() << std::endl;
+            std::cout << "        functions:" << std::endl;
+
+            for (const auto* fn : svc->functions()) {
+                std::cout << "          - function_name: " << fn->function_name() << std::endl;
+                std::cout << "            function_index: " << fn->function_index() << std::endl;
+                std::cout << "            function_kind: "
+                          << plugin::udf::to_string(fn->function_kind()) << std::endl;
+
+                const auto& input = fn->input_record();
+                std::cout << "            input_record:" << std::endl;
+                std::cout << "              record_name: " << input.record_name() << std::endl;
+                std::cout << "              columns:" << std::endl;
+                print_columns(input.columns(), 16);
+
+                const auto& output = fn->output_record();
+                std::cout << "            output_record:" << std::endl;
+                std::cout << "              record_name: " << output.record_name() << std::endl;
+                std::cout << "              columns:" << std::endl;
+                print_columns(output.columns(), 16);
+            }
+        }
     }
 }
 } // namespace plugin::udf

@@ -14,49 +14,50 @@
 
 using namespace plugin::udf;
 
-void print_plugin_info(const std::vector<plugin_api*>& apis) {
-    std::cout << "packages:" << std::endl;
+void print_columns(const std::vector<column_descriptor*>& cols, int indent = 0) {
+    std::string indent_str(indent, ' ');
 
-    for (const auto* api : apis) {
-        const auto& pkgs = api->packages();
-        for (const auto* pkg : pkgs) {
-            std::cout << "  - package_name: " << pkg->package_name() << std::endl;
-            std::cout << "    services:" << std::endl;
+    for (const auto* col : cols) {
+        std::cout << indent_str << "- column_name: " << col->column_name() << std::endl;
+        std::cout << indent_str << "  type_kind: " << plugin::udf::to_string(col->type_kind())
+                  << std::endl;
 
-            for (const auto* svc : pkg->services()) {
-                std::cout << "      - service_name: " << svc->service_name() << std::endl;
-                std::cout << "        service_index: " << svc->service_index() << std::endl;
-                std::cout << "        functions:" << std::endl;
+        if (auto nested = col->nested()) {
+            std::cout << indent_str << "  nested_record:" << std::endl;
+            std::cout << indent_str << "    record_name: " << nested->record_name() << std::endl;
+            std::cout << indent_str << "    columns:" << std::endl;
+            print_columns(nested->columns(), indent + 6); // 再帰的に表示
+        }
+    }
+}
 
-                for (const auto* fn : svc->functions()) {
-                    std::cout << "          - function_name: " << fn->function_name() << std::endl;
-                    std::cout << "            function_index: " << fn->function_index()
-                              << std::endl;
-                    std::cout << "            function_kind: "
-                              << plugin::udf::to_string(fn->function_kind()) << std::endl;
+void print_plugin_info(const plugin_api* api) {
+    const auto& pkgs = api->packages();
+    for (const auto* pkg : pkgs) {
+        std::cout << "  - package_name: " << pkg->package_name() << std::endl;
+        std::cout << "    services:" << std::endl;
+        for (const auto* svc : pkg->services()) {
+            std::cout << "      - service_name: " << svc->service_name() << std::endl;
+            std::cout << "        service_index: " << svc->service_index() << std::endl;
+            std::cout << "        functions:" << std::endl;
 
-                    const auto& input = fn->input_record();
-                    std::cout << "            input_record:" << std::endl;
-                    std::cout << "              record_name: " << input.record_name() << std::endl;
-                    std::cout << "              columns:" << std::endl;
-                    for (const auto* col : input.columns()) {
-                        std::cout << "                - column_name: " << col->column_name()
-                                  << std::endl;
-                        std::cout << "                  type_kind: "
-                                  << plugin::udf::to_string(col->type_kind()) << std::endl;
-                    }
+            for (const auto* fn : svc->functions()) {
+                std::cout << "          - function_name: " << fn->function_name() << std::endl;
+                std::cout << "            function_index: " << fn->function_index() << std::endl;
+                std::cout << "            function_kind: "
+                          << plugin::udf::to_string(fn->function_kind()) << std::endl;
 
-                    const auto& output = fn->output_record();
-                    std::cout << "            output_record:" << std::endl;
-                    std::cout << "              record_name: " << output.record_name() << std::endl;
-                    std::cout << "              columns:" << std::endl;
-                    for (const auto* col : output.columns()) {
-                        std::cout << "                - column_name: " << col->column_name()
-                                  << std::endl;
-                        std::cout << "                  type_kind: "
-                                  << plugin::udf::to_string(col->type_kind()) << std::endl;
-                    }
-                }
+                const auto& input = fn->input_record();
+                std::cout << "            input_record:" << std::endl;
+                std::cout << "              record_name: " << input.record_name() << std::endl;
+                std::cout << "              columns:" << std::endl;
+                print_columns(input.columns(), 16);
+
+                const auto& output = fn->output_record();
+                std::cout << "            output_record:" << std::endl;
+                std::cout << "              record_name: " << output.record_name() << std::endl;
+                std::cout << "              columns:" << std::endl;
+                print_columns(output.columns(), 16);
             }
         }
     }
@@ -75,6 +76,7 @@ int main(int argc, char** argv) {
         loader->load(so_path);
         auto plugins = loader->get_plugins();
         for (const auto& plugin : plugins) {
+            print_plugin_info(std::get<0>(plugin));
             auto factory = std::get<1>(plugin);
             if (!factory) {
                 std::cerr << "[main] Factory creation failed" << std::endl;

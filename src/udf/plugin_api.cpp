@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <memory>
 
 namespace plugin::udf {
 std::string to_string(function_kind_type kind) {

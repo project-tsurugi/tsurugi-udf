@@ -27,29 +27,7 @@ int main(int argc, char** argv) {
     loader->load(so_path);
     manager.set_loader(std::move(loader));
     grpc_init();
-    {
-        auto plugins = (manager.get_loader())->get_plugins();
-        for (const auto& plugin : plugins) {
-            print_plugin_info(std::get<0>(plugin));
-            auto factory = std::get<1>(plugin);
-            if (!factory) {
-                std::cerr << "[main] Factory creation failed" << std::endl;
-                return 1;
-            }
-            std::cerr << "[main] Factory created: " << factory << std::endl;
-            auto channel =
-                grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
-            auto raw_client = factory->create(channel);
-            if (!raw_client) {
-                std::cerr << "[main] generic_client creation failed" << std::endl;
-                return 1;
-            }
-            std::unique_ptr<generic_client> client(raw_client);
-
-            register_rpc_tasks(manager, *client);
-            manager.run_tasks();
-        }
-    }
+    manager.set_functions();
     grpc_shutdown();
     return 0;
 }

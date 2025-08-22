@@ -9,6 +9,7 @@ class TaskManager {
     void run_tasks() const;
     void set_loader(std::unique_ptr<plugin::udf::plugin_loader> l);
     plugin::udf::plugin_loader* get_loader() const;
+    void set_functions();
 
   private:
     std::vector<std::function<void()>> tasks_;

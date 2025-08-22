@@ -1,5 +1,6 @@
 #pragma once
 #include "udf/generic_client.h"
+#include "udf/plugin_api.h"
 #include "udf/plugin_loader.h"
 #include <functional>
 #include <memory>
@@ -19,5 +20,5 @@ class TaskManager {
   private:
     std::vector<std::function<void()>> tasks_;
     std::unique_ptr<plugin_loader> loader_;
-    std::vector<std::shared_ptr<generic_client>> clients_;
+    std::vector<std::tuple<std::shared_ptr<plugin_api>, std::shared_ptr<generic_client>>> plugins_;
 };

@@ -9,7 +9,7 @@
 using namespace plugin::udf;
 void TaskManager::shutdown() {
     tasks_.clear();
-    clients_.clear();
+    plugins_.clear();
     loader_.reset();
 }
 void TaskManager::register_task(std::function<void()> fn) { tasks_.push_back(std::move(fn)); }
@@ -30,7 +30,7 @@ plugin::udf::plugin_loader* TaskManager::get_loader() const { return loader_.get
 void TaskManager::set_functions() {
     auto plugins = (loader_)->get_plugins();
     for (const auto& plugin : plugins) {
-        print_plugin_info(std::get<0>(plugin));
+        // print_plugin_info(std::get<0>(plugin));
         auto factory = std::get<1>(plugin);
         if (!factory) {
             std::cerr << "[main] Factory creation failed" << std::endl;
@@ -43,11 +43,13 @@ void TaskManager::set_functions() {
             std::cerr << "[main] generic_client creation failed" << std::endl;
             return;
         }
-        clients_.push_back(std::shared_ptr<generic_client>(raw_client));
+        plugins_.emplace_back(std::shared_ptr<plugin_api>(std::get<0>(plugin)),
+            std::shared_ptr<generic_client>(raw_client));
     }
 }
 void TaskManager::register_rpc_tasks() {
-    for (const auto& client : clients_) {
+    for (const auto& tup : plugins_) {
+        auto client = std::get<1>(tup);
         // SayHello
         register_task([client]() {
             std::cout << "[task] SayHello connect" << std::endl;

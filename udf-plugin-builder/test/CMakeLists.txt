@@ -11,7 +11,8 @@ set(COMMON_LIBS ${GRPC_LIBRARIES} protobuf::libprotobuf)
 
 set(COMMON_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include ${CMAKE_CURRENT_SOURCE_DIR}/../out)
+    ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../out)
 
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../build)
 find_library(PROTO_LIB proto_lib PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../build)
@@ -23,6 +24,8 @@ endif()
 add_executable(
   inspect_plugin
   ${CMAKE_CURRENT_SOURCE_DIR}/src/inspect_plugin.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_tasks.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/task_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/plugin_api.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/udf_loader.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/generic_record_impl.cpp)

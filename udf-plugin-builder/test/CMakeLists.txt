@@ -24,7 +24,6 @@ endif()
 add_executable(
   inspect_plugin
   ${CMAKE_CURRENT_SOURCE_DIR}/src/inspect_plugin.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc_tasks.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/task_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/plugin_api.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/udf_loader.cpp

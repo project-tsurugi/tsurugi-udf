@@ -1,5 +1,4 @@
 #include "descriptor_impl.h"
-#include "rpc_tasks.h"
 #include "task_manager.h"
 #include "udf/generic_client.h"
 #include "udf/generic_client_factory.h"
@@ -28,6 +27,9 @@ int main(int argc, char** argv) {
     manager.set_loader(std::move(loader));
     grpc_init();
     manager.set_functions();
+    manager.register_rpc_tasks();
+    manager.run_tasks();
+    manager.shutdown();
     grpc_shutdown();
     return 0;
 }

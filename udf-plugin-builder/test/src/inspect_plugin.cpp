@@ -17,17 +17,18 @@
 
 using namespace plugin::udf;
 int main(int argc, char** argv) {
-    TaskManager manager;
-    grpc_init();
     if (argc < 2) {
         std::cerr << "Usage: inspect_plugin <path_to_plugin.so>" << std::endl;
         return 1;
     }
     const char* so_path = argv[1];
+    TaskManager manager;
+    std::unique_ptr<plugin_loader> loader = std::make_unique<udf_loader>();
+    loader->load(so_path);
+    manager.set_loader(std::move(loader));
+    grpc_init();
     {
-        std::unique_ptr<plugin_loader> loader = std::make_unique<udf_loader>();
-        loader->load(so_path);
-        auto plugins = loader->get_plugins();
+        auto plugins = (manager.get_loader())->get_plugins();
         for (const auto& plugin : plugins) {
             print_plugin_info(std::get<0>(plugin));
             auto factory = std::get<1>(plugin);

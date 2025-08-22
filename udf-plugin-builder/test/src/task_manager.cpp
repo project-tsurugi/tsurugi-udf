@@ -30,7 +30,6 @@ plugin::udf::plugin_loader* TaskManager::get_loader() const { return loader_.get
 void TaskManager::set_functions() {
     auto plugins = (loader_)->get_plugins();
     for (const auto& plugin : plugins) {
-        // print_plugin_info(std::get<0>(plugin));
         auto factory = std::get<1>(plugin);
         if (!factory) {
             std::cerr << "[main] Factory creation failed" << std::endl;
@@ -50,6 +49,7 @@ void TaskManager::set_functions() {
 void TaskManager::register_rpc_tasks() {
     for (const auto& tup : plugins_) {
         auto client = std::get<1>(tup);
+        print_plugin_info(std::get<0>(tup));
         // SayHello
         register_task([client]() {
             std::cout << "[task] SayHello connect" << std::endl;

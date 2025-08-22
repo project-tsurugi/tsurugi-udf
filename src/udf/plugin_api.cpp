@@ -70,7 +70,7 @@ void print_columns(const std::vector<column_descriptor*>& cols, int indent = 0) 
     }
 }
 
-void print_plugin_info(const plugin_api* api) {
+void print_plugin_info(const std::shared_ptr<plugin_api>& api) {
     const auto& pkgs = api->packages();
     for (const auto* pkg : pkgs) {
         std::cout << "  - package_name: " << pkg->package_name() << std::endl;

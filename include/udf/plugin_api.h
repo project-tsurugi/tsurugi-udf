@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 #pragma once
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
+
 namespace plugin::udf {
 enum class function_kind_type {
     Unary,
@@ -102,7 +104,7 @@ class plugin_api {
     virtual const std::vector<package_descriptor*>& packages() const noexcept = 0;
 };
 void print_columns(const std::vector<column_descriptor*>& cols, int indent);
-void print_plugin_info(const plugin_api* api);
+void print_plugin_info(const std::shared_ptr<plugin_api>& api);
 
 extern "C" plugin_api* create_plugin_api();
 } // namespace plugin::udf

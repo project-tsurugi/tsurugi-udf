@@ -49,7 +49,33 @@ void TaskManager::set_functions() {
 void TaskManager::register_rpc_tasks() {
     for (const auto& tup : plugins_) {
         auto client = std::get<1>(tup);
-        print_plugin_info(std::get<0>(tup));
+        auto plugin = std::get<0>(tup);
+        print_plugin_info(plugin);
+        auto packages = plugin->packages();
+        for (const auto* pkg : packages) {
+            for (const auto* svc : pkg->services()) {
+                for (const auto* fn : svc->functions()) {
+                    register_task([client, pkg, svc, fn]() {
+                        generic_record_impl request;
+                        generic_record_impl response;
+                        grpc::ClientContext context;
+                        std::cout << "[package] " << pkg->package_name() << std::endl;
+                        std::cout << "  [service] " << svc->service_name() << std::endl;
+                        std::cout << "    [function] " << fn->function_name() << std::endl;
+                        const auto& input               = fn->input_record();
+                        const auto& output              = fn->output_record();
+                        std::vector<NativeValue> inputs = column_to_native_values(input.columns());
+                        for (const auto& input : inputs) {
+                            add_arg_value(request, input);
+                        }
+                        client->call(context, {0, fn->function_index()}, request, response);
+                        std::vector<NativeValue> output_values =
+                            cursor_to_native_values(response, output.columns());
+                        print_native_values(output_values);
+                    });
+                }
+            }
+        }
         // SayHello
         register_task([client]() {
             std::cout << "[task] SayHello connect" << std::endl;

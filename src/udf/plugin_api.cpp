@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 #include "udf/plugin_api.h"
+#include "udf/generic_record.h"
+#include "udf/generic_record_impl.h"
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <memory>
 
 namespace plugin::udf {
 std::string to_string(function_kind_type kind) {
@@ -53,6 +55,152 @@ std::string to_string(type_kind_type kind) {
         case type_kind_type::SFIXED4: return "SFIXED4";
         default: return "UnknownTypeKind";
     }
+}
+void add_column(const std::vector<column_descriptor*>& cols) {
+    for (const auto* col : cols) {
+        std::cout << "- column_name: " << col->column_name() << std::endl;
+        std::cout << "  type_kind: " << plugin::udf::to_string(col->type_kind()) << std::endl;
+
+        if (auto nested = col->nested()) {
+            std::cout << "  nested_record:" << std::endl;
+            std::cout << "    record_name: " << nested->record_name() << std::endl;
+            std::cout << "    columns:" << std::endl;
+            add_column(nested->columns());
+        }
+    }
+}
+std::vector<NativeValue> column_to_native_values(const std::vector<column_descriptor*>& cols) {
+    std::vector<NativeValue> result;
+
+    for (const auto* col : cols) {
+        switch (col->type_kind()) {
+            case type_kind_type::FLOAT8: result.emplace_back(2.2); break;
+            case type_kind_type::FLOAT4: result.emplace_back(1.1f); break;
+            case type_kind_type::INT8: result.emplace_back(int64_t(64)); break;
+            case type_kind_type::UINT8: result.emplace_back(uint64_t(65)); break;
+            case type_kind_type::INT4: result.emplace_back(int32_t(32)); break;
+            case type_kind_type::UINT4: result.emplace_back(uint32_t(33)); break;
+            case type_kind_type::BOOL: result.emplace_back(false); break;
+            case type_kind_type::STRING: result.emplace_back(std::string{"string hello"}); break;
+            case type_kind_type::BYTES: result.emplace_back(std::string{"bytes data"}); break;
+            case type_kind_type::GROUP:
+            case type_kind_type::MESSAGE: {
+                if (auto nested_cols = col->nested()) {
+                    auto nested_values = column_to_native_values(nested_cols->columns());
+                    result.insert(result.end(), nested_values.begin(), nested_values.end());
+                } else {
+                    result.emplace_back();
+                }
+                break;
+            }
+
+            default: result.emplace_back(); break;
+        }
+    }
+
+    return result;
+}
+std::vector<NativeValue> cursor_to_native_values(
+    generic_record_impl& response, const std::vector<column_descriptor*>& cols) {
+    std::vector<NativeValue> result;
+    if (auto cursor = response.cursor()) {
+        for (const auto* col : cols) {
+            switch (col->type_kind()) {
+                case type_kind_type::INT4:
+                    if (auto val = cursor->fetch_int4())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::INT8:
+                    if (auto val = cursor->fetch_int8())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::UINT4:
+                    if (auto val = cursor->fetch_uint4())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::UINT8:
+                    if (auto val = cursor->fetch_uint8())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::FLOAT4:
+                    if (auto val = cursor->fetch_float())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::FLOAT8:
+                    if (auto val = cursor->fetch_double())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::BOOL:
+                    if (auto val = cursor->fetch_bool())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::STRING:
+                    if (auto val = cursor->fetch_string())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+                case type_kind_type::BYTES:
+                    if (auto val = cursor->fetch_string())
+                        result.emplace_back(*val);
+                    else
+                        result.emplace_back();
+                    break;
+
+                case type_kind_type::GROUP:
+                case type_kind_type::MESSAGE: {
+                    if (auto nested_cols = col->nested()) {
+                        auto nested_values =
+                            cursor_to_native_values(response, nested_cols->columns());
+                        result.insert(result.end(), nested_values.begin(), nested_values.end());
+                    } else {
+                        result.emplace_back();
+                    }
+                    break;
+                }
+
+                default: result.emplace_back(); break;
+            }
+        }
+    }
+
+    return result;
+}
+
+void print_native_values(const std::vector<NativeValue>& values) {
+    for (const auto& nv : values) {
+        if (!nv.value) {
+            std::cout << "null";
+        } else {
+            std::visit(
+                [](auto&& arg) {
+                    using T = std::decay_t<decltype(arg)>;
+                    if constexpr (std::is_same_v<T, std::monostate>)
+                        std::cout << "null";
+                    else if constexpr (std::is_same_v<T, bool>)
+                        std::cout << (arg ? "true" : "false");
+                    else
+                        std::cout << arg;
+                },
+                *nv.value);
+        }
+        std::cout << " ";
+    }
+    std::cout << std::endl;
 }
 void print_columns(const std::vector<column_descriptor*>& cols, int indent = 0) {
     std::string indent_str(indent, ' ');

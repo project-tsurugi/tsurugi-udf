@@ -15,14 +15,13 @@
  */
 #pragma once
 #include "generic_record.h"
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 #include <vector>
-
 namespace plugin::udf {
-
-using value_type = std::optional<std::variant<bool, std::int32_t, std::int64_t, std::uint32_t,
-    std::uint64_t, std::string, double, float>>;
 
 class generic_record_impl : public generic_record {
   public:
@@ -52,6 +51,7 @@ class generic_record_impl : public generic_record {
 class generic_record_cursor_impl : public generic_record_cursor {
   public:
     explicit generic_record_cursor_impl(const std::vector<value_type>& values);
+
     std::optional<bool> fetch_bool() override;
     std::optional<std::int32_t> fetch_int4() override;
     std::optional<std::int64_t> fetch_int8() override;
@@ -67,4 +67,7 @@ class generic_record_cursor_impl : public generic_record_cursor {
     std::size_t index_ = 0;
 };
 
+void add_arg_value(generic_record_impl& rec, const NativeValue& v);
+
+template <class> struct always_false : std::false_type {};
 } // namespace plugin::udf

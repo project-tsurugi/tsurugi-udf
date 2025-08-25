@@ -22,6 +22,9 @@
 #include <grpcpp/grpcpp.h>
 #include <iostream>
 #include <string_view>
+#include <tuple>
+#include <utility>
+#include <vector>
 namespace fs = std::filesystem;
 using namespace plugin::udf;
 void udf_loader::load(std::string_view plugin_path) {

@@ -19,9 +19,24 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 
 namespace plugin::udf {
 // @see https://protobuf.dev/programming-guides/proto3/
+
+using value_type = std::variant<std::monostate, bool, std::int32_t, std::int64_t, std::uint32_t,
+    std::uint64_t, float, double, std::string>;
+
+struct NativeValue {
+    std::optional<value_type> value;
+
+    NativeValue() : value(std::monostate{}) {}
+    template <typename T> NativeValue(T v) : value(v) {}
+
+    bool is_null() const { return !value || std::holds_alternative<std::monostate>(*value); }
+};
+
+// Abstract interfaces
 class generic_record_cursor {
   public:
     virtual ~generic_record_cursor() = default;

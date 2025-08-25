@@ -58,9 +58,8 @@ add_dependencies(proto_lib generate_plugin_api_cpp)
 
 add_library(plugin_api SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
 target_include_directories(
-  plugin_api
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
-          ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/out)
+  plugin_api PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+                     ${CMAKE_CURRENT_SOURCE_DIR}/out)
 target_link_libraries(plugin_api PRIVATE proto_lib ${GRPC_LIBRARIES}
                                          protobuf::libprotobuf)
 add_dependencies(plugin_api generate_plugin_api_cpp)

@@ -23,6 +23,17 @@
 #include <vector>
 namespace plugin::udf {
 
+using value_type = std::variant<std::monostate, bool, std::int32_t, std::int64_t, std::uint32_t,
+    std::uint64_t, float, double, std::string>;
+
+struct NativeValue {
+    std::optional<value_type> value;
+
+    NativeValue() : value(std::monostate{}) {}
+    template <typename T> NativeValue(T v) : value(v) {}
+
+    bool is_null() const { return !value || std::holds_alternative<std::monostate>(*value); }
+};
 class generic_record_impl : public generic_record {
   public:
     void reset() override;

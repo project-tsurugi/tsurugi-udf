@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 #pragma once
-#include "udf/plugin_api.h"
+#include "plugin_api.h"
 #include <string_view>
 #include <vector>
-using namespace plugin::udf;
+namespace plugin::udf {
 class column_descriptor_impl : public column_descriptor {
   public:
     column_descriptor_impl(
@@ -92,3 +92,5 @@ class package_descriptor_impl : public package_descriptor {
     std::string_view name;
     std::vector<service_descriptor*> svcs;
 };
+
+} // namespace plugin::udf

@@ -173,13 +173,19 @@ def parse_args():
 
     parser.add_argument(
         "--proto_path",
-        default="proto",
-        help="Directory containing the .proto files (default: proto)",
+        nargs="+",
+        default=["proto"],
+        help="Directory(ies) containing .proto files (default: proto)",
     )
     parser.add_argument(
         "--proto_file",
-        default="proto/sample.proto",
-        help="Path to the target .proto file (default: proto/sample.proto)",
+        nargs="+",
+        default=[
+            "proto/sample.proto",
+            "proto/complex_types.proto",
+            "proto/primitive_types.proto",
+        ],
+        help="Path(s) to main .proto file(s) (default: sample + complex_types + primitive_types)",
     )
     parser.add_argument(
         "--out",
@@ -198,7 +204,6 @@ def parse_args():
 def generate_file() -> str:
     args = parse_args()
 
-    proto_path = args.proto_path
     out_dir = args.out
     descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
 
@@ -211,23 +216,25 @@ def generate_file() -> str:
         print("Error: grpc_cpp_plugin not found in PATH")
         sys.exit(1)
 
-    proto_files = list(Path(proto_path).rglob("*.proto"))
-
-    if not proto_files:
-        print(f"No .proto files found in {proto_path}")
-        sys.exit(1)
-
+    proto_files = [Path(p) for p in args.proto_file]
+    for p in proto_files:
+        if not p.exists():
+            print(f"Error: proto file not found: {p}")
+            sys.exit(1)
     proto_files_str = [str(p) for p in proto_files]
+
+    proto_path_flags = [f"-I{p}" for p in args.proto_path]
 
     cmd = [
         "protoc",
-        f"--proto_path={proto_path}",
+        *proto_path_flags,
         f"--cpp_out={out_dir}",
         f"--grpc_out={out_dir}",
         f"--plugin=protoc-gen-grpc={grpc_plugin}",
         f"--descriptor_set_out={descriptor_path}",
         "--include_imports",
-    ] + proto_files_str
+        *proto_files_str,
+    ]
 
     print("Running:", " ".join(cmd))
     subprocess.run(cmd, check=True)
@@ -253,13 +260,16 @@ def generate_cpp_from_template(
     template_dir: str,
     template_file: str,
     output_cpp_path: str,
+    proto_base_name: str,
 ):
     env = Environment(
         loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
     )
     env.globals["fetch_add_name"] = fetch_add_name
     template = env.get_template(template_file)
-    rendered = template.render(packages=[asdict(pkg) for pkg in packages])
+    rendered = template.render(
+        packages=[asdict(pkg) for pkg in packages], proto_base_name=proto_base_name
+    )
 
     with open(output_cpp_path, "w") as f:
         f.write(rendered)
@@ -273,6 +283,7 @@ if __name__ == "__main__":
     packages = parse_package_descriptor(desc_set)
     dump_packages_json(packages, "out/service_descriptors.json")
     out_dir = "out"
+    proto_base_name = Path(parse_args().proto_file[0]).stem
     templates = {
         "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",
         "rpc_client.cpp.j2": "rpc_client.cpp",
@@ -282,4 +293,6 @@ if __name__ == "__main__":
     template_dir = "templates"
     for template_file, output_file in templates.items():
         output_path = f"{out_dir}/{output_file}"
-        generate_cpp_from_template(packages, template_dir, template_file, output_path)
+        generate_cpp_from_template(
+            packages, template_dir, template_file, output_path, proto_base_name
+        )

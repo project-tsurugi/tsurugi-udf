@@ -4,85 +4,78 @@
 
 本リポジトリは以下の 2 つのモジュールから構成されています:
 
-- **[udf-plugin-builder](./udf-plugin-builder/)** Tsurugi にロード可能な UDF プラグイン (`.so`) を自動生成・ビルドする仕組み
-
-- **[udf-plugin-viewer](./udf-plugin-viewer/)** 生成した UDF プラグインのメタデータをロードし、内容を表示するためのツール
+- **[udf-plugin-builder](./udf-plugin-builder/)**\
+  Tsurugi にロード可能な UDF プラグイン (`.so`) を自動生成・ビルドする仕組み
+- **[udf-plugin-viewer](./udf-plugin-viewer/)**\
+  生成した UDF プラグインのメタデータをロードし、内容を表示するためのツール
 
 ______________________________________________________________________
 
-## Tsurugi Database 向けのユーザー定義関数 (UDF: User-Defined Function) 機能
+## 背景と目的
 
-Tsurugi Database では、専用の **共有ライブラリ (shared object)** を起動時にロードすることで、ユーザー定義関数 (UDF) を利用できます。\
-UDF を通じて DB 上のデータを gRPC サーバに転送し、その結果を受け取って SQL の実行結果として返すことが可能になります。\
-これにより、UDF 関数を **標準の SQL 関数と同様に利用** できるようになります。
-
-### UDF プラグインの生成と設定手順
-
-1. **UDF プラグインの生成**\
-   `udf-plugin-builder` を使用して、`.proto` ファイルから UDF 用の shared object を生成します。\
-   詳細は [udf-plugin-builder/README.md](./udf-plugin-builder/README.md) を参照してください。
-
-1. **プラグインの配置**\
-   生成した shared object を任意のフォルダに配置します。
-
-1. **設定ファイル (tsurugi.ini) の編集**\
-   以下の設定を追加し、プラグインのロードパスと通信先 gRPC サーバの URL を指定します。
-
-```ini
-[SQL]
-loader_path=/path/to/plugins
-grpc_url="localhost:50051"
-```
-
-### 使用例
-
-例として、以下のような gRPC サービス定義があるとします:
-
-```proto
-service Greeter {
-  rpc SayHello (StrValue) returns (StrValue);
-}
-message StrValue { string value = 1; }
-```
-
-この `.proto` ファイルを `udf-plugin-builder` でビルドし、`libplugin_api.so` を生成して `/home/tsurugide/plugins` に配置します。\
-`tsurugi.ini` に以下を追記します:
-
-```ini
-[SQL]
-loader_path=/home/tsurugide/plugins
-grpc_url="localhost:50051"
-```
-
-その後、TsurugiDB と gRPC サーバを起動します:
-
-```bash
-tgctl start
-tgsql
-```
-
-SQL からは次のように UDF を呼び出せます:
+従来の **Tsurugi Database** では、SQL から利用可能な関数はあらかじめ組み込まれた **built-in 関数** のみに限られていました。たとえば以下のような呼び出しです:
 
 ```sql
-tgsql> create table t (c0 varchar(255));
-tgsql> insert into t (c0) values ('how are you?');
-
-tgsql> select sayhello(c0) from t;
+SELECT length(c0) FROM t;
 ```
 
-もし gRPC サーバ側の `sayhello` が引数に `" hello"` を追加して返す処理を実装していた場合、結果は次のようになります:
+今回の **ユーザー定義関数 (UDF: User-Defined Function)** 機能により、利用者が独自に関数を定義し、それを SQL から呼び出せるようになりました。
+
+```sql
+SELECT sayhello(c0) FROM t;
+```
+
+このように、built-in 関数とは別に **独自の UDF を SQL 関数と同様の形で利用可能** となります。
+
+______________________________________________________________________
+
+## UDF 機能の仕組み
+
+Tsurugi Database の UDF は **gRPC を利用** しています。\
+内部的には以下のように動作します:
+
+- Tsurugi Database 自体は **gRPC クライアント**
+- 別途用意した **gRPC サーバ** と通信し、その応答を Tsurugi の SQL 実行結果として返却
+- この gRPC クライアント機能を持つのが **UDF プラグイン**
+
+UDF プラグインは `udf-plugin-builder` によって生成された shared object として出力されます。Tsurugi Database 起動時にロードされ、SQL から呼び出せる形で組み込まれます。
+
+______________________________________________________________________
+
+## 利用手順
+
+以下は簡易的な利用手順です。ビルド等の詳細な手順はリンク先を参照してください。
+
+1. `udf-plugin-builder` を利用して UDF プラグイン (libplugin_api.so) を生成する。[udf-plugin-builderの詳細](./udf-plugin-builder/README.md)
+1. 生成した shared object を、Tsurugi Database を起動するマシン上の任意のフォルダに配置する(例では/home/tsurugidb/plugins)
+1. tsurugi.ini に以下を追加してロードパス(/home/tsurugidb/plugins)と gRPCサーバのURL(localhost:50051) を指定する
+
+```ini
+[SQL]
+loader_path=/home/tsurugidb/plugins
+grpc_url=localhost:50051
+```
+
+4. gRPC サーバを起動します。サーバの起動タイミングは、UDF 実行直前まで遅らせることも可能です。
+1. Tsurugi Database を起動し、SQL から UDF を呼び出す。
+
+```sql
+CREATE TABLE t (c0 VARCHAR(255));
+INSERT INTO t (c0) VALUES ('how are you?');
+-- sayhello はudf-plugin-builderでUDFとして用意済み
+SELECT sayhello(c0) FROM t;
+```
+
+もし gRPC サーバ側が `" hello"` を追加する処理をしていれば、結果は次のようになります:
 
 ```
 [c0: VARCHAR]
 [how are you? hello]
 ```
 
-このように、UDF は **通常の SQL 関数と同じ感覚で利用可能** です。
-Tsurugi DBの型とUDFのProto Typeの対応の詳細は[PROTO_TSURUGITYPES](./docs/internal/PROTO_TSURUGITYPES.md)を参照してください。
-
 ______________________________________________________________________
 
-## モジュール概要
+## モジュール詳細
 
 ### udf-plugin-builder
 
@@ -108,9 +101,19 @@ ______________________________________________________________________
 cd udf-plugin-builder
 mkdir build
 cd build
-cmake ..
+cmake .. -DPROTO_PATH="proto" \
+-DPROTO_FILES="proto/sample.proto;proto/extra.proto" \ 
+-DPLUGIN_API_NAME="my_udf"
 make
 ```
+
+#### CMake オプション
+
+| オプション名 | 説明 | 既定値 |
+|---------------------|----------------------------------------------------------------------|--------|
+| `PROTO_PATH` | `.proto` ファイルが置かれているディレクトリへのパス | `proto` |
+| `PROTO_FILES` | コンパイル対象とする `.proto` ファイルのリスト（`;` 区切りで指定）。2番目以降のファイルは、先頭の `.proto` ファイルから import されるものに限定してください。importされないファイルを指定した場合、動作は保証されません | `proto/sample.proto; proto/complex_types.proto; proto/primitive_types.proto` |
+| `PLUGIN_API_NAME` | 生成されるプラグイン API ライブラリのターゲット名（`lib<name>.so` になる） | `plugin_api` |
 
 詳細は [udf-plugin-builder/README.md](./udf-plugin-builder/README.md) を参照してください。
 

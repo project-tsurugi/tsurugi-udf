@@ -20,6 +20,15 @@ find_package(Python3 REQUIRED)
 
 set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/generate.py)
 
+# ====== build type ======
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE
+      Debug
+      CACHE STRING "Choose the build type")
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+                                             "RelWithDebInfo" "MinSizeRel")
+
 # ====== proto files ======
 set(DEFAULT_PROTO_FILES proto/sample.proto proto/complex_types.proto
                         proto/primitive_types.proto)

@@ -87,6 +87,7 @@ cd udf-plugin-builder
 mkdir build
 cd build
 cmake .. \
+  -DCMAKE_BUILD_TYPE=Release \
   -DPROTO_PATH="proto" \
   -DPROTO_FILES="proto/hello.proto" \
   -DPLUGIN_API_NAME="my_udf"

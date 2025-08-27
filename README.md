@@ -103,7 +103,9 @@ ______________________________________________________________________
 cd udf-plugin-builder
 mkdir build
 cd build
-cmake .. -DPROTO_PATH="proto" \
+cmake .. \
+-DCMAKE_BUILD_TYPE=Release \
+-DPROTO_PATH="proto" \
 -DPROTO_FILES="proto/sample.proto;proto/extra.proto" \ 
 -DPLUGIN_API_NAME="my_udf"
 make

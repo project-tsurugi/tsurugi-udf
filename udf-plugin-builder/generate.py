@@ -135,12 +135,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--proto_path",
-        nargs="+",
-        default=["proto"],
-        help="Directory(ies) containing .proto files (default: proto)",
-    )
-    parser.add_argument(
         "--proto_file",
         nargs="+",
         default=[
@@ -205,8 +199,7 @@ if __name__ == "__main__":
     descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
     desc_set = load_descriptor(descriptor_path)
     packages = parse_package_descriptor(desc_set)
-    dump_packages_json(packages, "out/service_descriptors.json")
-    out_dir = "out"
+    dump_packages_json(packages, f"{out_dir}/service_descriptors.json")
     proto_base_name = Path(parse_args().proto_file[0]).stem
     templates = {
         "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",

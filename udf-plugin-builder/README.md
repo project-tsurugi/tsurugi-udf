@@ -32,6 +32,7 @@ ______________________________________________________________________
 - `message` は **第一階層のみ** 定義可能（ネストしたメッセージは不可、将来対応予定）
 - `repeated` は利用できない
 - `oneof` は利用できない（オーバーロードや可変引数は現状非対応、将来対応予定）
+- `rpc` メソッドは **[Unary RPC](https://grpc.io/docs/what-is-grpc/core-concepts/#unary-rpc) のみ** サポート（`stream` キーワードを含む Streaming RPC は現状非対応）
 - **rpc 名は SQL 関数名として利用されるため、service や package に関わらず一意である必要がある**
 - 戻り値は **単一フィールドのみサポート**（将来的には複数フィールドも対応予定）
 - リクエストメッセージの **フィールド定義順** が SQL 関数の引数順に対応する
@@ -100,9 +101,26 @@ ______________________________________________________________________
 
 | オプション名 | 説明 | 既定値 |
 |--------------|------|--------|
-| `PROTO_PATH` | `.proto` ファイルが置かれているディレクトリへのパス | `proto` |
+| `PROTO_PATH` | `.proto` ファイル検索用ディレクトリ（protoc の -I と同様） | `proto` |
 | `PROTO_FILES` | コンパイル対象の `.proto` ファイルリスト（`;` 区切り）。2番目以降のファイルは先頭ファイルから import されるものに限定。import されないファイルを指定した場合は未定義動作。 | `proto/sample.proto; proto/complex_types.proto; proto/primitive_types.proto` |
 | `PLUGIN_API_NAME` | 生成されるプラグイン API ライブラリのターゲット名（`lib<name>.so` になる） | `plugin_api` |
+
+______________________________________________________________________
+
+## PROTO_PATH と PROTO_FILES の指定
+
+- `PROTO_PATH` は protoc の `-I` と同様の意味です。\
+  `.proto` ファイル検索用のディレクトリを指定します。
+- `PROTO_FILES` はコンパイル対象の `.proto` ファイルのリストです。
+- 両方とも **相対パスか絶対パスのどちらかを統一して指定する必要** があります。
+  - 例: 相対パスの場合
+    ```bash
+    -DPROTO_PATH="proto" -DPROTO_FILES="proto/hello.proto"
+    ```
+  - 例: 絶対パスの場合
+    ```bash
+    -DPROTO_PATH="/home/user/udf-plugin-builder/proto" -DPROTO_FILES="/home/user/udf-pl
+    ```
 
 ______________________________________________________________________
 

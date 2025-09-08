@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import subprocess
 import sys
 import os
 import json
@@ -32,31 +31,18 @@ from common.descriptors import (
     FunctionDescriptor,
     ServiceDescriptor,
     PackageDescriptor,
+    TYPE_KIND_MAP,
+    FIELD_TYPE_MAP,
 )
 
 
 def fetch_add_name(type_kind: str) -> str:
-    mapping = {
-        "FLOAT8": "double",
-        "FLOAT4": "float",
-        "INT8": "int8",
-        "UINT8": "uint8",
-        "INT4": "int4",
-        "FIXED8": "int8",
-        "FIXED4": "int4",
-        "BOOL": "bool",
-        "STRING": "string",
-        "BYTES": "string",
-        "ENUM": "string",
-        "GROUP": "/* no fetch, GROUP type */",
-        "MESSAGE": "/* no fetch, MESSAGE type */",
-        "UINT4": "uint4",
-        "SINT4": "int4",
-        "SINT8": "int8",
-        "SFIXED8": "int8",
-        "SFIXED4": "int4",
-    }
-    return mapping.get(type_kind, "/* no fetch, unknown type */")
+    return TYPE_KIND_MAP.get(type_kind, "/* no fetch, unknown type */")
+
+
+def field_type_to_kind(field) -> str:
+    """Protobuf field type番号 -> internal type名"""
+    return FIELD_TYPE_MAP.get(field.type, f"TYPE_{field.type}")
 
 
 def parse_package_descriptor(
@@ -73,30 +59,6 @@ def parse_package_descriptor(
             fqname = f".{pkg}.{msg.name}" if pkg else f".{msg.name}"
             message_type_map[fqname] = msg
 
-    # @see https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243
-    def field_type_to_kind(field):
-        type_map = {
-            1: "FLOAT8",
-            2: "FLOAT4",
-            3: "INT8",
-            4: "UINT8",
-            5: "INT4",
-            6: "FIXED8",
-            7: "FIXED4",
-            8: "BOOL",
-            9: "STRING",
-            10: "GROUP",
-            11: "MESSAGE",
-            12: "BYTES",
-            13: "UINT4",
-            14: "ENUM",
-            15: "SFIXED4",
-            16: "SFIXED8",
-            17: "SINT4",
-            18: "SINT8",
-        }
-        return type_map.get(field.type, f"TYPE_{field.type}")
-
     def resolve_record_type(type_name):
         descriptor = message_type_map.get(type_name)
         if not descriptor:
@@ -112,7 +74,8 @@ def parse_package_descriptor(
         for idx, field in enumerate(descriptor.field):
             kind = field_type_to_kind(field)
             nested = None
-            if kind == "MESSAGE":
+            # 11: MESSAGE
+            if kind == FIELD_TYPE_MAP[11]:
                 nested_type_name = field.type_name
                 nested = resolve_record_type(nested_type_name)
             columns.append(
@@ -201,47 +164,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def generate_file() -> str:
-    args = parse_args()
-
-    out_dir = args.out
-    descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
-
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-
-    import shutil
-
-    grpc_plugin = shutil.which("grpc_cpp_plugin")
-    if not grpc_plugin:
-        print("Error: grpc_cpp_plugin not found in PATH")
-        sys.exit(1)
-
-    proto_files = [Path(p) for p in args.proto_file]
-    for p in proto_files:
-        if not p.exists():
-            print(f"Error: proto file not found: {p}")
-            sys.exit(1)
-    proto_files_str = [str(p) for p in proto_files]
-
-    proto_path_flags = [f"-I{p}" for p in args.proto_path]
-
-    cmd = [
-        "protoc",
-        *proto_path_flags,
-        f"--cpp_out={out_dir}",
-        f"--grpc_out={out_dir}",
-        f"--plugin=protoc-gen-grpc={grpc_plugin}",
-        f"--descriptor_set_out={descriptor_path}",
-        "--include_imports",
-        *proto_files_str,
-    ]
-
-    print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
-    print(f"[OK] Generated C++ and gRPC files in: {out_dir}")
-    return descriptor_path
-
-
 def dump_packages_json(packages: List[PackageDescriptor], output_path: str):
     with open(output_path, "w") as f:
         json.dump([asdict(pkg) for pkg in packages], f, indent=2)
@@ -278,7 +200,9 @@ def generate_cpp_from_template(
 
 
 if __name__ == "__main__":
-    descriptor_path = generate_file()
+    args = parse_args()
+    out_dir = args.out
+    descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
     desc_set = load_descriptor(descriptor_path)
     packages = parse_package_descriptor(desc_set)
     dump_packages_json(packages, "out/service_descriptors.json")

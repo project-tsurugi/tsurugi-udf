@@ -54,3 +54,48 @@ class ServiceDescriptor:
 class PackageDescriptor:
     package_name: str
     services: List[ServiceDescriptor]
+
+
+# @see https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243
+FIELD_TYPE_MAP = {
+    1: "FLOAT8",
+    2: "FLOAT4",
+    3: "INT8",
+    4: "UINT8",
+    5: "INT4",
+    6: "FIXED8",
+    7: "FIXED4",
+    8: "BOOL",
+    9: "STRING",
+    10: "GROUP",
+    11: "MESSAGE",
+    12: "BYTES",
+    13: "UINT4",
+    14: "ENUM",
+    15: "SFIXED4",
+    16: "SFIXED8",
+    17: "SINT4",
+    18: "SINT8",
+}
+
+# internal type name -> C++ fetch name
+TYPE_KIND_MAP = {
+    "FLOAT8": "double",
+    "FLOAT4": "float",
+    "INT8": "int8",
+    "UINT8": "uint8",
+    "INT4": "int4",
+    "FIXED8": "int8",
+    "FIXED4": "int4",
+    "BOOL": "bool",
+    "STRING": "string",
+    "BYTES": "string",
+    "ENUM": "string",
+    "GROUP": "/* no fetch, GROUP type */",
+    "MESSAGE": "/* no fetch, MESSAGE type */",
+    "UINT4": "uint4",
+    "SINT4": "int4",
+    "SINT8": "int8",
+    "SFIXED8": "int8",
+    "SFIXED4": "int4",
+}

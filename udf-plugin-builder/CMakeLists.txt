@@ -82,6 +82,17 @@ set(PLUGIN_GEN_HDRS ${OUT_DIR}/rpc_client.h)
 add_custom_command(
   OUTPUT ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS} ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS}
          ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS}
+  COMMAND ${CMAKE_COMMAND} -E echo "Generating out directory..."
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${OUT_DIR}
+  COMMAND ${CMAKE_COMMAND} -E echo "Generating C++ and gRPC code from proto files..."
+  COMMAND ${PROTOC_EXECUTABLE}
+          -I${PROTO_PATH}
+          --cpp_out=${OUT_DIR}
+          --grpc_out=${OUT_DIR}
+          --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN_EXECUTABLE}
+          --descriptor_set_out=${OUT_DIR}/descriptor.pb
+          --include_imports
+          ${PROTO_FILES}
   COMMAND ${CMAKE_COMMAND} -E echo "Generating code from proto and API..."
   COMMAND ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_path ${PROTO_PATH}
           --proto_file ${PROTO_FILES} --out ${OUT_DIR}

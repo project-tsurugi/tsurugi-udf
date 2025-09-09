@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+message Int32Request {
+  int32 value = 1;
+}
+message Int32Reply {
+  int32 result = 1;
+}
+
+message Int64Request {
+  int64 value = 1;
+}
+message Int64Reply {
+  int64 result = 1;
+}
+
+message FloatRequest {
+  float value = 1;
+}
+message FloatReply {
+  float result = 1;
+}
+
+message DoubleRequest {
+  double value = 1;
+}
+message DoubleReply {
+  double result = 1;
+}
+
+message StringRequest {
+  string value = 1;
+}
+message StringReply {
+  string result = 1;
+}
+
+message BytesRequest {
+  bytes value = 1;
+}
+message BytesReply {
+  bytes result = 1;
+}
+
+message BoolRequest {
+  bool value = 1;
+}
+message BoolReply {
+  bool result = 1;
+}
+
+message Int32StringRequest {
+  int32 id = 1;
+  string name = 2;
+}
+message Int32StringReply {
+  string message = 1;
+}
+
+message StringInt32Request {
+  string name = 1;
+  int32 id = 2;
+}
+message StringInt32Reply {
+  string message = 1;
+}
+
+message Int32Int64Request {
+  int32 small = 1;
+  int64 big = 2;
+}
+message Int32Int64Reply {
+  int64 sum = 1;
+}
+
+message FloatDoubleRequest {
+  float fval = 1;
+  double dval = 2;
+}
+message FloatDoubleReply {
+  double result = 1;
+}
+
+message StringBytesRequest {
+  string text = 1;
+  bytes blob = 2;
+}
+message StringBytesReply {
+  string combined = 1;
+}
+
+message BoolInt32StringRequest {
+  bool flag = 1;
+  int32 count = 2;
+  string label = 3;
+}
+message BoolInt32StringReply {
+  string message = 1;
+}
+
+message AllTypesRequest {
+  int32 i32 = 1;
+  int64 i64 = 2;
+  float f32 = 3;
+  double f64 = 4;
+  string text = 5;
+  bytes blob = 6;
+  bool flag = 7;
+}
+message AllTypesReply {
+  string summary = 1;
+}
+
+service TestService {
+  rpc EchoInt32   (Int32Request)  returns (Int32Reply);
+  rpc EchoInt64   (Int64Request)  returns (Int64Reply);
+  rpc EchoFloat   (FloatRequest)  returns (FloatReply);
+  rpc EchoDouble  (DoubleRequest) returns (DoubleReply);
+  rpc EchoString  (StringRequest) returns (StringReply);
+  rpc EchoBytes   (BytesRequest)  returns (BytesReply);
+  rpc EchoBool    (BoolRequest)   returns (BoolReply);
+
+  rpc ConcatInt32String     (Int32StringRequest)     returns (Int32StringReply);
+  rpc ConcatStringInt32     (StringInt32Request)     returns (StringInt32Reply);
+  rpc SumInt32Int64         (Int32Int64Request)      returns (Int32Int64Reply);
+  rpc MultiplyFloatDouble   (FloatDoubleRequest)     returns (FloatDoubleReply);
+  rpc CombineStringBytes    (StringBytesRequest)     returns (StringBytesReply);
+  rpc FormatBoolInt32String (BoolInt32StringRequest) returns (BoolInt32StringReply);
+
+  rpc UseAllTypes (AllTypesRequest) returns (AllTypesReply);
+}
+

@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(udf_app)
 
 # Usage: cmake -S . -B build \ -DPROTO_PATH="proto" \
-# -DPROTO_FILES="proto/sample.proto;proto/extra.proto" \
-# -DPLUGIN_API_NAME="my_udf"
+# -DPROTO_FILES="proto/sample.proto;proto/complex_types.proto;proto/primitive_types.proto"
+# \ -DPLUGIN_API_NAME="my_udf"
 #
 # Options: PROTO_PATH        Path to .proto files directory (default: proto)
 # PROTO_FILES       List of .proto files to compile (default: sample.proto,
@@ -58,7 +58,11 @@ set(PLUGIN_API_NAME
 message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
 
 # ====== output dir ======
-set(OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/out)
+set(DEFAULT_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/out)
+set(OUT_DIR
+    ${DEFAULT_OUT_DIR}
+    CACHE PATH
+          "Output directory for generated code (default: ${DEFAULT_OUT_DIR})")
 
 # ====== list of generated files ======
 set(PROTO_GEN_SRCS "")

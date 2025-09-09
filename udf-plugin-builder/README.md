@@ -119,7 +119,7 @@ ______________________________________________________________________
     ```
   - 例: 絶対パスの場合
     ```bash
-    -DPROTO_PATH="/home/user/udf-plugin-builder/proto" -DPROTO_FILES="/home/user/udf-pl
+    -DPROTO_PATH="/home/user/udf-plugin-builder/proto" -DPROTO_FILES="/home/user/udf-plugin-builder/proto/hello.proto"
     ```
 
 ______________________________________________________________________

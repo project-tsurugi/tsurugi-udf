@@ -20,8 +20,56 @@ class TestServiceImpl final : public TestService::Service {
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    Status EchoUInt32(
+        ServerContext* context, const UInt32Request* request, UInt32Reply* reply) override {
+        uint32_t value = 32;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoSInt32(
+        ServerContext* context, const SInt32Request* request, SInt32Reply* reply) override {
+        int32_t value = 32;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoFixed32(
+        ServerContext* context, const Fixed32Request* request, Fixed32Reply* reply) override {
+        uint32_t value = 32;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoSFixed32(
+        ServerContext* context, const SFixed32Request* request, SFixed32Reply* reply) override {
+        int32_t value = 32;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
     Status EchoInt64(
         ServerContext* context, const Int64Request* request, Int64Reply* reply) override {
+        int64_t value = 64;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoUInt64(
+        ServerContext* context, const UInt64Request* request, UInt64Reply* reply) override {
+        uint64_t value = 64;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoSInt64(
+        ServerContext* context, const SInt64Request* request, SInt64Reply* reply) override {
+        int64_t value = 64;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoFixed64(
+        ServerContext* context, const Fixed64Request* request, Fixed64Reply* reply) override {
+        uint64_t value = 64;
+        reply->set_result(value + request->value());
+        return Status::OK;
+    }
+    Status EchoSFixed64(
+        ServerContext* context, const SFixed64Request* request, SFixed64Reply* reply) override {
         int64_t value = 64;
         reply->set_result(value + request->value());
         return Status::OK;

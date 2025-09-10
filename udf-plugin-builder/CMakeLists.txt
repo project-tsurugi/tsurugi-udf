@@ -125,3 +125,22 @@ set_property(
   DIRECTORY
   APPEND
   PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${OUT_DIR}")
+# ====== test options ======
+option(ENABLE_TESTS "Build tests" OFF)
+if(ENABLE_TESTS)
+  option(ENABLE_UNARY_TEST "Build unary_test" OFF)
+
+  # cmake .. -DPROTO_PATH="test/unary_test/proto"
+  # -DPROTO_FILES="test/unary_test/proto/test_all.proto" -DENABLE_TESTS=ON
+  # -DENABLE_UNARY_TEST=ON
+  if(ENABLE_UNARY_TEST)
+    message(STATUS "Building unary_test")
+    add_executable(
+      rpc_server
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
+    target_include_directories(
+      rpc_server PRIVATE ${OUT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(rpc_server PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                             protobuf::libprotobuf)
+  endif()
+endif()

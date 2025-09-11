@@ -77,16 +77,22 @@ FIELD_TYPE_MAP = {
     17: "SINT4",
     18: "SINT8",
 }
-
+# @see https://protobuf.dev/programming-guides/proto3/#scalar
 # internal type name -> C++ fetch name
+# sint32	int32_t
+# sint64	int64_t
+# fixed32	uint32_t
+# fixed32	uint64_t
+# sfixed32	int32_t
+# sfixed64	int64_t
 TYPE_KIND_MAP = {
     "FLOAT8": "double",
     "FLOAT4": "float",
     "INT8": "int8",
     "UINT8": "uint8",
     "INT4": "int4",
-    "FIXED8": "int8",
-    "FIXED4": "int4",
+    "FIXED8": "uint8",
+    "FIXED4": "uint4",
     "BOOL": "bool",
     "STRING": "string",
     "BYTES": "string",

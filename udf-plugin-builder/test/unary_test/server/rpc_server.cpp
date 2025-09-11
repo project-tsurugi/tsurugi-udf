@@ -153,6 +153,87 @@ class TestServiceImpl final : public TestService::Service {
         reply->set_result(!request->value());
         return Status::OK;
     }
+    Status ConcatInt32String(ServerContext* context, const Int32StringRequest* request,
+        Int32StringReply* reply) override {
+        std::cerr << "ConcatInt32String" << std::endl;
+        std::cerr << "  request->id():" << request->id() << std::endl;
+        std::cerr << "  request->name():" << request->name() << std::endl;
+        reply->set_message("ID: " + std::to_string(request->id()) + ", Name: " + request->name());
+        return Status::OK;
+    }
+    Status ConcatStringInt32(ServerContext* context, const StringInt32Request* request,
+        StringInt32Reply* reply) override {
+        std::cerr << "ConcatStringInt32" << std::endl;
+        std::cerr << "  request->name():" << request->name() << std::endl;
+        std::cerr << "  request->id():" << request->id() << std::endl;
+        reply->set_message("ID: " + std::to_string(request->id()) + ", Name: " + request->name());
+        return Status::OK;
+    }
+    Status SumInt32Int64(
+        ServerContext* context, const Int32Int64Request* request, Int32Int64Reply* reply) override {
+        std::cerr << "SumInt32Int64" << std::endl;
+        std::cerr << "  request->small():" << request->small() << std::endl;
+        std::cerr << "  request->big():" << request->big() << std::endl;
+        reply->set_sum(request->small() + request->big());
+        return Status::OK;
+    }
+    Status MultiplyFloatDouble(ServerContext* context, const FloatDoubleRequest* request,
+        FloatDoubleReply* reply) override {
+        std::cerr << "MultiplyFloatDouble" << std::endl;
+        std::cerr << "  request->fval():" << request->fval() << std::endl;
+        std::cerr << "  request->dval():" << request->dval() << std::endl;
+        reply->set_result(request->fval() * request->dval());
+        return Status::OK;
+    }
+    Status CombineStringBytes(ServerContext* context, const StringBytesRequest* request,
+        StringBytesReply* reply) override {
+        std::cerr << "CombineStringBytes" << std::endl;
+        std::cerr << "  request->text():" << request->text() << std::endl;
+        std::cerr << "  request->blob():" << request->blob() << std::endl;
+        reply->set_combined(request->text() + request->blob());
+        return Status::OK;
+    }
+    Status FormatBoolInt32String(ServerContext* context, const BoolInt32StringRequest* request,
+        BoolInt32StringReply* reply) override {
+        std::cerr << "FormatBoolInt32String" << std::endl;
+        std::cerr << "  request->flag():" << request->flag() << std::endl;
+        std::cerr << "  request->count():" << request->count() << std::endl;
+        std::cerr << "  request->label():" << request->label() << std::endl;
+        reply->set_message("Flag: " + std::to_string(request->flag()) + ", Count: " +
+                           std::to_string(request->count()) + ", Label: " + request->label());
+        return Status::OK;
+    }
+    Status UseAllTypes(
+        ServerContext* context, const AllTypesRequest* request, AllTypesReply* reply) override {
+        std::cerr << "UseAllTypes" << std::endl;
+        std::cerr << "  request->i32():" << request->i32() << std::endl;
+        std::cerr << "  request->i64():" << request->i64() << std::endl;
+        std::cerr << "  request->ui32():" << request->ui32() << std::endl;
+        std::cerr << "  request->ui64():" << request->ui64() << std::endl;
+        std::cerr << "  request->si32():" << request->si32() << std::endl;
+        std::cerr << "  request->si64():" << request->si64() << std::endl;
+        std::cerr << "  request->fi32():" << request->fi32() << std::endl;
+        std::cerr << "  request->fi64():" << request->fi64() << std::endl;
+        std::cerr << "  request->sfi32():" << request->sfi32() << std::endl;
+        std::cerr << "  request->sfi64():" << request->sfi64() << std::endl;
+        std::cerr << "  request->f32():" << request->f32() << std::endl;
+        std::cerr << "  request->f64():" << request->f64() << std::endl;
+        std::cerr << "  request->text():" << request->text() << std::endl;
+        std::cerr << "  request->blob():" << request->blob() << std::endl;
+        std::cerr << "  request->flag():" << request->flag() << std::endl;
+        reply->set_summary(
+            "i32: " + std::to_string(request->i32()) + ", i64: " + std::to_string(request->i64()) +
+            ", ui32: " + std::to_string(request->ui32()) + ", ui64: " +
+            std::to_string(request->ui64()) + ", si32: " + std::to_string(request->si32()) +
+            ", si64: " + std::to_string(request->si64()) + ", fi32: " +
+            std::to_string(request->fi32()) + ", fi64: " + std::to_string(request->fi64()) +
+            ", sfi32: " + std::to_string(request->sfi32()) + ", sfi64: " +
+            std::to_string(request->sfi64()) + ", f32: " + std::to_string(request->f32()) +
+            ", f64: " + std::to_string(request->f64()) + ", text: " + request->text() +
+            ", blob size: " + std::to_string(request->blob().size()) +
+            ", flag: " + std::to_string(request->flag()));
+        return Status::OK;
+    }
 };
 
 void RunServer() {

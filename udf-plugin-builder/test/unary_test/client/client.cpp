@@ -268,6 +268,146 @@ int main() {
             }
         }
     }
+    // rpc ConcatInt32String     (Int32StringRequest)     returns (Int32StringReply);
+    {
+        std::cout << "ConcatInt32String connect" << std::endl;
+        generic_record_impl request;
+        request.add_int4(2);
+        request.add_string("three");
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 15}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_string()) {
+                std::cout << "ConcatInt32Stringg received: " << *result << std::endl;
+            }
+        }
+    }
+    // rpc ConcatStringInt32(StringInt32Request) returns(StringInt32Reply);
+
+    {
+        std::cout << "ConcatStringInt32 connect" << std::endl;
+        generic_record_impl request;
+        request.add_string("one");
+        request.add_int4(2);
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 16}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_string()) {
+                std::cout << "ConcatStringInt32 received: " << *result << std::endl;
+            }
+        }
+    }
+    // rpc SumInt32Int64(Int32Int64Request) returns(Int32Int64Reply);
+
+    {
+        std::cout << "SumInt32Int64 connect" << std::endl;
+        generic_record_impl request;
+        request.add_int4(1);
+        request.add_int8(2);
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 17}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_int8()) {
+                std::cout << "SumInt32Int64 received: " << *result << std::endl;
+            }
+        }
+    }
+    {
+        std::cout << "MultiplyFloatDouble connect" << std::endl;
+        generic_record_impl request;
+        request.add_float(1.0f);
+        request.add_double(2.0);
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 18}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_double()) {
+                std::cout << "MultiplyFloatDouble received: " << *result << std::endl;
+            }
+        }
+    }
+    // rpc CombineStringBytes(StringBytesRequest) returns(StringBytesReply);
+    {
+        std::cout << "CombineStringBytes connect" << std::endl;
+        generic_record_impl request;
+        request.add_string("one");
+        request.add_string("two");
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 19}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_string()) {
+                std::cout << "CombineStringBytes received: " << *result << std::endl;
+            }
+        }
+    }
+    // rpc FormatBoolInt32String(BoolInt32StringRequest) returns(BoolInt32StringReply);
+    {
+        std::cout << "FormatBoolInt32String connect" << std::endl;
+        generic_record_impl request;
+        request.add_bool(true);
+        request.add_int4(42);
+        request.add_string("Hello");
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 20}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_string()) {
+                std::cout << "FormatBoolInt32String received: " << *result << std::endl;
+            }
+        }
+    }
+    // rpc UseAllTypes (AllTypesRequest) returns (AllTypesReply);
+    {
+        std::cout << "UseAllTypes connect" << std::endl;
+        generic_record_impl request;
+        request.add_int4(42);
+        request.add_int8(64);
+        request.add_uint4(32);
+        request.add_uint8(64);
+        request.add_int4(32);
+        request.add_int8(64);
+        request.add_uint4(32);
+        request.add_uint8(64);
+        request.add_int4(32);
+        request.add_int8(64);
+        request.add_float(3.14f);
+        request.add_double(3.14);
+        request.add_string("Hello, world!");
+        request.add_string("Hello, world!");
+        request.add_bool(true);
+
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 21}, request, response);
+
+        if (auto cursor = response.cursor()) {
+            if (auto result = cursor->fetch_string()) {
+                std::cout << "UseAllTypes received: " << *result << std::endl;
+            }
+        }
+    }
     tsurugi_destroy_generic_client(client.release());
     tsurugi_destroy_generic_client_factory(factory);
 

@@ -16,21 +16,33 @@ class TestServiceImpl final : public TestService::Service {
     Status EchoInt32(
         ServerContext* context, const Int32Request* request, Int32Reply* reply) override {
         int32_t value = 32;
+        std::cerr << "EchoInt32" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
     Status EchoUInt32(
         ServerContext* context, const UInt32Request* request, UInt32Reply* reply) override {
         uint32_t value = 32;
+        std::cerr << "EchoUInt32" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
+        reply->set_result(value + request->value());
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    // sint32	int32_t
     Status EchoSInt32(
         ServerContext* context, const SInt32Request* request, SInt32Reply* reply) override {
         int32_t value = 32;
+        std::cerr << "EchoSInt32" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    // fixed32	uint32_t
     Status EchoFixed32(
         ServerContext* context, const Fixed32Request* request, Fixed32Reply* reply) override {
         uint32_t value = 32;
@@ -41,6 +53,7 @@ class TestServiceImpl final : public TestService::Service {
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    // sfixed32	int32_t
     Status EchoSFixed32(
         ServerContext* context, const SFixed32Request* request, SFixed32Reply* reply) override {
         int32_t value = 32;
@@ -53,58 +66,90 @@ class TestServiceImpl final : public TestService::Service {
     Status EchoInt64(
         ServerContext* context, const Int64Request* request, Int64Reply* reply) override {
         int64_t value = 64;
+        std::cerr << "EchoInt64" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
     Status EchoUInt64(
         ServerContext* context, const UInt64Request* request, UInt64Reply* reply) override {
         uint64_t value = 64;
+        std::cerr << "EchoUInt64" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    // sint64	int64_t
     Status EchoSInt64(
         ServerContext* context, const SInt64Request* request, SInt64Reply* reply) override {
         int64_t value = 64;
+        std::cerr << "EchoSInt64" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    // fixed64	uint64_t
     Status EchoFixed64(
         ServerContext* context, const Fixed64Request* request, Fixed64Reply* reply) override {
         uint64_t value = 64;
+        std::cerr << "EchoFixed64" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
+    // sfixed64	int64_t
     Status EchoSFixed64(
         ServerContext* context, const SFixed64Request* request, SFixed64Reply* reply) override {
         int64_t value = 64;
+        std::cerr << "EchoSFixed64" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
     Status EchoFloat(
         ServerContext* context, const FloatRequest* request, FloatReply* reply) override {
         float value = 3.14;
+        std::cerr << "EchoFloat" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
     Status EchoDouble(
         ServerContext* context, const DoubleRequest* request, DoubleReply* reply) override {
         double value = 2.718;
+        std::cerr << "EchoDouble" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
     Status EchoString(
         ServerContext* context, const StringRequest* request, StringReply* reply) override {
         std::string prefix("Hello ");
+        std::cerr << "EchoString" << std::endl;
+        std::cerr << "  prefix: " << prefix << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(prefix + request->value());
         return Status::OK;
     }
     Status EchoBytes(
         ServerContext* context, const BytesRequest* request, BytesReply* reply) override {
         std::string prefix("Bytes: ");
+        std::cerr << "EchoBytes" << std::endl;
+        std::cerr << "  prefix: " << prefix << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(prefix + request->value());
         return Status::OK;
     }
     Status EchoBool(ServerContext* context, const BoolRequest* request, BoolReply* reply) override {
+        std::cerr << "EchoBool" << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(!request->value());
         return Status::OK;
     }

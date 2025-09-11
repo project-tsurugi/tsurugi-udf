@@ -85,6 +85,7 @@ int main() {
             }
         }
     }
+    // sint32	int32_t
     {
         std::cout << "EchoSInt32 connect" << std::endl;
         generic_record_impl request;
@@ -101,6 +102,7 @@ int main() {
             }
         }
     }
+    // sint64	int64_t
     {
         std::cout << "EchoSInt64 connect" << std::endl;
         generic_record_impl request;
@@ -197,10 +199,11 @@ int main() {
             }
         }
     }
+    // fixed32	uint32_t
     {
         std::cout << "Fixed32Request connect" << std::endl;
         generic_record_impl request;
-        request.add_int4(32);
+        request.add_uint4(32);
 
         generic_record_impl response;
         grpc::ClientContext context;
@@ -208,15 +211,16 @@ int main() {
         client->call(context, {0, 11}, request, response);
 
         if (auto cursor = response.cursor()) {
-            if (auto result = cursor->fetch_int4()) {
+            if (auto result = cursor->fetch_uint4()) {
                 std::cout << "Fixed32Request received: " << *result << std::endl;
             }
         }
     }
+    // fixed64	uint64_t
     {
         std::cout << "Fixed64Request connect" << std::endl;
         generic_record_impl request;
-        request.add_int8(64);
+        request.add_uint8(64);
 
         generic_record_impl response;
         grpc::ClientContext context;
@@ -224,15 +228,16 @@ int main() {
         client->call(context, {0, 12}, request, response);
 
         if (auto cursor = response.cursor()) {
-            if (auto result = cursor->fetch_int8()) {
+            if (auto result = cursor->fetch_uint8()) {
                 std::cout << "Fixed64Request received: " << *result << std::endl;
             }
         }
     }
+    // sfixed32	int32_t
     {
         std::cout << "SFixed32Request connect" << std::endl;
         generic_record_impl request;
-        request.add_uint4(32);
+        request.add_int4(32);
 
         generic_record_impl response;
         grpc::ClientContext context;
@@ -241,15 +246,16 @@ int main() {
         client->call(context, {0, 13}, request, response);
 
         if (auto cursor = response.cursor()) {
-            if (auto result = cursor->fetch_uint4()) {
+            if (auto result = cursor->fetch_int4()) {
                 std::cout << "SFixed32Request received: " << *result << std::endl;
             }
         }
     }
+    // sfixed64	int64_t
     {
         std::cout << "SFixed64Request connect" << std::endl;
         generic_record_impl request;
-        request.add_uint8(64);
+        request.add_int8(64);
 
         generic_record_impl response;
         grpc::ClientContext context;
@@ -257,7 +263,7 @@ int main() {
         client->call(context, {0, 14}, request, response);
 
         if (auto cursor = response.cursor()) {
-            if (auto result = cursor->fetch_uint8()) {
+            if (auto result = cursor->fetch_int8()) {
                 std::cout << "SFixed64Request received: " << *result << std::endl;
             }
         }

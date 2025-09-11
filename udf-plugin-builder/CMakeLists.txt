@@ -135,12 +135,25 @@ if(ENABLE_TESTS)
   # -DENABLE_UNARY_TEST=ON
   if(ENABLE_UNARY_TEST)
     message(STATUS "Building unary_test")
+    # ====== rpc server/client ======
     add_executable(
       rpc_server
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
     target_include_directories(
       rpc_server PRIVATE ${OUT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
     target_link_libraries(rpc_server PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                             protobuf::libprotobuf)
+    add_executable(
+      rpc_client
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
+      ${OUT_DIR}/rpc_client.cpp ${OUT_DIR}/rpc_client_factory.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp)
+    target_include_directories(
+      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+                                 ${OUT_DIR})
+    target_include_directories(rpc_client
+                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
   endif()
 endif()

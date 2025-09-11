@@ -5,7 +5,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -35,12 +34,19 @@ class TestServiceImpl final : public TestService::Service {
     Status EchoFixed32(
         ServerContext* context, const Fixed32Request* request, Fixed32Reply* reply) override {
         uint32_t value = 32;
+
+        std::cerr << "EchoFixed32" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }
     Status EchoSFixed32(
         ServerContext* context, const SFixed32Request* request, SFixed32Reply* reply) override {
         int32_t value = 32;
+        std::cerr << "EchoSFixed32" << std::endl;
+        std::cerr << "  value: " << value << std::endl;
+        std::cerr << "  request->value():" << request->value() << std::endl;
         reply->set_result(value + request->value());
         return Status::OK;
     }

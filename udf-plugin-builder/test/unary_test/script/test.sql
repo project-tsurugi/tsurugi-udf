@@ -17,6 +17,7 @@ drop table if exists t_float_double;
 drop table if exists t_string_bytes;
 drop table if exists t_string_bytes2;
 drop table if exists t_bool_int32_string;
+drop table if exists t_all;
 -- tablemake
 create table t_int32 (v int);
 create table t_bigint (v bigint);
@@ -37,6 +38,9 @@ create table t_float_double (v1 float, v2 double);
 create table t_string_bytes (v1 varchar, v2 varbinary);
 create table t_string_bytes2 (v1 char(30), v2 binary(30));
 create table t_bool_int32_string (v1 int, v2 int, v3 varchar);
+create table t_all (v1 int, v2 bigint, v3 int, v4 bigint, v5 int, v6 bigint,
+                    v7 int, v8 bigint, v9 int, v10 bigint,
+                    v11 float, v12 double, v13 varchar(30), v14 varbinary(30));
 -- insert
 insert into t_int32 values (123);
 insert into t_bigint values (1234567890123);
@@ -57,6 +61,7 @@ insert into t_float_double values (1.23, 1.0e100);
 insert into t_string_bytes values ('hello', X'abcd');
 insert into t_string_bytes2 values ('world', X'dcba');
 insert into t_bool_int32_string values (1, 3, 'test');
+insert into t_all values (1,2,3,4,5,6,7,8,9,10,11,12,'hello',X'abcd');
 -- check
 select EchoInt32(v) from t_int32;
 select EchoUInt32(v) from t_int32;
@@ -74,15 +79,17 @@ select EchoFloat(v) from t_real;
 select EchoDouble(v) from t_double;
 select EchoString(v) from t_char;
 select EchoString(v) from t_vchar;
--- select EchoBytes(v) from t_binary;
--- select EchoBytes(v) from t_vbinary;
--- select BoolRequest(v) from t_bool;
+select EchoBytes(v) from t_binary;
+select EchoBytes(v) from t_vbinary;
+select EchoBool(v = 1) from t_bool;
 select ConcatInt32String(v, c) from t_int32_char;
 select ConcatInt32String(v, c) from t_int32_vchar;
 select ConcatStringInt32(v, c) from t_char_int32;
 select ConcatStringInt32(v, c) from t_vchar_int32;
 select SumInt32Int64(v1, v2) from t_int32_int64;
 select MultiplyFloatDouble(v1, v2) from t_float_double;
--- select CombineStringBytes(v1, v2) from t_string_bytes;
--- select CombineStringBytes(v1, v2) from t_string_bytes2;
--- select FormatBoolInt32String(v1, v2, v3) from t_bool_int32_string;
+--select CombineStringBytes(v1, v2) from t_string_bytes;
+select CombineStringBytes(v1, v2) from t_string_bytes2;
+select FormatBoolInt32String(1 = 1, v, c) from t_int32_char;
+select FormatBoolInt32String(1 = 1, v, c) from t_int32_vchar;
+select UseAllTypes(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14,v1=0) from t_all;

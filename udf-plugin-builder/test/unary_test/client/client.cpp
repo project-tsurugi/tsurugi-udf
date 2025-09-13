@@ -30,11 +30,15 @@ int main() {
         grpc::ClientContext context;
 
         client->call(context, {0, 0}, request, response);
-
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int4()) {
                 std::cout << "EchoInt32 received: " << *result << std::endl;
             }
+        } else {
+            std::cerr << "No response cursor\n";
         }
     }
     {
@@ -47,7 +51,10 @@ int main() {
 
         client->call(context, {0, 1}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int8()) {
                 std::cout << "EchoInt64 received: " << *result << std::endl;
             }
@@ -63,7 +70,10 @@ int main() {
 
         client->call(context, {0, 2}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_uint4()) {
                 std::cout << "EchoInt32 received: " << *result << std::endl;
             }
@@ -79,7 +89,10 @@ int main() {
 
         client->call(context, {0, 3}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_uint8()) {
                 std::cout << "EchoUInt64 received: " << *result << std::endl;
             }
@@ -96,7 +109,10 @@ int main() {
 
         client->call(context, {0, 4}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int4()) {
                 std::cout << "EchoSInt32 received: " << *result << std::endl;
             }
@@ -113,7 +129,10 @@ int main() {
 
         client->call(context, {0, 5}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int8()) {
                 std::cout << "EchoSInt64 received: " << *result << std::endl;
             }
@@ -129,7 +148,10 @@ int main() {
 
         client->call(context, {0, 6}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_float()) {
                 std::cout << "EchoFloat received: " << *result << std::endl;
             }
@@ -145,7 +167,10 @@ int main() {
 
         client->call(context, {0, 7}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_double()) {
                 std::cout << "EchoDouble received: " << *result << std::endl;
             }
@@ -161,7 +186,10 @@ int main() {
 
         client->call(context, {0, 8}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "EchoString received: " << *result << std::endl;
             }
@@ -177,7 +205,10 @@ int main() {
 
         client->call(context, {0, 9}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "EchoBytes received: " << *result << std::endl;
             }
@@ -193,7 +224,10 @@ int main() {
 
         client->call(context, {0, 10}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_bool()) {
                 std::cout << "EchoBool received: " << *result << std::endl;
             }
@@ -210,7 +244,10 @@ int main() {
 
         client->call(context, {0, 11}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_uint4()) {
                 std::cout << "Fixed32Request received: " << *result << std::endl;
             }
@@ -227,7 +264,10 @@ int main() {
 
         client->call(context, {0, 12}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_uint8()) {
                 std::cout << "Fixed64Request received: " << *result << std::endl;
             }
@@ -242,10 +282,12 @@ int main() {
         generic_record_impl response;
         grpc::ClientContext context;
 
-        std::cout << "SFixed32Request call" << std::endl;
         client->call(context, {0, 13}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int4()) {
                 std::cout << "SFixed32Request received: " << *result << std::endl;
             }
@@ -262,7 +304,10 @@ int main() {
 
         client->call(context, {0, 14}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int8()) {
                 std::cout << "SFixed64Request received: " << *result << std::endl;
             }
@@ -279,7 +324,10 @@ int main() {
 
         client->call(context, {0, 15}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "ConcatInt32Stringg received: " << *result << std::endl;
             }
@@ -298,7 +346,10 @@ int main() {
 
         client->call(context, {0, 16}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "ConcatStringInt32 received: " << *result << std::endl;
             }
@@ -317,7 +368,10 @@ int main() {
 
         client->call(context, {0, 17}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int8()) {
                 std::cout << "SumInt32Int64 received: " << *result << std::endl;
             }
@@ -334,7 +388,10 @@ int main() {
 
         client->call(context, {0, 18}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_double()) {
                 std::cout << "MultiplyFloatDouble received: " << *result << std::endl;
             }
@@ -352,7 +409,10 @@ int main() {
 
         client->call(context, {0, 19}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "CombineStringBytes received: " << *result << std::endl;
             }
@@ -371,7 +431,10 @@ int main() {
 
         client->call(context, {0, 20}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "FormatBoolInt32String received: " << *result << std::endl;
             }
@@ -402,7 +465,10 @@ int main() {
 
         client->call(context, {0, 21}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "UseAllTypes received: " << *result << std::endl;
             }

@@ -30,7 +30,10 @@ int main() {
 
         client->call(context, {0, 0}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "Greeter received: " << *result << std::endl;
             }
@@ -46,7 +49,10 @@ int main() {
 
         client->call(context, {0, 1}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int4()) {
                 std::cout << "Greeter received: " << *result << std::endl;
             }
@@ -64,7 +70,10 @@ int main() {
 
         client->call(context, {0, 2}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             while (auto result = cursor->fetch_string()) {
                 std::cout << "Greeter SayGoodbye received: " << *result << std::endl;
             }
@@ -80,7 +89,10 @@ int main() {
 
         client->call(context, {0, 3}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "Byer SayWorld received: " << *result << std::endl;
             }
@@ -96,7 +108,10 @@ int main() {
 
         client->call(context, {0, 4}, request, response);
 
-        if (auto cursor = response.cursor()) {
+        if (response.error()) {
+            std::cerr << "RPC failed: code=" << response.error()->code()
+                      << ", message=" << response.error()->message() << std::endl;
+        } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int8()) {
                 std::cout << "Byer DecDecimal received: " << *result << std::endl;
             }

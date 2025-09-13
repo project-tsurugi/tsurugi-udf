@@ -98,7 +98,11 @@ void rpc_client::call(ClientContext& context,
                 // Write response into generic_record (nested -> flatten)
                 {{ emit_response_add("rep", fn.output_record, False) }}
             } else {
-                fail();
+                response.set_error(error_info(
+                static_cast<error_info::error_code_type>(status.error_code()),
+                    std::string(status.error_message())
+                ));
+                //fail();
             }
             break;
         }

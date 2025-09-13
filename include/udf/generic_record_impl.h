@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #pragma once
+#include "enum_types.h"
 #include "generic_record.h"
 #include <cstdint>
 #include <memory>
@@ -27,12 +28,20 @@ using value_type = std::variant<std::monostate, bool, std::int32_t, std::int64_t
     std::uint64_t, float, double, std::string>;
 
 struct NativeValue {
-    std::optional<value_type> value;
+  private:
+    std::optional<value_type> value_{std::monostate{}};
+    type_kind_type type_kind_{type_kind_type::MESSAGE};
 
-    NativeValue() : value(std::monostate{}) {}
-    template <typename T> NativeValue(T v) : value(v) {}
-
-    bool is_null() const { return !value || std::holds_alternative<std::monostate>(*value); }
+  public:
+    NativeValue() = default;
+    template <typename T>
+    explicit NativeValue(T v, type_kind_type tk = type_kind_type::MESSAGE)
+        : value_(v), type_kind_(tk) {}
+    [[nodiscard]] const std::optional<value_type>& value() const { return value_; }
+    [[nodiscard]] bool is_null() const {
+        return !value_.has_value() || std::holds_alternative<std::monostate>(*value_);
+    }
+    [[nodiscard]] type_kind_type kind() const noexcept { return type_kind_; }
 };
 class generic_record_impl : public generic_record {
   public:
@@ -53,7 +62,7 @@ class generic_record_impl : public generic_record {
     void add_double_null() override;
     void add_string(std::string value) override;
     void add_string_null() override;
-    std::unique_ptr<generic_record_cursor> cursor() const override;
+    [[nodiscard]] std::unique_ptr<generic_record_cursor> cursor() const override;
 
   private:
     std::vector<value_type> values_;
@@ -63,15 +72,15 @@ class generic_record_cursor_impl : public generic_record_cursor {
   public:
     explicit generic_record_cursor_impl(const std::vector<value_type>& values);
 
-    std::optional<bool> fetch_bool() override;
-    std::optional<std::int32_t> fetch_int4() override;
-    std::optional<std::int64_t> fetch_int8() override;
-    std::optional<std::uint32_t> fetch_uint4() override;
-    std::optional<std::uint64_t> fetch_uint8() override;
-    std::optional<float> fetch_float() override;
-    std::optional<double> fetch_double() override;
-    std::optional<std::string> fetch_string() override;
-    bool has_next() override;
+    [[nodiscard]] std::optional<bool> fetch_bool() override;
+    [[nodiscard]] std::optional<std::int32_t> fetch_int4() override;
+    [[nodiscard]] std::optional<std::int64_t> fetch_int8() override;
+    [[nodiscard]] std::optional<std::uint32_t> fetch_uint4() override;
+    [[nodiscard]] std::optional<std::uint64_t> fetch_uint8() override;
+    [[nodiscard]] std::optional<float> fetch_float() override;
+    [[nodiscard]] std::optional<double> fetch_double() override;
+    [[nodiscard]] std::optional<std::string> fetch_string() override;
+    [[nodiscard]] bool has_next() override;
 
   private:
     const std::vector<value_type>& values_;

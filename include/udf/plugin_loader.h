@@ -17,14 +17,20 @@
 #include "generic_client_factory.h"
 #include "plugin_api.h"
 #include <string_view>
-#include <vector>
 #include <tuple>
+#include <vector>
 namespace plugin::udf {
 class plugin_loader {
   public:
-    virtual ~plugin_loader()                                           = default;
-    virtual void load(std::string_view dir_path)                       = 0;
-    virtual void unload_all()                                          = 0;
-    virtual const std::vector<std::tuple<plugin_api*, generic_client_factory*>>& get_plugins() const noexcept = 0;
+    plugin_loader()                                = default;
+    plugin_loader(const plugin_loader&)            = delete;
+    plugin_loader& operator=(const plugin_loader&) = delete;
+    plugin_loader(plugin_loader&&)                 = delete;
+    plugin_loader& operator=(plugin_loader&&)      = delete;
+    virtual ~plugin_loader()                       = default;
+    virtual void load(std::string_view dir_path)   = 0;
+    virtual void unload_all()                      = 0;
+    [[nodiscard]] virtual const std::vector<std::tuple<plugin_api*, generic_client_factory*>>&
+    get_plugins() const noexcept = 0;
 };
 } // namespace plugin::udf

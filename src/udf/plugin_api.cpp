@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "udf/plugin_api.h"
+#include "udf/enum_types.h"
 #include "udf/generic_record.h"
 #include "udf/generic_record_impl.h"
 #include <iostream>
@@ -56,6 +57,7 @@ std::string to_string(type_kind_type kind) {
         default: return "UnknownTypeKind";
     }
 }
+namespace {
 void add_column(const std::vector<column_descriptor*>& cols) {
     for (const auto* col : cols) {
         std::cout << "- column_name: " << col->column_name() << std::endl;
@@ -69,17 +71,18 @@ void add_column(const std::vector<column_descriptor*>& cols) {
         }
     }
 }
+} // anonymous namespace
 std::vector<NativeValue> column_to_native_values(const std::vector<column_descriptor*>& cols) {
     std::vector<NativeValue> result;
 
     for (const auto* col : cols) {
         switch (col->type_kind()) {
             case type_kind_type::FLOAT8: result.emplace_back(2.2); break;
-            case type_kind_type::FLOAT4: result.emplace_back(1.1f); break;
-            case type_kind_type::INT8: result.emplace_back(int64_t(64)); break;
-            case type_kind_type::UINT8: result.emplace_back(uint64_t(65)); break;
-            case type_kind_type::INT4: result.emplace_back(int32_t(32)); break;
-            case type_kind_type::UINT4: result.emplace_back(uint32_t(33)); break;
+            case type_kind_type::FLOAT4: result.emplace_back(1.1F); break;
+            case type_kind_type::INT8: result.emplace_back(static_cast<int64_t>(64)); break;
+            case type_kind_type::UINT8: result.emplace_back(static_cast<uint64_t>(65)); break;
+            case type_kind_type::INT4: result.emplace_back(static_cast<int32_t>(32)); break;
+            case type_kind_type::UINT4: result.emplace_back(static_cast<uint32_t>(33)); break;
             case type_kind_type::BOOL: result.emplace_back(false); break;
             case type_kind_type::STRING: result.emplace_back(std::string{"string hello"}); break;
             case type_kind_type::BYTES: result.emplace_back(std::string{"bytes data"}); break;
@@ -100,65 +103,59 @@ std::vector<NativeValue> column_to_native_values(const std::vector<column_descri
 
     return result;
 }
-std::vector<NativeValue> cursor_to_native_values(
-    generic_record_impl& response, const std::vector<column_descriptor*>& cols) {
-    std::vector<NativeValue> result;
+namespace {
+
+template <typename FetchFunc>
+void fetch_and_emplace(
+    std::vector<plugin::udf::NativeValue>& result, type_kind_type kind, FetchFunc&& fetch) {
+    if (auto val = std::forward<FetchFunc>(fetch)()) {
+        result.emplace_back(*val, kind);
+    } else {
+        result.emplace_back();
+    }
+}
+
+} // anonymous namespace
+
+// @ see  https://protobuf.dev/programming-guides/proto3/#scalar
+std::vector<plugin::udf::NativeValue> cursor_to_native_values(
+    plugin::udf::generic_record_impl& response,
+    const std::vector<plugin::udf::column_descriptor*>& cols) {
+    std::vector<plugin::udf::NativeValue> result;
     if (auto cursor = response.cursor()) {
         for (const auto* col : cols) {
-            switch (col->type_kind()) {
+            auto type_kind = col->type_kind();
+            switch (type_kind) {
+                case type_kind_type::SFIXED4:
                 case type_kind_type::INT4:
-                    if (auto val = cursor->fetch_int4())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                case type_kind_type::SINT4:
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_int4(); });
                     break;
+                case type_kind_type::SFIXED8:
                 case type_kind_type::INT8:
-                    if (auto val = cursor->fetch_int8())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                case type_kind_type::SINT8:
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_int8(); });
                     break;
                 case type_kind_type::UINT4:
-                    if (auto val = cursor->fetch_uint4())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                case type_kind_type::FIXED4:
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_uint4(); });
                     break;
                 case type_kind_type::UINT8:
-                    if (auto val = cursor->fetch_uint8())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                case type_kind_type::FIXED8:
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_uint8(); });
                     break;
                 case type_kind_type::FLOAT4:
-                    if (auto val = cursor->fetch_float())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_float(); });
                     break;
                 case type_kind_type::FLOAT8:
-                    if (auto val = cursor->fetch_double())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_double(); });
                     break;
                 case type_kind_type::BOOL:
-                    if (auto val = cursor->fetch_bool())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_bool(); });
                     break;
                 case type_kind_type::STRING:
-                    if (auto val = cursor->fetch_string())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
-                    break;
                 case type_kind_type::BYTES:
-                    if (auto val = cursor->fetch_string())
-                        result.emplace_back(*val);
-                    else
-                        result.emplace_back();
+                    fetch_and_emplace(result, type_kind, [&] { return cursor->fetch_string(); });
                     break;
 
                 case type_kind_type::GROUP:
@@ -177,26 +174,26 @@ std::vector<NativeValue> cursor_to_native_values(
             }
         }
     }
-
     return result;
 }
 
 void print_native_values(const std::vector<NativeValue>& values) {
     for (const auto& nv : values) {
-        if (!nv.value) {
+        if (!nv.value()) {
             std::cout << "null";
         } else {
             std::visit(
                 [](auto&& arg) {
                     using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, std::monostate>)
+                    if constexpr (std::is_same_v<T, std::monostate>) {
                         std::cout << "null";
-                    else if constexpr (std::is_same_v<T, bool>)
+                    } else if constexpr (std::is_same_v<T, bool>) {
                         std::cout << (arg ? "true" : "false");
-                    else
+                    } else {
                         std::cout << arg;
+                    }
                 },
-                *nv.value);
+                *nv.value());
         }
         std::cout << " ";
     }

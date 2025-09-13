@@ -46,6 +46,12 @@ namespace plugin::udf {
  */
 class udf_loader : public plugin_loader {
   public:
+    udf_loader()                             = default;
+    udf_loader(const udf_loader&)            = delete;
+    udf_loader& operator=(const udf_loader&) = delete;
+    udf_loader(udf_loader&&)                 = delete;
+    udf_loader& operator=(udf_loader&&)      = delete;
+    ~udf_loader() override;
     /**
      * @brief Loads UDF plugins from the specified path.
      *
@@ -62,14 +68,13 @@ class udf_loader : public plugin_loader {
      * Safe to call multiple times.
      */
     void unload_all() override;
-    ~udf_loader() override;
     /**
      * @brief Retrieves the list of loaded plugin API/factory pairs.
      *
      * @return Vector of tuples containing (`plugin_api*`, `generic_client_factory*`).
      *         The pointers remain valid until `unload_all()` is called.
      */
-    const std::vector<std::tuple<plugin_api*, generic_client_factory*>>&
+    [[nodiscard]] const std::vector<std::tuple<plugin_api*, generic_client_factory*>>&
     get_plugins() const noexcept override;
 
   private:

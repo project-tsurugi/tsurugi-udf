@@ -27,8 +27,8 @@
 #include <vector>
 namespace fs = std::filesystem;
 using namespace plugin::udf;
-void udf_loader::load(std::string_view plugin_path) {
-    fs::path path(plugin_path);
+void udf_loader::load(std::string_view dir_path) {
+    fs::path path(dir_path);
 
     std::vector<fs::path> files_to_load;
     if (fs::is_regular_file(path) && path.extension() == ".so") {
@@ -72,6 +72,7 @@ void udf_loader::create_api_from_handle(void* handle) {
     using create_api_func     = plugin_api* (*)();
     using create_factory_func = generic_client_factory* (*)(const char*);
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     auto* api_func = reinterpret_cast<create_api_func>(dlsym(handle, "create_plugin_api"));
     if (!api_func) {
         std::cerr << "Failed to find symbol create_plugin_api\n";
@@ -83,7 +84,7 @@ void udf_loader::create_api_from_handle(void* handle) {
         std::cerr << "create_plugin_api returned nullptr\n";
         return;
     }
-
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     auto* factory_func = reinterpret_cast<create_factory_func>(
         dlsym(handle, "tsurugi_create_generic_client_factory"));
     if (!factory_func) {

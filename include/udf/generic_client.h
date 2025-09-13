@@ -22,8 +22,13 @@
 namespace plugin::udf {
 class generic_client {
   public:
-    using function_index_type = std::pair<int, int>;
-    virtual ~generic_client() = default;
+    using function_index_type                        = std::pair<int, int>;
+    generic_client()                                 = default;
+    virtual ~generic_client()                        = default;
+    generic_client(const generic_client&)            = delete;
+    generic_client& operator=(const generic_client&) = delete;
+    generic_client(generic_client&&)                 = delete;
+    generic_client& operator=(generic_client&&)      = delete;
 
     virtual void call(grpc::ClientContext& context, function_index_type function_index,
         generic_record& request, generic_record& response) const = 0;

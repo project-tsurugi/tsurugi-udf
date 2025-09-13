@@ -63,9 +63,9 @@ class generic_record_impl : public generic_record {
     void add_string(std::string value) override;
     void add_string_null() override;
     [[nodiscard]] std::unique_ptr<generic_record_cursor> cursor() const override;
-    std::optional<error_info>& error() noexcept override;
-    const std::optional<error_info>& error() const noexcept override;
-    void set_error(const error_info& status);
+    [[nodiscard]] std::optional<error_info>& error() noexcept override;
+    [[nodiscard]] const std::optional<error_info>& error() const noexcept override;
+    void set_error(const error_info& status) override;
 
   private:
     std::vector<value_type> values_;

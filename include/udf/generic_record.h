@@ -29,7 +29,7 @@ namespace plugin::udf {
 class error_info {
   public:
     using error_code_type = std::size_t;
-
+    ~error_info()         = default;
     explicit error_info(error_code_type code, std::string msg)
         : code_(code), message_(std::move(msg)) {}
     error_info(const error_info&)                = default;
@@ -98,9 +98,9 @@ class generic_record {
     virtual void add_string(std::string value) = 0;
     virtual void add_string_null()             = 0;
 
-    virtual void set_error(const error_info& status)                = 0;
-    virtual std::optional<error_info>& error() noexcept             = 0;
-    virtual const std::optional<error_info>& error() const noexcept = 0;
+    virtual void set_error(const error_info& status)                              = 0;
+    [[nodiscard]] virtual std::optional<error_info>& error() noexcept             = 0;
+    [[nodiscard]] virtual const std::optional<error_info>& error() const noexcept = 0;
 
     [[nodiscard]] virtual std::unique_ptr<generic_record_cursor> cursor() const = 0;
 };

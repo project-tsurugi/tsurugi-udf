@@ -1,3 +1,4 @@
+#include "udf/error_info.h"
 #include "udf/generic_client_factory.h"
 #include "udf/generic_record_impl.h"
 #include <grpcpp/grpcpp.h>
@@ -5,6 +6,10 @@
 #include <memory>
 
 using namespace plugin::udf;
+void print_error(const error_info& err) {
+    std::cerr << "RPC failed: code=" << err.code_string() << ", message=" << err.message()
+              << std::endl;
+}
 int main() {
     auto channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
 
@@ -29,10 +34,9 @@ int main() {
         grpc::ClientContext context;
 
         client->call(context, {0, 0}, request, response);
-
-        if (response.error()) {
-            std::cerr << "RPC failed: code=" << response.error()->code()
-                      << ", message=" << response.error()->message() << std::endl;
+        auto err = response.error();
+        if (err) {
+            print_error(*err);
         } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "Greeter received: " << *result << std::endl;
@@ -48,10 +52,9 @@ int main() {
         grpc::ClientContext context;
 
         client->call(context, {0, 1}, request, response);
-
-        if (response.error()) {
-            std::cerr << "RPC failed: code=" << response.error()->code()
-                      << ", message=" << response.error()->message() << std::endl;
+        auto err = response.error();
+        if (err) {
+            print_error(*err);
         } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int4()) {
                 std::cout << "Greeter received: " << *result << std::endl;
@@ -69,10 +72,9 @@ int main() {
         grpc::ClientContext context;
 
         client->call(context, {0, 2}, request, response);
-
-        if (response.error()) {
-            std::cerr << "RPC failed: code=" << response.error()->code()
-                      << ", message=" << response.error()->message() << std::endl;
+        auto err = response.error();
+        if (err) {
+            print_error(*err);
         } else if (auto cursor = response.cursor()) {
             while (auto result = cursor->fetch_string()) {
                 std::cout << "Greeter SayGoodbye received: " << *result << std::endl;
@@ -89,9 +91,9 @@ int main() {
 
         client->call(context, {0, 3}, request, response);
 
-        if (response.error()) {
-            std::cerr << "RPC failed: code=" << response.error()->code()
-                      << ", message=" << response.error()->message() << std::endl;
+        auto err = response.error();
+        if (err) {
+            print_error(*err);
         } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_string()) {
                 std::cout << "Byer SayWorld received: " << *result << std::endl;
@@ -108,9 +110,9 @@ int main() {
 
         client->call(context, {0, 4}, request, response);
 
-        if (response.error()) {
-            std::cerr << "RPC failed: code=" << response.error()->code()
-                      << ", message=" << response.error()->message() << std::endl;
+        auto err = response.error();
+        if (err) {
+            print_error(*err);
         } else if (auto cursor = response.cursor()) {
             if (auto result = cursor->fetch_int8()) {
                 std::cout << "Byer DecDecimal received: " << *result << std::endl;

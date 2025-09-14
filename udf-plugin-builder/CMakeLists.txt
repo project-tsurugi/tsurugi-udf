@@ -146,8 +146,10 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
-      ${OUT_DIR}/rpc_client.cpp ${OUT_DIR}/rpc_client_factory.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp)
+      ${OUT_DIR}/rpc_client.cpp
+      ${OUT_DIR}/rpc_client_factory.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
     target_include_directories(
       ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
                                  ${OUT_DIR})

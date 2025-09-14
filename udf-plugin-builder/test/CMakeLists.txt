@@ -27,7 +27,8 @@ add_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/task_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/plugin_api.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/udf_loader.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/generic_record_impl.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/generic_record_impl.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/error_info.cpp)
 
 target_include_directories(inspect_plugin PRIVATE ${COMMON_INCLUDES})
 target_link_libraries(inspect_plugin PRIVATE ${COMMON_LIBS} dl proto_lib)
@@ -38,7 +39,8 @@ add_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/client/client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../out/rpc_client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../out/rpc_client_factory.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/generic_record_impl.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/generic_record_impl.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/udf/error_info.cpp)
 
 target_include_directories(rpc_client PRIVATE ${COMMON_INCLUDES})
 target_link_libraries(rpc_client PRIVATE ${COMMON_LIBS} proto_lib)

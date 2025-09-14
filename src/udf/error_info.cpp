@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-#include "udf/generic_record_impl.h"
+#include "udf/error_info.h"
 #include <grpcpp/support/status_code_enum.h>
-#include <optional>
 #include <string>
+#include <string_view>
 namespace plugin::udf {
 using error_code_type = grpc::StatusCode;
-std::optional<error_info>& generic_record_impl::error() noexcept { return err_; }
-const std::optional<error_info>& generic_record_impl::error() const noexcept { return err_; }
 error_code_type error_info::code() const noexcept { return code_; }
 std::string_view error_info::message() const noexcept { return message_; }
 // @see https://github.com/grpc/grpc/blob/master/include/grpcpp/support/status_code_enum.h#L43

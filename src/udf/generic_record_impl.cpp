@@ -23,6 +23,8 @@
 #include <variant>
 #include <vector>
 namespace plugin::udf {
+std::optional<error_info>& generic_record_impl::error() noexcept { return err_; }
+const std::optional<error_info>& generic_record_impl::error() const noexcept { return err_; }
 void generic_record_impl::reset() {
     values_.clear();
     err_ = std::nullopt;

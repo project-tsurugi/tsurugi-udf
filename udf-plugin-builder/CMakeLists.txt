@@ -18,6 +18,7 @@ find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(Python3 REQUIRED)
 find_program(PROTOC_EXECUTABLE protoc)
+find_package(Boost REQUIRED)
 if(NOT PROTOC_EXECUTABLE)
   message(FATAL_ERROR "protoc not found!")
 endif()
@@ -63,7 +64,11 @@ set(OUT_DIR
     ${DEFAULT_OUT_DIR}
     CACHE PATH
           "Output directory for generated code (default: ${DEFAULT_OUT_DIR})")
-
+# ====== gRPC URL option ======
+set(DEFAULT_GRPC_URL "localhost:50051")
+set(GRPC_URL
+    ${DEFAULT_GRPC_URL}
+    CACHE STRING "gRPC server URL (default: ${DEFAULT_GRPC_URL})")
 # ====== list of generated files ======
 set(PROTO_GEN_SRCS "")
 set(PROTO_GEN_HDRS "")
@@ -115,7 +120,17 @@ target_include_directories(
   ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include ${OUT_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
+# ====== output ini ======
+set(INI_FILE lib${PLUGIN_API_NAME}.ini)
+add_custom_command(
+  OUTPUT ${INI_FILE}
+  COMMAND ${CMAKE_COMMAND} -E echo "[grpc]" > ${INI_FILE}
+  COMMAND ${CMAKE_COMMAND} -E echo "url=${GRPC_URL}" >> ${INI_FILE}
+  COMMAND ${CMAKE_COMMAND} -E echo "credentials=insecure" >> ${INI_FILE}
+  DEPENDS ${PLUGIN_API_NAME}
+  COMMENT "Generating ${PLUGIN_API_NAME}.ini")
 
+add_custom_target(${PLUGIN_API_NAME}_ini ALL DEPENDS ${INI_FILE})
 # ====== clean target ======
 add_custom_target(
   clean_out

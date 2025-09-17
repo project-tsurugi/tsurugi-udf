@@ -1,6 +1,8 @@
 #include "udf/error_info.h"
 #include "udf/generic_client_factory.h"
 #include "udf/generic_record_impl.h"
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <grpcpp/grpcpp.h>
 #include <iostream>
 #include <memory>
@@ -12,8 +14,28 @@ void print_error(const error_info& err) {
     std::cerr << "RPC failed: code=" << err.code_string() << ", message=" << err.message()
               << std::endl;
 }
-int main() {
-    auto channel = grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials());
+int main(int argc, char** argv) {
+    std::string grpc_url    = "localhost:50051";
+    std::string credentials = "insecure";
+
+    if (argc >= 2) {
+        std::string ini_file = argv[1];
+        boost::property_tree::ptree pt;
+        try {
+            boost::property_tree::ini_parser::read_ini(ini_file, pt);
+            grpc_url    = pt.get<std::string>("grpc.url", grpc_url);
+            credentials = pt.get<std::string>("grpc.credentials", credentials);
+            std::cout << "[INFO] Loaded gRPC settings from " << ini_file << "\n";
+        } catch (const boost::property_tree::ini_parser_error& e) {
+            std::cerr << "[WARN] Failed to read ini file '" << ini_file << "': " << e.what()
+                      << "\n";
+            std::cerr << "[INFO] Using default gRPC settings\n";
+        }
+    } else {
+        std::cout << "[INFO] No ini file specified. Using default gRPC settings\n";
+    }
+
+    auto channel = grpc::CreateChannel(grpc_url, grpc::InsecureChannelCredentials());
 
     generic_client_factory* factory = tsurugi_create_generic_client_factory("Greeter");
     if (!factory) {

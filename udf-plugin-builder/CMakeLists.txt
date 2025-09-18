@@ -172,5 +172,18 @@ if(ENABLE_TESTS)
                                PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
+    add_executable(
+      inspect_plugin
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/inspect_plugin/inspect_plugin.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/inspect_plugin/task_manager.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/plugin_api.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/udf_loader.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
+
+    target_include_directories(inspect_plugin
+                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_link_libraries(inspect_plugin PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                                 protobuf::libprotobuf)
   endif()
 endif()

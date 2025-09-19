@@ -108,7 +108,7 @@ add_custom_command(
   COMMENT "Running generate.py")
 
 # ====== proto library ======
-add_library(proto_lib SHARED ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
+add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
                              ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
 target_include_directories(proto_lib PUBLIC ${OUT_DIR} ${GRPC_INCLUDE_DIRS})
 target_link_libraries(proto_lib PUBLIC ${GRPC_LIBRARIES} protobuf::libprotobuf)
@@ -144,7 +144,7 @@ set_property(
 option(ENABLE_TESTS "Build tests" OFF)
 if(ENABLE_TESTS)
   option(ENABLE_UNARY_TEST "Build unary_test" OFF)
-
+  option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
   # cmake .. -DPROTO_PATH="test/unary_test/proto"
   # -DPROTO_FILES="test/unary_test/proto/test_all.proto" -DENABLE_TESTS=ON
   # -DENABLE_UNARY_TEST=ON
@@ -152,12 +152,12 @@ if(ENABLE_TESTS)
     message(STATUS "Building unary_test")
     # ====== rpc server/client ======
     add_executable(
-      rpc_server
+      rpc_server_unary
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server PRIVATE ${OUT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_link_libraries(rpc_server PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                             protobuf::libprotobuf)
+      rpc_server_unary PRIVATE ${OUT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(rpc_server_unary PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                                   protobuf::libprotobuf)
     add_executable(
       rpc_client
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
@@ -185,5 +185,18 @@ if(ENABLE_TESTS)
                                PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     target_link_libraries(inspect_plugin PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
+  endif()
+  if(ENABLE_LOAD_ANOTHER_TEST)
+    message(STATUS "Building load_another_test")
+    # ====== rpc server/client ======
+    add_executable(
+      rpc_server_another_load
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/load_another/server/rpc_server.cpp)
+    target_include_directories(
+      rpc_server_another_load PRIVATE ${OUT_DIR}
+                                      ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(
+      rpc_server_another_load PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                      protobuf::libprotobuf)
   endif()
 endif()

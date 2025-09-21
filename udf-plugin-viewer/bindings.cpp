@@ -124,11 +124,13 @@ PYBIND11_MODULE(udf_plugin, m) {
     m.doc() = "UDF Plugin Loader (with nested record support)";
     m.def("load_plugin", [](const std::string& path) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
-        loader->load(path);
+        auto result                               = loader->load(path);
+        std::cerr << "[gRPC] " << result.status_string() << " file: " << result.file()
+                  << " detail: " << result.detail() << std::endl;
         auto plugins = loader->get_plugins();
         std::vector<plugin_api*> apis;
         for (const auto& plugin : plugins) {
-            apis.push_back(std::get<0>(plugin));
+            apis.push_back(std::get<0>(plugin).get());
         }
         return package_to_list(apis);
     });

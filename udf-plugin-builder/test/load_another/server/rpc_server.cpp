@@ -17,11 +17,16 @@ class GreeterServiceImpl final : public Greeter::Service {
     Status SayHello(
         ServerContext* context, const StringValue* request, StringValue* reply) override {
         std::string prefix("Hello ");
+        std::cerr << "SayHello" << std::endl;
+        std::cerr << "  prefix: " << prefix << std::endl;
+        std::cerr << "  request->value(): " << request->value() << std::endl;
         reply->set_value(prefix + request->value());
         return Status::OK;
     }
     Status IntAddInt(
         ServerContext* context, const Int32Value* request, Int32Value* reply) override {
+        std::cerr << "IntAddInt" << std::endl;
+        std::cerr << "  request->value(): " << request->value() << std::endl;
         int sum = request->value() + 1;
         reply->set_value(sum);
         return Status::OK;
@@ -32,6 +37,9 @@ class ByerServiceImpl final : public Byer::Service {
     Status SayWorld(
         ServerContext* context, const StringValue* request, StringValue* reply) override {
         std::string prefix("World ");
+        std::cerr << "SayWorld" << std::endl;
+        std::cerr << "  prefix: " << prefix << std::endl;
+        std::cerr << "  request->value(): " << request->value() << std::endl;
         reply->set_value(prefix + request->value());
         return Status::OK;
     }

@@ -29,8 +29,9 @@ find_package(nlohmann_json REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 
-pybind11_add_module(udf_plugin bindings.cpp
-                    ${CMAKE_SOURCE_DIR}/../src/udf/udf_loader.cpp)
+pybind11_add_module(
+  udf_plugin bindings.cpp ${CMAKE_SOURCE_DIR}/../src/udf/udf_loader.cpp
+  ${CMAKE_SOURCE_DIR}/../src/udf/error_info.cpp)
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py

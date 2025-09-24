@@ -41,18 +41,46 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
 # ====== proto files ======
 set(DEFAULT_PROTO_FILES proto/sample.proto proto/complex_types.proto
                         proto/primitive_types.proto)
+set(DEFAULT_PROTO_PATH proto)
+
+# Override defaults if test options are enabled
+if(ENABLE_UNARY_TEST)
+  if(NOT DEFINED PROTO_PATH)
+    set(DEFAULT_PROTO_PATH test/unary_test/proto)
+  endif()
+  if(NOT DEFINED PROTO_FILES)
+    set(DEFAULT_PROTO_FILES test/unary_test/proto/test_all.proto)
+  endif()
+elseif(ENABLE_LOAD_ANOTHER_TEST)
+  if(NOT DEFINED PROTO_PATH)
+    set(DEFAULT_PROTO_PATH test/load_another/proto)
+  endif()
+  if(NOT DEFINED PROTO_FILES)
+    set(DEFAULT_PROTO_FILES test/load_another/proto/sample.proto)
+  endif()
+endif()
+
 set(PROTO_FILES
     ${DEFAULT_PROTO_FILES}
     CACHE STRING "List of proto files to generate")
 string(REPLACE ";" " " PROTO_FILES_STR "${PROTO_FILES}")
 
-set(DEFAULT_PROTO_PATH proto)
 set(PROTO_PATH
     ${DEFAULT_PROTO_PATH}
     CACHE STRING "Directories containing proto files")
 
 # ====== library name ======
 set(DEFAULT_PLUGIN_API_NAME plugin_api)
+
+if(ENABLE_UNARY_TEST)
+  if(NOT DEFINED PLUGIN_API_NAME)
+    set(DEFAULT_PLUGIN_API_NAME unary)
+  endif()
+elseif(ENABLE_LOAD_ANOTHER_TEST)
+  if(NOT DEFINED PLUGIN_API_NAME)
+    set(DEFAULT_PLUGIN_API_NAME load_another)
+  endif()
+endif()
 set(PLUGIN_API_NAME
     ${DEFAULT_PLUGIN_API_NAME}
     CACHE STRING "Name of the plugin_api library target (default: plugin_api)")
@@ -66,6 +94,15 @@ set(OUT_DIR
           "Output directory for generated code (default: ${DEFAULT_OUT_DIR})")
 # ====== gRPC URL option ======
 set(DEFAULT_GRPC_URL "localhost:50051")
+if(ENABLE_UNARY_TEST)
+  if(NOT DEFINED GRPC_URL)
+    set(DEFAULT_GRPC_URL "localhost:50001")
+  endif()
+elseif(ENABLE_LOAD_ANOTHER_TEST)
+  if(NOT DEFINED GRPC_URL)
+    set(DEFAULT_GRPC_URL "localhost:50002")
+  endif()
+endif()
 set(GRPC_URL
     ${DEFAULT_GRPC_URL}
     CACHE STRING "gRPC server URL (default: ${DEFAULT_GRPC_URL})")
@@ -186,6 +223,9 @@ if(ENABLE_TESTS)
     target_link_libraries(inspect_plugin PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
   endif()
+  # cmake ../ -DPROTO_PATH="test/load_another/proto"
+  # -DPROTO_FILES="test/load_another/proto/sample.proto" -DENABLE_TESTS=ON
+  # -DENABLE_LOAD_ANOTHER_TEST=ON -DPLUGIN_API_NAME="load_another" ; make
   if(ENABLE_LOAD_ANOTHER_TEST)
     message(STATUS "Building load_another_test")
     # ====== rpc server/client ======

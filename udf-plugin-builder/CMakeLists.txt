@@ -74,7 +74,7 @@ set(DEFAULT_PLUGIN_API_NAME plugin_api)
 
 if(ENABLE_UNARY_TEST)
   if(NOT DEFINED PLUGIN_API_NAME)
-    set(DEFAULT_PLUGIN_API_NAME unary)
+    set(DEFAULT_PLUGIN_API_NAME unary_test)
   endif()
 elseif(ENABLE_LOAD_ANOTHER_TEST)
   if(NOT DEFINED PLUGIN_API_NAME)
@@ -189,12 +189,14 @@ if(ENABLE_TESTS)
     message(STATUS "Building unary_test")
     # ====== rpc server/client ======
     add_executable(
-      rpc_server_unary
+      rpc_server_unary_test
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_unary PRIVATE ${OUT_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_link_libraries(rpc_server_unary PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                                   protobuf::libprotobuf)
+      rpc_server_unary_test PRIVATE ${OUT_DIR}
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(
+      rpc_server_unary_test PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                    protobuf::libprotobuf)
     add_executable(
       rpc_client
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
@@ -230,13 +232,13 @@ if(ENABLE_TESTS)
     message(STATUS "Building load_another_test")
     # ====== rpc server/client ======
     add_executable(
-      rpc_server_another_load
+      rpc_server_load_another
       ${CMAKE_CURRENT_SOURCE_DIR}/test/load_another/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_another_load PRIVATE ${OUT_DIR}
+      rpc_server_load_another PRIVATE ${OUT_DIR}
                                       ${CMAKE_CURRENT_SOURCE_DIR}/include)
     target_link_libraries(
-      rpc_server_another_load PRIVATE proto_lib ${GRPC_LIBRARIES}
+      rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
   endif()
 endif()

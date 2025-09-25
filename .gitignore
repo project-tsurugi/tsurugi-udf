@@ -2,3 +2,6 @@ py/common/__pycache__/
 udf-plugin-builder/build/
 udf-plugin-builder/out/
 udf-plugin-builder/test/build/
+udf-plugin-builder/test/unary_test/build
+udf-plugin-builder/test/load_another/build
+udf-plugin-builder/test/oneof_test/build

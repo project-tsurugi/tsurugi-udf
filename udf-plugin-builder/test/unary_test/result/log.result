@@ -1,0 +1,58 @@
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":155}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":155}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":155}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":155}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":155}
+// {"columns":[{"name":null,"label":"@#0","type":"INT8","dimension":0}]}
+{"@#0":1234567890187}
+// {"columns":[{"name":null,"label":"@#0","type":"INT8","dimension":0}]}
+{"@#0":1234567890187}
+// {"columns":[{"name":null,"label":"@#0","type":"INT8","dimension":0}]}
+{"@#0":1234567890187}
+// {"columns":[{"name":null,"label":"@#0","type":"INT8","dimension":0}]}
+{"@#0":1234567890187}
+// {"columns":[{"name":null,"label":"@#0","type":"INT8","dimension":0}]}
+{"@#0":1234567890187}
+// {"columns":[{"name":null,"label":"@#0","type":"FLOAT4","dimension":0}]}
+{"@#0":4.37}
+// {"columns":[{"name":null,"label":"@#0","type":"FLOAT4","dimension":0}]}
+{"@#0":4.37}
+// {"columns":[{"name":null,"label":"@#0","type":"FLOAT4","dimension":0}]}
+{"@#0":6.28}
+// {"columns":[{"name":null,"label":"@#0","type":"FLOAT8","dimension":0}]}
+{"@#0":1.0E100}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Hello hello world                   "}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Hello hello world"}
+// {"columns":[{"name":null,"label":"@#0","type":"OCTET","dimension":0}]}
+{"@#0":[66,121,116,101,115,58,32,-85,-51,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
+// {"columns":[{"name":null,"label":"@#0","type":"OCTET","dimension":0}]}
+{"@#0":[66,121,116,101,115,58,32,-36,-70]}
+// {"columns":[{"name":null,"label":"@#0","type":"BOOLEAN","dimension":0}]}
+{"@#0":false}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"ID: 123, Name: hello                         "}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"ID: 456, Name: world"}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"ID: 123, Name: hello                         "}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"ID: 456, Name: world"}
+// {"columns":[{"name":null,"label":"@#0","type":"INT8","dimension":0}]}
+{"@#0":1234567890246}
+// {"columns":[{"name":null,"label":"@#0","type":"FLOAT8","dimension":0}]}
+{"@#0":1.2300000190734864E100}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"world                         ܺ\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Flag: 1, Count: 123, Label: hello                         "}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Flag: 1, Count: 456, Label: world"}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"i32: 1, i64: 2, ui32: 3, ui64: 4, si32: 5, si64: 6, fi32: 7, fi64: 8, sfi32: 9, sfi64: 10, f32: 11.000000, f64: 12.000000, text: hello, blob size: 2, flag: 0"}

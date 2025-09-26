@@ -1,46 +1,55 @@
 # udf-plugin-builder-test
 
-## 利用方法
+## 概要
+
+udf-plugin-builder-test は、udf-plugin-builder により生成された共有ライブラリ（shared object）が Tsurugi Database 上で正常に動作することを検証するためのテストです。
+
+本テストを実行することで、ビルドされた UDF プラグインが Tsurugi のプラグインローダ経由で正しくロード・利用可能であるかを確認できます。
+
+## 前提条件
+
+- Tsurugi Database がインストール済みであること
+- テストを実行するユーザが必要な権限を有していること
+
+## テスト実行方法
+
+以下のコマンドを実行します。
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make
-./inspect_plugin ../../build/libplugin_api.so
+./run.sh <tsurugi.ini の loader_path>
 ```
 
-## 解説
+## 引数
 
-`make` を実行すると以下の3つの実行ファイルが生成されます。
+### loader_path
 
-- **inspect_plugin**\
-  `libplugin_api.so` をロードし、その中に組み込まれた gRPC クライアントを起動するプログラムです。
+Tsurugi Database の設定ファイル tsurugi.ini に記載された loader_path を指定します。
 
-- **rpc_server**\
-  gRPC サーバ。テストを行う前に事前に起動しておく必要があります。
+例:
 
-- **rpc_client**\
-  gRPC クライアント。`rpc_server` との疎通確認を行うために利用します。
+```
+[sql]
+loader_path=/tsurugi/grpc
+```
 
-## テスト手順
+## 判定基準
 
-1. まず `rpc_server` を起動します。
+テストの実行結果は、標準出力に以下の形式で表示されます。
 
-1. 次に `rpc_client` を起動し、クライアントとサーバ間で gRPC 通信が行えていることを確認します。
+### OK: \<テスト名>
 
-1. 通信が確認できたら以下を実行します。
+→ テストが正常に完了した場合
 
-   ```bash
-   ./inspect_plugin ../../build/libplugin_api.so
-   ```
+### NG: \<テスト名>
 
-   - `inspect_plugin` の第1引数には `libplugin_api.so` のパスを渡します。
-   - 実行すると、`inspect_plugin` が `libplugin_api.so` に組み込まれた gRPC クライアントを起動し、gRPC 通信を行います。
-   - クライアントに通信結果が表示されればテスト成功です。
+→ テストが失敗した場合
 
-1. さらに、**gRPC サーバを起動せずに `inspect_plugin` を実行し、通信が失敗することを確認**してください。これにより、通信が正しくサーバ依存で動作していることが確認できます。
+## 例
 
-______________________________________________________________________
+OK: load_another
+NG: unary_test
 
-以上で通信テストは終了です。
+※本テストは 終了コードでも成功／失敗を区別します。
+
+- 全てのテストが成功した場合 → 終了コード 0
+- いずれかのテストが失敗した場合 → 終了コード 1

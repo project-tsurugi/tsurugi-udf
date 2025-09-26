@@ -80,6 +80,24 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## PROTO_PATH と PROTO_FILES の指定
+
+- `PROTO_PATH` は protoc の `-I` と同様の意味です。\
+  `.proto` ファイル検索用のディレクトリを指定します。
+- `PROTO_FILES` はコンパイル対象の `.proto` ファイルのリストです。
+- 両方とも **相対パスか絶対パスのどちらかを統一して指定する必要** があります。
+  - 例: 相対パスの場合
+
+    ```bash
+    -DPROTO_PATH="proto" -DPROTO_FILES="proto/hello.proto"
+    ```
+
+  - 例: 絶対パスの場合
+
+    ```bash
+    -DPROTO_PATH="/home/user/udf-plugin-builder/proto" -DPROTO_FILES="/home/user/udf-plugin-builder/proto/hello.proto"
+    ```
+
 ## 例
 
 ### `.proto` 定義例

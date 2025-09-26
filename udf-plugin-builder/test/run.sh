@@ -1,7 +1,7 @@
 #!/bin/bash
 # shfmt -i 4 -ci -sr -w run.sh
 set -euo pipefail
-
+status=0
 OUT_DIR=${1:-$(pwd)}
 LIST=(load_another unary_test)
 for i in ${LIST[@]}; do
@@ -29,6 +29,7 @@ for i in ${LIST[@]}; do
         echo "OK: $i"
     else
         echo "NG: $i"
+        status=1
     fi
 done
 
@@ -38,3 +39,4 @@ for pid in "${pids[@]}"; do
 done
 
 tgctl shutdown
+exit $status

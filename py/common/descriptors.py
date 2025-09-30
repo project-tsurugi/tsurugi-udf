@@ -25,6 +25,30 @@ class ColumnDescriptor:
 
 
 @dataclass
+class ScalarDescriptor(ColumnDescriptor):
+    index: int
+    column_name: str
+    type_kind: Optional[str] = None
+    nested_record: Optional[RecordDescriptor] = None
+
+
+@dataclass
+class NestedDescriptor(ColumnDescriptor):
+    index: int
+    column_name: str
+    type_kind: Optional[str] = None
+    nested_record: Optional[RecordDescriptor] = None
+
+
+@dataclass
+class OneofDescriptor(ColumnDescriptor):
+    index: int
+    column_name: str
+    type_kind: Optional[str] = None
+    nested_record: Optional[RecordDescriptor] = None
+
+
+@dataclass
 class RecordDescriptor:
     columns: List[ColumnDescriptor]
     record_name: str = ""

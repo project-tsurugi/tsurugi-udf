@@ -35,6 +35,59 @@ class column_descriptor_impl : public column_descriptor {
     type_kind_type kind;
     record_descriptor* nested_record;
 };
+class scalar_descriptor_impl : public scalar_descriptor {
+  public:
+    scalar_descriptor_impl(
+        index_type i, std::string_view n, type_kind_type k, record_descriptor* nested = nullptr)
+        : idx(i), name(n), kind(k), nested_record(nested) {}
+
+    index_type index() const noexcept override { return idx; }
+    std::string_view column_name() const noexcept override { return name; }
+    type_kind_type type_kind() const noexcept override { return kind; }
+    record_descriptor* nested() const noexcept { return nested_record; }
+
+  private:
+    index_type idx;
+    std::string_view name;
+    type_kind_type kind;
+    record_descriptor* nested_record;
+};
+
+class nested_descriptor_impl : public nested_descriptor {
+  public:
+    nested_descriptor_impl(
+        index_type i, std::string_view n, type_kind_type k, record_descriptor* nested = nullptr)
+        : idx(i), name(n), kind(k), nested_record(nested) {}
+
+    index_type index() const noexcept override { return idx; }
+    std::string_view column_name() const noexcept override { return name; }
+    type_kind_type type_kind() const noexcept override { return kind; }
+    record_descriptor* nested() const noexcept { return nested_record; }
+
+  private:
+    index_type idx;
+    std::string_view name;
+    type_kind_type kind;
+    record_descriptor* nested_record;
+};
+
+class oneof_descriptor_impl : public oneof_descriptor {
+  public:
+    oneof_descriptor_impl(
+        index_type i, std::string_view n, type_kind_type k, record_descriptor* nested = nullptr)
+        : idx(i), name(n), kind(k), nested_record(nested) {}
+
+    index_type index() const noexcept override { return idx; }
+    std::string_view column_name() const noexcept override { return name; }
+    type_kind_type type_kind() const noexcept override { return kind; }
+    record_descriptor* nested() const noexcept { return nested_record; }
+
+  private:
+    index_type idx;
+    std::string_view name;
+    type_kind_type kind;
+    record_descriptor* nested_record;
+};
 
 class record_descriptor_impl : public record_descriptor {
   public:

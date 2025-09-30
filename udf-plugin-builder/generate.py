@@ -27,6 +27,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "p
 from dataclasses import asdict
 from common.descriptors import (
     ColumnDescriptor,
+    ScalarDescriptor,
+    NestedDescriptor,
+    OneofDescriptor,
     RecordDescriptor,
     FunctionDescriptor,
     ServiceDescriptor,
@@ -79,7 +82,7 @@ def parse_package_descriptor(
                 ],
                 record_name=type_name.lstrip("."),
             )
-        columns = []
+        columns: list[ColumnDescriptor] = []
         for idx, field in enumerate(descriptor.field):
             kind = field_type_to_kind(field)
             nested = None
@@ -87,14 +90,20 @@ def parse_package_descriptor(
             if kind == FIELD_TYPE_MAP[11]:
                 nested_type_name = field.type_name
                 nested = resolve_record_type(nested_type_name)
-            columns.append(
-                ColumnDescriptor(
+                field_desc = NestedDescriptor(
                     index=idx,
                     column_name=field.name,
                     type_kind=kind,
                     nested_record=nested,
                 )
-            )
+            else:
+                field_desc = ScalarDescriptor(
+                    index=idx,
+                    column_name=field.name,
+                    type_kind=kind,
+                    nested_record=None,
+                )
+            columns.append(field_desc)
         return RecordDescriptor(columns=columns, record_name=type_name.lstrip("."))
 
     for file_proto in desc_set.file:

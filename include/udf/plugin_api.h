@@ -41,7 +41,20 @@ class column_descriptor {
     [[nodiscard]] virtual type_kind_type type_kind() const noexcept     = 0;
     [[nodiscard]] virtual record_descriptor* nested() const noexcept    = 0;
 };
+class scalar_descriptor : public column_descriptor {
+  public:
+    ~scalar_descriptor() override = default;
+};
 
+class nested_descriptor : public column_descriptor {
+  public:
+    ~nested_descriptor() override = default;
+};
+
+class oneof_descriptor : public column_descriptor {
+  public:
+    ~oneof_descriptor() override = default;
+};
 class record_descriptor {
   public:
     record_descriptor()                                                                   = default;

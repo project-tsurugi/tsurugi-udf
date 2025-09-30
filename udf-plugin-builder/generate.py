@@ -53,11 +53,20 @@ def parse_package_descriptor(
     function_counter = 0
 
     message_type_map = {}
+
+    def register_message(pkg: str, msg, parent_prefix: str = ""):
+        if parent_prefix:
+            fqname = f"{parent_prefix}.{msg.name}"
+        else:
+            fqname = f".{pkg}.{msg.name}" if pkg else f".{msg.name}"
+        message_type_map[fqname] = msg
+        for nested in msg.nested_type:
+            register_message(pkg, nested, fqname)
+
     for file_proto in desc_set.file:
         pkg = file_proto.package
         for msg in file_proto.message_type:
-            fqname = f".{pkg}.{msg.name}" if pkg else f".{msg.name}"
-            message_type_map[fqname] = msg
+            register_message(pkg, msg)
 
     def resolve_record_type(type_name):
         descriptor = message_type_map.get(type_name)

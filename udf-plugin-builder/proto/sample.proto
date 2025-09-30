@@ -2,17 +2,23 @@ syntax = "proto3";
 
 package myapi;
 
-import "primitive_types.proto";
 import "complex_types.proto";
+import "primitive_types.proto";
 
 service Greeter {
-  rpc SayHello (StringValue) returns (StringValue);
-  rpc IntAddInt (Int32Value) returns (Int32Value);
-  rpc SayGoodbye (Byebye) returns (Byebye);
+  rpc SayHello(StringValue) returns (StringValue);
+  rpc IntAddInt(Int32Value) returns (Int32Value);
+  rpc SayGoodbye(Byebye) returns (Byebye);
 }
 service Byer {
-  rpc SayWorld (StringValue) returns (StringValue);
-  rpc DecDecimal (tsurugidb.udf.value.Decimal) returns (tsurugidb.udf.value.LocalTime);
+  rpc SayWorld(StringValue) returns (StringValue);
+  rpc DecDecimal(tsurugidb.udf.value.Decimal) returns (tsurugidb.udf.value.LocalTime);
 }
-message Bye { string value = 1; string message =2; }
-message Byebye {Bye bye =1; string str=2; }
+message Bye {
+  string value = 1;
+  string message = 2;
+}
+message Byebye {
+  Bye bye = 1;
+  string str = 2;
+}

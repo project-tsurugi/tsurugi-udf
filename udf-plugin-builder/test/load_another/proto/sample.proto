@@ -1,11 +1,15 @@
 syntax = "proto3";
 
 service Greeter {
-  rpc SayHello (StringValue) returns (StringValue);
-  rpc IntAddInt (Int32Value) returns (Int32Value);
+  rpc SayHello(StringValue) returns (StringValue);
+  rpc IntAddInt(Int32Value) returns (Int32Value);
 }
 service Byer {
-  rpc SayWorld (StringValue) returns (StringValue);
+  rpc SayWorld(StringValue) returns (StringValue);
 }
-message Int32Value { int32 value = 1; }
-message StringValue { string value = 1; }
+message Int32Value {
+  int32 value = 1;
+}
+message StringValue {
+  string value = 1;
+}

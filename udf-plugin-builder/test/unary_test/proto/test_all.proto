@@ -169,36 +169,35 @@ message AllTypesRequest {
   double f64 = 12;
   string text = 13;
   bytes blob = 14;
-  bool flag =  15;
+  bool flag = 15;
 }
 message AllTypesReply {
   string summary = 1;
 }
 
 service TestService {
-  rpc EchoInt32   (Int32Request)  returns (Int32Reply);
-  rpc EchoInt64   (Int64Request)  returns (Int64Reply);
-  rpc EchoUInt32   (UInt32Request)  returns (UInt32Reply);
-  rpc EchoUInt64   (UInt64Request)  returns (UInt64Reply);
-  rpc EchoSInt32   (SInt32Request)  returns (SInt32Reply);
-  rpc EchoSInt64   (SInt64Request)  returns (SInt64Reply);
-  rpc EchoFloat   (FloatRequest)  returns (FloatReply);
-  rpc EchoDouble  (DoubleRequest) returns (DoubleReply);
-  rpc EchoString  (StringRequest) returns (StringReply);
-  rpc EchoBytes   (BytesRequest)  returns (BytesReply);
-  rpc EchoBool    (BoolRequest)   returns (BoolReply);
-  rpc EchoFixed32   (Fixed32Request)  returns (Fixed32Reply);
-  rpc EchoFixed64   (Fixed64Request)  returns (Fixed64Reply);
-  rpc EchoSFixed32   (SFixed32Request)  returns (SFixed32Reply);
-  rpc EchoSFixed64   (SFixed64Request)  returns (SFixed64Reply);
+  rpc EchoInt32(Int32Request) returns (Int32Reply);
+  rpc EchoInt64(Int64Request) returns (Int64Reply);
+  rpc EchoUInt32(UInt32Request) returns (UInt32Reply);
+  rpc EchoUInt64(UInt64Request) returns (UInt64Reply);
+  rpc EchoSInt32(SInt32Request) returns (SInt32Reply);
+  rpc EchoSInt64(SInt64Request) returns (SInt64Reply);
+  rpc EchoFloat(FloatRequest) returns (FloatReply);
+  rpc EchoDouble(DoubleRequest) returns (DoubleReply);
+  rpc EchoString(StringRequest) returns (StringReply);
+  rpc EchoBytes(BytesRequest) returns (BytesReply);
+  rpc EchoBool(BoolRequest) returns (BoolReply);
+  rpc EchoFixed32(Fixed32Request) returns (Fixed32Reply);
+  rpc EchoFixed64(Fixed64Request) returns (Fixed64Reply);
+  rpc EchoSFixed32(SFixed32Request) returns (SFixed32Reply);
+  rpc EchoSFixed64(SFixed64Request) returns (SFixed64Reply);
 
-  rpc ConcatInt32String     (Int32StringRequest)     returns (Int32StringReply);
-  rpc ConcatStringInt32     (StringInt32Request)     returns (StringInt32Reply);
-  rpc SumInt32Int64         (Int32Int64Request)      returns (Int32Int64Reply);
-  rpc MultiplyFloatDouble   (FloatDoubleRequest)     returns (FloatDoubleReply);
-  rpc CombineStringBytes    (StringBytesRequest)     returns (StringBytesReply);
-  rpc FormatBoolInt32String (BoolInt32StringRequest) returns (BoolInt32StringReply);
+  rpc ConcatInt32String(Int32StringRequest) returns (Int32StringReply);
+  rpc ConcatStringInt32(StringInt32Request) returns (StringInt32Reply);
+  rpc SumInt32Int64(Int32Int64Request) returns (Int32Int64Reply);
+  rpc MultiplyFloatDouble(FloatDoubleRequest) returns (FloatDoubleReply);
+  rpc CombineStringBytes(StringBytesRequest) returns (StringBytesReply);
+  rpc FormatBoolInt32String(BoolInt32StringRequest) returns (BoolInt32StringReply);
 
-  rpc UseAllTypes (AllTypesRequest) returns (AllTypesReply);
+  rpc UseAllTypes(AllTypesRequest) returns (AllTypesReply);
 }
-

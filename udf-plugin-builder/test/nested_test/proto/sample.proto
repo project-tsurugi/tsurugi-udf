@@ -3,22 +3,26 @@ syntax = "proto3";
 package myapi;
 
 service Nestet {
-  rpc NestedHello (NestedValue) returns (StrValue);
+  rpc NestedHello(NestedValue) returns (StrValue);
 }
 
 message NestedValue {
   int32 i32 = 1;
+  Result r1 = 2;
   message Result {
-    int64 i64 = 2;
-    uint32 ui32 = 3;
+    int64 i64 = 1;
+    uint32 ui32 = 2;
   }
-  uint64 ui64 = 4;
+  uint64 ui64 = 3;
+  Result2 r2 = 4;
   message Result2 {
-    sint32 si32 = 5;
-    sint64 si64 = 6;
+    sint32 si32 = 1;
+    sint64 si64 = 2;
   }
-  float f32 = 7;
-  double f64 = 8;
+  float f32 = 5;
+  double f64 = 6;
 }
 
-message StrValue { string value = 1; }
+message StrValue {
+  string value = 1;
+}

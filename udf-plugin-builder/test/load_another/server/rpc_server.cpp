@@ -1,11 +1,12 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "sample.grpc.pb.h"
 #include "sample.pb.h"
-#include <boost/property_tree/ini_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
+
 #include <grpcpp/grpcpp.h>
 
 using grpc::Server;
@@ -14,8 +15,7 @@ using grpc::ServerContext;
 using grpc::Status;
 
 class GreeterServiceImpl final : public Greeter::Service {
-    Status SayHello(
-        ServerContext* context, const StringValue* request, StringValue* reply) override {
+    Status SayHello(ServerContext* context, const StringValue* request, StringValue* reply) override {
         std::string prefix("Hello ");
         std::cerr << "SayHello" << std::endl;
         std::cerr << "  prefix: " << prefix << std::endl;
@@ -23,8 +23,7 @@ class GreeterServiceImpl final : public Greeter::Service {
         reply->set_value(prefix + request->value());
         return Status::OK;
     }
-    Status IntAddInt(
-        ServerContext* context, const Int32Value* request, Int32Value* reply) override {
+    Status IntAddInt(ServerContext* context, const Int32Value* request, Int32Value* reply) override {
         std::cerr << "IntAddInt" << std::endl;
         std::cerr << "  request->value(): " << request->value() << std::endl;
         int sum = request->value() + 1;
@@ -34,8 +33,7 @@ class GreeterServiceImpl final : public Greeter::Service {
 };
 
 class ByerServiceImpl final : public Byer::Service {
-    Status SayWorld(
-        ServerContext* context, const StringValue* request, StringValue* reply) override {
+    Status SayWorld(ServerContext* context, const StringValue* request, StringValue* reply) override {
         std::string prefix("World ");
         std::cerr << "SayWorld" << std::endl;
         std::cerr << "  prefix: " << prefix << std::endl;
@@ -50,11 +48,10 @@ void RunServer(const std::string& server_address, const std::string& credentials
 
     grpc::ServerBuilder builder;
 
-    if (credentials == "insecure") {
+    if(credentials == "insecure") {
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     } else {
-        std::cerr << "[WARN] Unsupported credentials: " << credentials
-                  << " (falling back to insecure)\n";
+        std::cerr << "[WARN] Unsupported credentials: " << credentials << " (falling back to insecure)\n";
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     }
 
@@ -69,19 +66,18 @@ void RunServer(const std::string& server_address, const std::string& credentials
 
 int main(int argc, char** argv) {
     std::string server_address = "0.0.0.0:50051";
-    std::string credentials    = "insecure";
+    std::string credentials = "insecure";
 
-    if (argc >= 2) {
+    if(argc >= 2) {
         std::string ini_file = argv[1];
         boost::property_tree::ptree pt;
         try {
             boost::property_tree::ini_parser::read_ini(ini_file, pt);
             server_address = pt.get<std::string>("grpc.url", server_address);
-            credentials    = pt.get<std::string>("grpc.credentials", credentials);
+            credentials = pt.get<std::string>("grpc.credentials", credentials);
             std::cout << "[INFO] Loaded gRPC settings from " << ini_file << "\n";
-        } catch (const boost::property_tree::ini_parser_error& e) {
-            std::cerr << "[WARN] Failed to read ini file '" << ini_file << "': " << e.what()
-                      << "\n";
+        } catch(const boost::property_tree::ini_parser_error& e) {
+            std::cerr << "[WARN] Failed to read ini file '" << ini_file << "': " << e.what() << "\n";
             std::cerr << "[INFO] Using default gRPC settings\n";
         }
     } else {

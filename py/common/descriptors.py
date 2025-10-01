@@ -22,30 +22,8 @@ class ColumnDescriptor:
     column_name: str
     type_kind: Optional[str] = None
     nested_record: Optional[RecordDescriptor] = None
-
-
-@dataclass
-class ScalarDescriptor(ColumnDescriptor):
-    index: int
-    column_name: str
-    type_kind: Optional[str] = None
-    nested_record: Optional[RecordDescriptor] = None
-
-
-@dataclass
-class NestedDescriptor(ColumnDescriptor):
-    index: int
-    column_name: str
-    type_kind: Optional[str] = None
-    nested_record: Optional[RecordDescriptor] = None
-
-
-@dataclass
-class OneofDescriptor(ColumnDescriptor):
-    index: int
-    column_name: str
-    type_kind: Optional[str] = None
-    nested_record: Optional[RecordDescriptor] = None
+    oneof_index: Optional[int] = None
+    oneof_name: Optional[str] = None
 
 
 @dataclass

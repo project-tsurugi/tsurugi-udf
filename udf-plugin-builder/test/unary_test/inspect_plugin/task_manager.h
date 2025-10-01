@@ -1,14 +1,16 @@
 #pragma once
-#include "udf/generic_client.h"
-#include "udf/plugin_api.h"
-#include "udf/plugin_loader.h"
 #include <functional>
 #include <memory>
 #include <vector>
 
+#include "udf/generic_client.h"
+#include "udf/plugin_api.h"
+#include "udf/plugin_loader.h"
+
 using namespace plugin::udf;
 class TaskManager {
-  public:
+public:
+
     void register_task(std::function<void()> fn);
     void run_tasks() const;
     void set_loader(std::unique_ptr<plugin_loader> l);
@@ -17,7 +19,8 @@ class TaskManager {
     void register_rpc_tasks();
     void shutdown();
 
-  private:
+private:
+
     std::vector<std::function<void()>> tasks_;
     std::unique_ptr<plugin_loader> loader_;
     std::vector<std::tuple<std::shared_ptr<plugin_api>, std::shared_ptr<generic_client>>> plugins_;

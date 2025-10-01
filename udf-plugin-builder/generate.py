@@ -27,9 +27,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "p
 from dataclasses import asdict
 from common.descriptors import (
     ColumnDescriptor,
-    ScalarDescriptor,
-    NestedDescriptor,
-    OneofDescriptor,
     RecordDescriptor,
     FunctionDescriptor,
     ServiceDescriptor,
@@ -86,23 +83,28 @@ def parse_package_descriptor(
         for idx, field in enumerate(descriptor.field):
             kind = field_type_to_kind(field)
             nested = None
-            # 11: MESSAGE
-            if kind == FIELD_TYPE_MAP[11]:
-                nested_type_name = field.type_name
-                nested = resolve_record_type(nested_type_name)
-                field_desc = NestedDescriptor(
-                    index=idx,
-                    column_name=field.name,
-                    type_kind=kind,
-                    nested_record=nested,
+            if field.HasField("oneof_index"):
+                oneof_idx = field.oneof_index
+                oneof_name = (
+                    descriptor.oneof_decl[oneof_idx].name
+                    if oneof_idx is not None
+                    else None
                 )
             else:
-                field_desc = ScalarDescriptor(
-                    index=idx,
-                    column_name=field.name,
-                    type_kind=kind,
-                    nested_record=None,
-                )
+                oneof_idx = None
+                oneof_name = None
+            # 11: MESSAGE
+            if kind == FIELD_TYPE_MAP[11]:  # MESSAGE
+                nested_type_name = field.type_name
+                nested = resolve_record_type(nested_type_name)
+            field_desc = ColumnDescriptor(
+                index=idx,
+                column_name=field.name,
+                type_kind=kind,
+                nested_record=nested,
+                oneof_index=oneof_idx,
+                oneof_name=oneof_name,
+            )
             columns.append(field_desc)
         return RecordDescriptor(columns=columns, record_name=type_name.lstrip("."))
 

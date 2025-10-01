@@ -1,3 +1,10 @@
+#include <dlfcn.h>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
+
 #include "task_manager.h"
 #include "udf/descriptor_impl.h"
 #include "udf/generic_client.h"
@@ -6,17 +13,12 @@
 #include "udf/plugin_api.h"
 #include "udf/plugin_loader.h"
 #include "udf/udf_loader.h"
-#include <dlfcn.h>
+
 #include <grpcpp/grpcpp.h>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <tuple>
-#include <vector>
 
 using namespace plugin::udf;
 int main(int argc, char** argv) {
-    if (argc < 2) {
+    if(argc < 2) {
         std::cerr << "Usage: inspect_plugin <path_to_plugin.so>" << std::endl;
         return 1;
     }

@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "udf/udf_loader.h"
 #include <iostream>
 #include <memory>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <string>
 #include <tuple>
 #include <vector>
+
+#include "udf/udf_loader.h"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 using namespace plugin::udf;
 using namespace pybind11::literals;
 
 std::string type_kind_to_string(plugin::udf::type_kind_type kind) {
-    switch (kind) {
+    switch(kind) {
         case plugin::udf::type_kind_type::FLOAT8: return "FLOAT8";
         case plugin::udf::type_kind_type::FLOAT4: return "FLOAT4";
         case plugin::udf::type_kind_type::INT8: return "INT8";
@@ -52,51 +54,70 @@ std::string type_kind_to_string(plugin::udf::type_kind_type kind) {
 py::dict record_to_dict(const record_descriptor& record);
 
 py::dict column_to_dict(const column_descriptor* col) {
-    py::dict d("index"_a = col->index(), "column_name"_a = std::string(col->column_name()),
-        "type_kind"_a = type_kind_to_string(col->type_kind()));
+    py::dict d;
+    d["index"] = col->index();
+    d["column_name"] = std::string(col->column_name());
+    d["type_kind"] = type_kind_to_string(col->type_kind());
 
-    if (auto nested = col->nested()) {
+    // oneof_index
+    if(col->has_oneof()) {
+        std::cout << "oneof_index: " << col->oneof_index().value() << std::endl;
+        d["oneof_index"] = py::cast(col->oneof_index().value());
+    } else {
+        std::cout << "oneof_index: None" << std::endl;
+        d["oneof_index"] = py::none();
+    }
+
+    // oneof_name
+    if(col->has_oneof()) {
+        d["oneof_name"] = py::cast(std::string(col->oneof_name().value()));
+    } else {
+        d["oneof_name"] = py::none();
+    }
+
+    if(auto nested = col->nested()) {
         d["nested_record"] = record_to_dict(*nested);
     } else {
         d["nested_record"] = py::none();
     }
+
     return d;
 }
 
 py::dict record_to_dict(const record_descriptor& record) {
     py::list cols;
-    for (auto* col : record.columns()) {
-        cols.append(column_to_dict(col));
-    }
+    for(auto* col: record.columns()) { cols.append(column_to_dict(col)); }
     return py::dict("record_name"_a = std::string(record.record_name()), "columns"_a = cols);
 }
 
 py::dict function_to_dict(const function_descriptor* fn) {
-    return py::dict("function_index"_a = fn->function_index(),
-        "function_name"_a              = std::string(fn->function_name()),
-        "function_kind"_a              = static_cast<int>(fn->function_kind()),
-        "input_record"_a               = record_to_dict(fn->input_record()),
-        "output_record"_a              = record_to_dict(fn->output_record()));
+    return py::dict(
+        "function_index"_a = fn->function_index(),
+        "function_name"_a = std::string(fn->function_name()),
+        "function_kind"_a = static_cast<int>(fn->function_kind()),
+        "input_record"_a = record_to_dict(fn->input_record()),
+        "output_record"_a = record_to_dict(fn->output_record())
+    );
 }
 
 py::list functions_to_list(const std::vector<function_descriptor*>& fns) {
     py::list result;
-    for (auto* fn : fns) {
-        result.append(function_to_dict(fn));
-    }
+    for(auto* fn: fns) { result.append(function_to_dict(fn)); }
     return result;
 }
 
 py::dict service_to_dict(const service_descriptor* svc) {
-    return py::dict("service_index"_a = svc->service_index(),
-        "service_name"_a              = std::string(svc->service_name()),
-        "functions"_a                 = functions_to_list(svc->functions()));
+    return py::dict(
+        "service_index"_a = svc->service_index(),
+        "service_name"_a = std::string(svc->service_name()),
+        "functions"_a = functions_to_list(svc->functions())
+    );
 }
 
 py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
     py::list result;
-    for (auto* svc : svcs) {
-        if (!svc) {
+    for(auto* svc: svcs) {
+        if(! svc) {
             std::cerr << "Warning: null service_descriptor pointer encountered" << std::endl;
             continue;
         }
@@ -106,16 +127,16 @@ py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
 }
 
 py::dict package_to_dict(const package_descriptor* pkg) {
-    return py::dict("package_name"_a = std::string(pkg->package_name()),
-        "services"_a                 = services_to_list(pkg->services()));
+    return py::dict(
+        "package_name"_a = std::string(pkg->package_name()),
+        "services"_a = services_to_list(pkg->services())
+    );
 }
 
 py::list package_to_list(const std::vector<plugin_api*>& apis) {
     py::list result;
-    for (const auto* api : apis) {
-        for (const auto* pkg : api->packages()) {
-            result.append(package_to_dict(pkg));
-        }
+    for(const auto* api: apis) {
+        for(const auto* pkg: api->packages()) { result.append(package_to_dict(pkg)); }
     }
     return result;
 }
@@ -124,16 +145,14 @@ PYBIND11_MODULE(udf_plugin, m) {
     m.doc() = "UDF Plugin Loader (with nested record support)";
     m.def("load_plugin", [](const std::string& path) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
-        auto results                              = loader->load(path);
-        for (const auto& result : results) {
+        auto results = loader->load(path);
+        for(const auto& result: results) {
             std::cerr << "[gRPC] " << result.status_string() << " file: " << result.file()
                       << " detail: " << result.detail() << std::endl;
         }
         auto plugins = loader->get_plugins();
         std::vector<plugin_api*> apis;
-        for (const auto& plugin : plugins) {
-            apis.push_back(std::get<0>(plugin).get());
-        }
+        for(const auto& plugin: plugins) { apis.push_back(std::get<0>(plugin).get()); }
         return package_to_list(apis);
     });
 }

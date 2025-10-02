@@ -77,42 +77,58 @@ std::optional<T> fetch_value_as(const value_type& v) {
 }  // anonymous namespace
 std::optional<bool> generic_record_cursor_impl::fetch_bool() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<bool>(values_[index_++]);
+    auto value = fetch_value_as<bool>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<std::int32_t> generic_record_cursor_impl::fetch_int4() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<std::int32_t>(values_[index_++]);
+    auto value = fetch_value_as<std::int32_t>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<std::int64_t> generic_record_cursor_impl::fetch_int8() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<std::int64_t>(values_[index_++]);
+    auto value = fetch_value_as<std::int64_t>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<std::uint32_t> generic_record_cursor_impl::fetch_uint4() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<std::uint32_t>(values_[index_++]);
+    auto value = fetch_value_as<std::uint32_t>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<std::uint64_t> generic_record_cursor_impl::fetch_uint8() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<std::uint64_t>(values_[index_++]);
+    auto value = fetch_value_as<std::uint64_t>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<float> generic_record_cursor_impl::fetch_float() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<float>(values_[index_++]);
+    auto value = fetch_value_as<float>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<double> generic_record_cursor_impl::fetch_double() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<double>(values_[index_++]);
+    auto value = fetch_value_as<double>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 std::optional<std::string> generic_record_cursor_impl::fetch_string() {
     if(! has_next()) { return std::nullopt; }
-    return fetch_value_as<std::string>(values_[index_++]);
+    auto value = fetch_value_as<std::string>(values_[index_]);
+    if(value) { ++index_; }
+    return value;
 }
 
 void add_arg_value(generic_record_impl& rec, const NativeValue& v) {

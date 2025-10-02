@@ -1,0 +1,110 @@
+#include <iostream>
+#include <memory>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include "udf/error_info.h"
+#include "udf/generic_client_factory.h"
+#include "udf/generic_record_impl.h"
+
+#include <grpcpp/grpcpp.h>
+
+using namespace plugin::udf;
+// @see https://protobuf.dev/programming-guides/proto3/#scalar
+
+void print_error(const error_info& err) {
+    std::cerr << "RPC failed: code=" << err.code_string() << ", message=" << err.message() << std::endl;
+}
+int main(int argc, char** argv) {
+    std::string grpc_url = "localhost:50051";
+    std::string credentials = "insecure";
+
+    if(argc >= 2) {
+        std::string ini_file = argv[1];
+        boost::property_tree::ptree pt;
+        try {
+            boost::property_tree::ini_parser::read_ini(ini_file, pt);
+            grpc_url = pt.get<std::string>("grpc.url", grpc_url);
+            credentials = pt.get<std::string>("grpc.credentials", credentials);
+            std::cout << "[INFO] Loaded gRPC settings from " << ini_file << "\n";
+        } catch(const boost::property_tree::ini_parser_error& e) {
+            std::cerr << "[WARN] Failed to read ini file '" << ini_file << "': " << e.what() << "\n";
+            std::cerr << "[INFO] Using default gRPC settings\n";
+        }
+    } else {
+        std::cout << "[INFO] No ini file specified. Using default gRPC settings\n";
+    }
+
+    auto channel = grpc::CreateChannel(grpc_url, grpc::InsecureChannelCredentials());
+
+    generic_client_factory* factory = tsurugi_create_generic_client_factory("Greeter");
+    if(! factory) {
+        std::cerr << "Factory creation failed\n";
+        return 1;
+    }
+
+    std::unique_ptr<generic_client> client(factory->create(channel));
+    if(! client) {
+        std::cerr << "Client creation failed\n";
+        tsurugi_destroy_generic_client_factory(factory);
+        return 1;
+    }
+    {
+        std::cout << "EchoOneOf connect" << std::endl;
+        generic_record_impl request;
+        /*
+          sint64 aaa = 1;
+          oneof arg {
+            int64 int64_value = 2;
+            string string_value = 3;
+            bool bool_value = 4;
+          }
+          int32 bbb = 5;
+          oneof aab {
+            int64 int64_value2 = 6;
+            string string_value2 = 7;
+            bool bool_value2 = 8;
+         }
+        */
+        request.add_int8(32);
+        request.add_int8(32);
+        request.add_int4(32);
+        request.add_int8(32);
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 0}, request, response);
+        auto err = response.error();
+        if(err) {
+            print_error(*err);
+        } else if(auto cursor = response.cursor()) {
+            if(auto result = cursor->fetch_int4()) { std::cout << "EchoInt32 received: " << *result << std::endl; }
+        } else {
+            std::cerr << "No response cursor\n";
+        }
+    }
+    {
+        std::cout << "EchoOneOf connect" << std::endl;
+        generic_record_impl request;
+        request.add_int8(32);
+        request.add_string("oneof_test");
+        request.add_int4(32);
+        request.add_string("oneof_test");
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 0}, request, response);
+        auto err = response.error();
+        if(err) {
+            print_error(*err);
+        } else if(auto cursor = response.cursor()) {
+            if(auto result = cursor->fetch_int4()) { std::cout << "EchoInt32 received: " << *result << std::endl; }
+        } else {
+            std::cerr << "No response cursor\n";
+        }
+    }
+    tsurugi_destroy_generic_client(client.release());
+    tsurugi_destroy_generic_client_factory(factory);
+
+    return 0;
+}

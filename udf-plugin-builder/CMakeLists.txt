@@ -271,4 +271,31 @@ if(ENABLE_TESTS)
       rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
   endif()
+  if(ENABLE_ONEOF_TEST)
+    message(STATUS "Building oneof_test")
+    # ====== rpc server/client ======
+    add_executable(
+      rpc_server_oneof_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/server/rpc_server.cpp)
+    target_include_directories(
+      rpc_server_oneof_test PRIVATE ${OUT_DIR}
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_link_libraries(
+      rpc_server_oneof_test PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                    protobuf::libprotobuf)
+    add_executable(
+      rpc_client_oneof
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/client/client.cpp
+      ${OUT_DIR}/rpc_client.cpp
+      ${OUT_DIR}/rpc_client_factory.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
+    target_include_directories(
+      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+                                 ${OUT_DIR})
+    target_include_directories(rpc_client_oneof
+                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                                   protobuf::libprotobuf)
+  endif()
 endif()

@@ -198,10 +198,15 @@ def generate_cpp_from_template(
     output_cpp_path: str,
     proto_base_name: str,
 ):
+    def camelcase(s: str) -> str:
+        parts = s.split("_")
+        return "".join(p.capitalize() for p in parts if p)
+
     env = Environment(
         loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
     )
     env.globals["fetch_add_name"] = fetch_add_name
+    env.filters["camelcase"] = camelcase
     template = env.get_template(template_file)
     rendered = template.render(
         packages=[asdict(pkg) for pkg in packages], proto_base_name=proto_base_name

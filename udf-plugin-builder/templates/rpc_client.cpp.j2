@@ -10,6 +10,13 @@ using grpc::Status;
 using namespace plugin::udf;
 
 // =======================
+// Jinja2 filter for CamelCase
+// =======================
+{% macro camelcase(s) -%}
+    {{- s.split('_') | map('capitalize') | join('') -}}
+{%- endmacro %}
+
+// =======================
 // Macros (recursive code)
 // =======================
 
@@ -24,25 +31,44 @@ using namespace plugin::udf;
             }
         {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-            if (!arg{{ cursor_prefix }}{{ col.index }}) {
-                throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
-            }
-            {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+            {% if col.oneof_index is not none %}
+                if (arg{{ cursor_prefix }}{{ col.index }}) {
+                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                }
+                /* {{ col.oneof_index }} {{ col.oneof_name }} */
+            {% else %}
+                if (!arg{{ cursor_prefix }}{{ col.index }}) {
+                    throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
+                }
+                /* {{ col.oneof_index }} {{ col.oneof_name }} */
+                {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+            {% endif %}
         {% endif %}
     {% endfor %}
 {%- endmacro %}
 
 {# 出力: rep(Proto)→response(generic_record) にフラットに積む #}
-{% macro emit_response_add(parent, record, is_pointer=False) -%}
+{% macro emit_response_add(parent, record, parent_type, is_pointer=False) -%}
     {% for col in record.columns %}
         {% if col.nested_record %}
             {
                 // Flatten nested message: {{ col.column_name }}
                 const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
-                {{ emit_response_add("nested", col.nested_record, False) }}
+                {{ emit_response_add("nested", col.nested_record, parent_type, False) }}
             }
         {% else %}
-            response.add_{{ fetch_add_name(col.type_kind) }}({{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %});
+            {% if col.oneof_index is not none %}
+                // oneof field: add only if present
+                if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
+                    response.add_{{ fetch_add_name(col.type_kind) }}(
+                        {{ parent }}.{{ col.column_name }}()
+                    );
+                }
+            {% else %}
+                response.add_{{ fetch_add_name(col.type_kind) }}(
+                    {{ parent }}.{{ col.column_name }}()
+                );
+            {% endif %}
         {% endif %}
     {% endfor %}
 {%- endmacro %}
@@ -86,6 +112,7 @@ void rpc_client::call(ClientContext& context,
     {% for fn in svc.functions %}
         case {{ fn.function_index }}: {
             {{ fn.input_record.record_name  | replace('.', '::') }}  req;
+            {% set parent_type = fn.output_record.record_name | replace('.', '::') %}
             {{ fn.output_record.record_name | replace('.', '::') }}  rep;
 
             // Build request from generic_record (flatten -> nested)
@@ -96,13 +123,12 @@ void rpc_client::call(ClientContext& context,
 
             if (status.ok()) {
                 // Write response into generic_record (nested -> flatten)
-                {{ emit_response_add("rep", fn.output_record, False) }}
+                {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
             } else {
                 response.set_error(error_info(
-                static_cast<error_info::error_code_type>(status.error_code()),
+                    static_cast<error_info::error_code_type>(status.error_code()),
                     std::string(status.error_message())
                 ));
-                //fail();
             }
             break;
         }

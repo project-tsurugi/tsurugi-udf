@@ -25,7 +25,6 @@ class ColumnDescriptor:
     oneof_index: Optional[int] = None
     oneof_name: Optional[str] = None
 
-
 @dataclass
 class RecordDescriptor:
     columns: List[ColumnDescriptor]

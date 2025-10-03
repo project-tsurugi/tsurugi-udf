@@ -22,9 +22,21 @@ using namespace plugin::udf;
 
 {# 入力: request(generic_record)→req(Proto) に詰める #}
 {% macro emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
+    {% set oneof_groups = [] %}
+    {% for col in record.columns %}
+        {% if col.oneof_index is not none and col.oneof_index not in oneof_groups %}
+            {% set _ = oneof_groups.append(col.oneof_index) %}
+        {% endif %}
+    {% endfor %}
+
+    {# oneofグループのフラグ #}
+    {% for g in oneof_groups %}
+bool oneof_group{{ g }}_selected = false;
+int oneof_group{{ g }}_count = 0;
+    {% endfor %}
+
     {% for col in record.columns %}
         {% if col.nested_record %}
-            // Nested message: {{ col.column_name }}
             {
                 auto* nested = {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
                 {{ emit_setters("nested", col.nested_record, cursor_prefix ~ col.index ~ "_", True) }}
@@ -34,16 +46,26 @@ using namespace plugin::udf;
             {% if col.oneof_index is not none %}
                 if (arg{{ cursor_prefix }}{{ col.index }}) {
                     {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                    oneof_group{{ col.oneof_index }}_selected = true;
+                    oneof_group{{ col.oneof_index }}_count++;
                 }
-                /* {{ col.oneof_index }} {{ col.oneof_name }} */
             {% else %}
                 if (!arg{{ cursor_prefix }}{{ col.index }}) {
                     throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
                 }
-                /* {{ col.oneof_index }} {{ col.oneof_name }} */
                 {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
             {% endif %}
         {% endif %}
+    {% endfor %}
+
+    {# oneofグループチェック #}
+    {% for g in oneof_groups %}
+if (!oneof_group{{ g }}_selected) {
+    throw std::runtime_error("No field selected in oneof group {{ g }}");
+}
+if (oneof_group{{ g }}_count > 1) {
+    throw std::runtime_error("Multiple fields selected in oneof group {{ g }}");
+}
     {% endfor %}
 {%- endmacro %}
 
@@ -52,13 +74,11 @@ using namespace plugin::udf;
     {% for col in record.columns %}
         {% if col.nested_record %}
             {
-                // Flatten nested message: {{ col.column_name }}
                 const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
                 {{ emit_response_add("nested", col.nested_record, parent_type, False) }}
             }
         {% else %}
             {% if col.oneof_index is not none %}
-                // oneof field: add only if present
                 if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
                     response.add_{{ fetch_add_name(col.type_kind) }}(
                         {{ parent }}.{{ col.column_name }}()

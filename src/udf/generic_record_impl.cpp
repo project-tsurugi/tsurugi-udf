@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "udf/generic_record_impl.h"
+#include "generic_record_impl.h"
 
 #include <memory>
 #include <optional>
@@ -23,7 +23,7 @@
 #include <variant>
 #include <vector>
 
-#include "udf/error_info.h"
+#include "error_info.h"
 namespace plugin::udf {
 std::optional<error_info>& generic_record_impl::error() noexcept { return err_; }
 const std::optional<error_info>& generic_record_impl::error() const noexcept { return err_; }

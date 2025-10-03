@@ -3,9 +3,9 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "udf/error_info.h"
-#include "udf/generic_client_factory.h"
-#include "udf/generic_record_impl.h"
+#include "error_info.h"
+#include "generic_client_factory.h"
+#include "generic_record_impl.h"
 
 #include <grpcpp/grpcpp.h>
 

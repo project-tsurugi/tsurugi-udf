@@ -3,9 +3,9 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "udf/error_info.h"
-#include "udf/generic_client_factory.h"
-#include "udf/generic_record_impl.h"
+#include "error_info.h"
+#include "generic_client_factory.h"
+#include "generic_record_impl.h"
 
 #include <grpcpp/grpcpp.h>
 
@@ -78,7 +78,9 @@ int main(int argc, char** argv) {
         if(err) {
             print_error(*err);
         } else if(auto cursor = response.cursor()) {
-            if(auto result = cursor->fetch_int4()) { std::cout << "EchoInt32 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_int4()) { std::cout << "fetch_int4 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_int8()) { std::cout << "fetch_int8 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_string()) { std::cout << "fetch_string received: " << *result << std::endl; }
         } else {
             std::cerr << "No response cursor\n";
         }
@@ -98,7 +100,32 @@ int main(int argc, char** argv) {
         if(err) {
             print_error(*err);
         } else if(auto cursor = response.cursor()) {
-            if(auto result = cursor->fetch_int4()) { std::cout << "EchoInt32 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_int4()) { std::cout << "fetch_int4 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_int8()) { std::cout << "fetch_int8 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_string()) { std::cout << "fetch_string received: " << *result << std::endl; }
+        } else {
+            std::cerr << "No response cursor\n";
+        }
+    }
+    {
+        std::cout << "EchoOneOf connect" << std::endl;
+        generic_record_impl request;
+        request.add_int8(32);
+        request.add_string("oneof_test");
+        request.add_int4(32);
+        request.add_string("oneof_test");
+        request.add_int8(32);
+        generic_record_impl response;
+        grpc::ClientContext context;
+
+        client->call(context, {0, 0}, request, response);
+        auto err = response.error();
+        if(err) {
+            print_error(*err);
+        } else if(auto cursor = response.cursor()) {
+            if(auto result = cursor->fetch_int4()) { std::cout << "fetch_int4 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_int8()) { std::cout << "fetch_int8 received: " << *result << std::endl; }
+            if(auto result = cursor->fetch_string()) { std::cout << "fetch_string received: " << *result << std::endl; }
         } else {
             std::cerr << "No response cursor\n";
         }

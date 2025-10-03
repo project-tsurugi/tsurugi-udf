@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "udf/error_info.h"
+#include "error_info.h"
 
 #include <string>
 #include <string_view>

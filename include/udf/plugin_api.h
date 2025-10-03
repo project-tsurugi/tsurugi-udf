@@ -47,11 +47,6 @@ public:
     [[nodiscard]] virtual std::optional<oneof_index_type> oneof_index() const noexcept = 0;
     [[nodiscard]] virtual std::optional<std::string_view> oneof_name() const noexcept = 0;
 };
-class scalar_descriptor : public column_descriptor {
-public:
-
-    ~scalar_descriptor() override = default;
-};
 class record_descriptor {
 public:
 

@@ -184,7 +184,8 @@ set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ====== output library ======
 add_library(${PLUGIN_API_NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
 target_include_directories(
-  ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include ${OUT_DIR})
+  ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
+                             ${OUT_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
 # ====== output ini ======
@@ -223,7 +224,7 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_unary_test PRIVATE ${OUT_DIR}
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_unary_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                     protobuf::libprotobuf)
@@ -235,10 +236,10 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
                                  ${OUT_DIR})
-    target_include_directories(rpc_client
-                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_include_directories(
+      rpc_client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
     add_executable(
@@ -250,8 +251,8 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
 
-    target_include_directories(inspect_plugin
-                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_include_directories(
+      inspect_plugin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(inspect_plugin PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
   endif()
@@ -266,7 +267,7 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test/load_another/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_load_another PRIVATE ${OUT_DIR}
-                                      ${CMAKE_CURRENT_SOURCE_DIR}/include)
+                                      ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
@@ -279,7 +280,7 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_oneof_test PRIVATE ${OUT_DIR}
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/include)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_oneof_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                     protobuf::libprotobuf)
@@ -291,10 +292,10 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
                                  ${OUT_DIR})
-    target_include_directories(rpc_client_oneof
-                               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+    target_include_directories(
+      rpc_client_oneof PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                    protobuf::libprotobuf)
   endif()

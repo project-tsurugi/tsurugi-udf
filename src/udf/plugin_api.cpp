@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "udf/plugin_api.h"
+#include "plugin_api.h"
 
 #include <iostream>
 #include <memory>
@@ -21,9 +21,9 @@
 #include <string_view>
 #include <vector>
 
-#include "udf/enum_types.h"
-#include "udf/generic_record.h"
-#include "udf/generic_record_impl.h"
+#include "enum_types.h"
+#include "generic_record.h"
+#include "generic_record_impl.h"
 
 namespace plugin::udf {
 std::string to_string(function_kind_type kind) {

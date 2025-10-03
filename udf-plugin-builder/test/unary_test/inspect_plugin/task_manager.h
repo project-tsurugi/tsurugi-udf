@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 
-#include "udf/generic_client.h"
-#include "udf/plugin_api.h"
-#include "udf/plugin_loader.h"
+#include "generic_client.h"
+#include "plugin_api.h"
+#include "plugin_loader.h"
 
 using namespace plugin::udf;
 class TaskManager {

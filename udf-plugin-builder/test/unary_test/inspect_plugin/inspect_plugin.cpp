@@ -6,13 +6,13 @@
 #include <vector>
 
 #include "task_manager.h"
-#include "udf/descriptor_impl.h"
-#include "udf/generic_client.h"
-#include "udf/generic_client_factory.h"
-#include "udf/generic_record_impl.h"
-#include "udf/plugin_api.h"
-#include "udf/plugin_loader.h"
-#include "udf/udf_loader.h"
+#include "descriptor_impl.h"
+#include "generic_client.h"
+#include "generic_client_factory.h"
+#include "generic_record_impl.h"
+#include "plugin_api.h"
+#include "plugin_loader.h"
+#include "udf_loader.h"
 
 #include <grpcpp/grpcpp.h>
 

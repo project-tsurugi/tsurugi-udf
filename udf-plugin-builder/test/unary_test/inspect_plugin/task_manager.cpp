@@ -5,8 +5,8 @@
 #include <iostream>
 #include <vector>
 
-#include "udf/generic_client.h"
-#include "udf/generic_record_impl.h"
+#include "generic_client.h"
+#include "generic_record_impl.h"
 
 #include <grpcpp/grpcpp.h>
 using namespace plugin::udf;

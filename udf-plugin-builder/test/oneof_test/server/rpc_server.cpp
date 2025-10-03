@@ -4,8 +4,8 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "sample.grpc.pb.h"
-#include "sample.pb.h"
+#include "oneof_test.grpc.pb.h"
+#include "oneof_test.pb.h"
 
 #include <grpcpp/grpcpp.h>
 
@@ -14,7 +14,7 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-class TestServiceImpl final : public TestService::Service {
+class OneImpl final : public One::Service {
     Status EchoOneOf(ServerContext* context, const MyRequest* request, MyReply* reply) override {
         std::string prefix("Hello ");
         std::cerr << "EchoOneOf" << std::endl;
@@ -35,7 +35,7 @@ class TestServiceImpl final : public TestService::Service {
 };
 
 void RunServer(const std::string& server_address, const std::string& credentials) {
-    TestServiceImpl test_service;
+    OneImpl test_service;
 
 
     grpc::ServerBuilder builder;

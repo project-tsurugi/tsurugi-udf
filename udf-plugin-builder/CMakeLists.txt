@@ -234,7 +234,8 @@ if(ENABLE_TESTS)
       ${OUT_DIR}/rpc_client.cpp
       ${OUT_DIR}/rpc_client_factory.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp)
     target_include_directories(
       ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
                                  ${OUT_DIR})
@@ -249,6 +250,7 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/plugin_api.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/udf_loader.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
 
     target_include_directories(
@@ -290,6 +292,7 @@ if(ENABLE_TESTS)
       ${OUT_DIR}/rpc_client.cpp
       ${OUT_DIR}/rpc_client_factory.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
     target_include_directories(
       ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf

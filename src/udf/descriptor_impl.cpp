@@ -53,22 +53,29 @@ bool column_descriptor_impl::has_oneof() const noexcept { return _oneof_idx.has_
 std::optional<std::string_view> column_descriptor_impl::oneof_name() const noexcept { return _oneof_name; }
 
 // record_descriptor_impl
-record_descriptor_impl::record_descriptor_impl(std::string_view n, std::vector<column_descriptor*> c) :
+record_descriptor_impl::record_descriptor_impl(std::string_view n, const std::vector<column_descriptor*>& c) :
     _name(n),
-    _cols(std::move(c)) {}
+    _cols(c),
+    _argument_patterns(build_argument_patterns(_cols)) {}
 
 const std::vector<column_descriptor*>& record_descriptor_impl::columns() const noexcept { return _cols; }
 std::string_view record_descriptor_impl::record_name() const noexcept { return _name; }
-std::vector<std::vector<column_descriptor*>> record_descriptor_impl::argument_patterns() const noexcept {
+const std::vector<std::vector<column_descriptor*>>& record_descriptor_impl::argument_patterns() const noexcept {
+    return _argument_patterns;
+}
+
+std::vector<std::vector<column_descriptor*>>
+record_descriptor_impl::build_argument_patterns(const std::vector<column_descriptor*>& cols) noexcept {
     std::vector<std::vector<column_descriptor*>> patterns(1);
     std::unordered_map<column_descriptor::oneof_index_type, std::vector<column_descriptor*>> oneof_groups;
-    for(auto* col: _cols) {
+
+    for(auto* col: cols) {
         if(col->has_oneof()) { oneof_groups[*col->oneof_index()].push_back(col); }
     }
 
     std::unordered_map<column_descriptor::oneof_index_type, bool> processed;
 
-    for(auto* col: _cols) {
+    for(auto* col: cols) {
         if(! col->has_oneof()) {
             for(auto& p: patterns) { p.push_back(col); }
         } else {
@@ -83,7 +90,7 @@ std::vector<std::vector<column_descriptor*>> record_descriptor_impl::argument_pa
                 for(auto* choice: group) {
                     auto q = p;
                     q.push_back(choice);
-                    next_patterns.push_back(std::move(q));
+                    next_patterns.push_back(q);
                 }
             }
 

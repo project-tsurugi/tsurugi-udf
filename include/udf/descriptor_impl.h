@@ -56,16 +56,19 @@ private:
 class record_descriptor_impl : public record_descriptor {
 public:
 
-    record_descriptor_impl(std::string_view n, std::vector<column_descriptor*> c);
+    record_descriptor_impl(std::string_view n, const std::vector<column_descriptor*>& c);
 
     [[nodiscard]] const std::vector<column_descriptor*>& columns() const noexcept override;
     [[nodiscard]] std::string_view record_name() const noexcept override;
-    [[nodiscard]] std::vector<std::vector<column_descriptor*>> argument_patterns() const noexcept override;
+    [[nodiscard]] const std::vector<std::vector<column_descriptor*>>& argument_patterns() const noexcept override;
 
 private:
 
     std::string_view _name;
     std::vector<column_descriptor*> _cols;
+    std::vector<std::vector<column_descriptor*>> _argument_patterns;
+    [[nodiscard]] std::vector<std::vector<column_descriptor*>>
+    build_argument_patterns(const std::vector<column_descriptor*>& cols) noexcept;
 };
 
 class function_descriptor_impl : public function_descriptor {

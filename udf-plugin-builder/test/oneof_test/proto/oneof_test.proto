@@ -16,12 +16,20 @@ message MyRequest {
 }
 
 message MyReply {
+  string string_result = 2;
+}
+message Mm {
+  int32 a = 1;
+}
+
+message Ab {
   oneof result {
     int64 int64_result = 1;
     string string_result = 2;
   }
 }
-
 service One {
+  rpc OneofAlpha(Mm) returns (Mm);
+  rpc OneofBeta(Ab) returns (Mm);
   rpc EchoOneOf(MyRequest) returns (MyReply);
 }

@@ -3,7 +3,7 @@
 set -euo pipefail
 status=0
 OUT_DIR=${1:-$(pwd)}
-LIST=(load_another unary_test)
+LIST=(load_another unary_test oneof_test)
 for i in ${LIST[@]}; do
     (
         cd "$i"

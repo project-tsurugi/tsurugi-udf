@@ -1,0 +1,14 @@
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":187}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":520}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":64}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Hello 124"}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Hello 5hello7"}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Hello 89world"}
+// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
+{"@#0":"Hello 11foobar"}

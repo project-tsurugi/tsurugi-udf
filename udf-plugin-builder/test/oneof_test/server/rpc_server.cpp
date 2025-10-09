@@ -15,21 +15,80 @@ using grpc::ServerContext;
 using grpc::Status;
 
 class OneImpl final : public One::Service {
+    Status OneofAlpha(ServerContext* context, const Mm* request, Mm* reply) override {
+        std::cout << "OneofAlpha" << std::endl;
+        std::cout << "a :" << request->a() << std::endl;
+        reply->set_a(64 + request->a());
+        return Status::OK;
+    }
+    Status OneofBeta(ServerContext* context, const Ab* request, Mm* reply) override {
+        std::cout << "OneofBeta" << std::endl;
+        std::cout << "int64_result :" << request->int64_result() << std::endl;
+        std::cout << "string_result :" << request->string_result() << std::endl;
+        reply->set_a(64 + request->int64_result());
+        return Status::OK;
+    }
     Status EchoOneOf(ServerContext* context, const MyRequest* request, MyReply* reply) override {
         std::string prefix("Hello ");
-        std::cerr << "EchoOneOf" << std::endl;
-        std::cerr << "  prefix: " << prefix << std::endl;
-        std::cerr << "  request->aaa(): " << request->aaa() << std::endl;
-        std::cerr << "  oneof request->int64_value(): " << request->int64_value() << std::endl;
-        std::cerr << "  oneof request->string_value(): " << request->string_value() << std::endl;
-        std::cerr << "  oneof request->bool_value(): " << request->bool_value() << std::endl;
-        std::cerr << "  request->bbb(): " << request->bbb() << std::endl;
-        std::cerr << "  oneof request->int64_value2(): " << request->int64_value2() << std::endl;
-        std::cerr << "  oneof request->string_value2(): " << request->string_value2() << std::endl;
-        std::cerr << "  oneof request->bool_value2(): " << request->bool_value2() << std::endl;
+        std::cout << "EchoOneOf" << std::endl;
+        std::cout << "  prefix: " << prefix << std::endl;
+        std::cout << "  request->aaa(): " << request->aaa() << std::endl;
+        std::cout << "  oneof request->int64_value(): " << request->int64_value() << std::endl;
+        std::cout << "  oneof request->string_value(): " << request->string_value() << std::endl;
+        std::cout << "  oneof request->bool_value(): " << request->bool_value() << std::endl;
+        std::cout << "  request->bbb(): " << request->bbb() << std::endl;
+        std::cout << "  oneof request->int64_value2(): " << request->int64_value2() << std::endl;
+        std::cout << "  oneof request->string_value2(): " << request->string_value2() << std::endl;
+        std::cout << "  oneof request->bool_value2(): " << request->bool_value2() << std::endl;
 
-        reply->set_int64_result(64 + request->int64_value());
-        reply->set_string_result(prefix + request->string_value());
+
+        switch(request->arg_case()) {
+            case MyRequest::kInt64Value:
+                std::cout << "  oneof request->int64_value(): " << request->int64_value() << std::endl;
+                break;
+            case MyRequest::kStringValue:
+                std::cout << "  oneof request->string_value(): " << request->string_value() << std::endl;
+                break;
+            case MyRequest::kBoolValue:
+                std::cout << "  oneof request->bool_value(): " << std::boolalpha << request->bool_value() << std::endl;
+                break;
+            default: std::cout << "  oneof (arg) not set" << std::endl; break;
+        }
+
+        switch(request->aab_case()) {
+            case MyRequest::kInt64Value2:
+                std::cout << "  oneof request->int64_value2(): " << request->int64_value2() << std::endl;
+                break;
+            case MyRequest::kStringValue2:
+                std::cout << "  oneof request->string_value2(): " << request->string_value2() << std::endl;
+                break;
+            case MyRequest::kBoolValue2:
+                std::cout << "  oneof request->bool_value2(): " << std::boolalpha << request->bool_value2()
+                          << std::endl;
+                break;
+            default: std::cout << "  oneof (aab) not set" << std::endl; break;
+        }
+
+        std::ostringstream oss;
+        oss << prefix << request->aaa();
+
+        if(request->arg_case() == MyRequest::kInt64Value) {
+            oss << request->int64_value();
+        } else if(request->arg_case() == MyRequest::kStringValue) {
+            oss << request->string_value();
+        } else if(request->arg_case() == MyRequest::kBoolValue) {
+            oss << (request->bool_value() ? "true" : "false");
+        }
+
+        if(request->aab_case() == MyRequest::kInt64Value2) {
+            oss << request->int64_value2();
+        } else if(request->aab_case() == MyRequest::kStringValue2) {
+            oss << request->string_value2();
+        } else if(request->aab_case() == MyRequest::kBoolValue2) {
+            oss << (request->bool_value2() ? "true" : "false");
+        }
+
+        reply->set_string_result(oss.str());
         return Status::OK;
     }
 };

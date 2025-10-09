@@ -70,7 +70,8 @@ elseif(ENABLE_NESTED_TEST)
     set(DEFAULT_PROTO_PATH test/nested_test/proto)
   endif()
   if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES test/nested_test/proto/sample.proto)
+    set(DEFAULT_PROTO_FILES test/nested_test/proto/nested_test.proto
+                            test/nested_test/proto/complex_types.proto)
   endif()
 endif()
 
@@ -301,5 +302,33 @@ if(ENABLE_TESTS)
       rpc_client_oneof PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                    protobuf::libprotobuf)
+  endif()
+  if(ENABLE_NESTED_TEST)
+    add_executable(
+      rpc_server_nested_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/server/rpc_server.cpp)
+    target_include_directories(
+      rpc_server_nested_test PRIVATE ${OUT_DIR}
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
+    target_link_libraries(
+      rpc_server_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                     protobuf::libprotobuf)
+
+    add_executable(
+      rpc_client_nested_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/client/client.cpp
+      ${OUT_DIR}/rpc_client.cpp
+      ${OUT_DIR}/rpc_client_factory.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
+    target_include_directories(
+      ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
+                                 ${OUT_DIR})
+    target_include_directories(
+      rpc_client_nested_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
+    target_link_libraries(
+      rpc_client_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                     protobuf::libprotobuf)
   endif()
 endif()

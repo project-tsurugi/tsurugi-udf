@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "complex_types.proto";
+service Nested {
+  rpc NestedHello(SimpleValue) returns (SimpleValue);
+  rpc DecimalOne(tsurugidb.udf.value.Decimal) returns (SimpleValue);
+  rpc DecimalTwo(AddDecimal) returns (SimpleValue);
+}
+message SimpleValue {
+  string value = 1;
+}
+message AddDecimal {
+  int32 i32 = 1;
+  tsurugidb.udf.value.Decimal dec = 2;
+}

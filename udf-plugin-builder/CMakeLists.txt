@@ -151,8 +151,10 @@ foreach(proto_file IN LISTS PROTO_FILES)
   list(APPEND GRPC_GEN_HDRS ${OUT_DIR}/${proto_name}.grpc.pb.h)
 endforeach()
 
-set(PLUGIN_GEN_SRCS ${OUT_DIR}/plugin_api_impl.cpp ${OUT_DIR}/rpc_client.cpp
-                    ${OUT_DIR}/rpc_client_factory.cpp)
+set(PLUGIN_GEN_SRCS
+    ${OUT_DIR}/plugin_api_impl.cpp ${OUT_DIR}/rpc_client.cpp
+    ${OUT_DIR}/rpc_client_factory.cpp
+    ${CMAKE_SOURCE_DIR}/../src/udf/descriptor_impl.cpp)
 set(PLUGIN_GEN_HDRS ${OUT_DIR}/rpc_client.h)
 
 # ====== code generation rules ======

@@ -17,6 +17,13 @@ from typing import List, Optional
 
 
 @dataclass
+class Version:
+    major: int = 1
+    minor: int = 0
+    patch: int = 0
+
+
+@dataclass
 class ColumnDescriptor:
     index: int
     column_name: str
@@ -24,6 +31,7 @@ class ColumnDescriptor:
     nested_record: Optional[RecordDescriptor] = None
     oneof_index: Optional[int] = None
     oneof_name: Optional[str] = None
+
 
 @dataclass
 class RecordDescriptor:
@@ -55,6 +63,8 @@ class ServiceDescriptor:
 class PackageDescriptor:
     package_name: str
     services: List[ServiceDescriptor]
+    file_name: Optional[str] = None
+    version: Version = Version()
 
 
 # @see https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243

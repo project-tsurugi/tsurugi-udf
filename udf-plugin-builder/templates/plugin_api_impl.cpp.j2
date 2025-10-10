@@ -99,8 +99,8 @@ class plugin_api_impl : public plugin_api {
                                 "{{ col.column_name }}",
                                 type_kind_type::{{ col.type_kind }},
                                 new record_descriptor_impl("{{ col.nested_record.record_name }}", std::move(nested_columns)),
-                                    {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
-                                    {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                                {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
+                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
                             )
                         );
                     }
@@ -136,7 +136,12 @@ class plugin_api_impl : public plugin_api {
             }
 {% endfor %}
 
-            auto pkg_ptr = new package_descriptor_impl("{{ pkg.package_name }}", std::move(services));
+            auto pkg_ptr = new package_descriptor_impl(
+                "{{ pkg.package_name }}",
+                "{{ pkg.file_name if pkg.file_name else pkg.package_name + '.proto' }}",
+                package_version({{ pkg.version.major }}, {{ pkg.version.minor }}, {{ pkg.version.patch }}),
+                std::move(services)
+            );
             packages_.push_back(pkg_ptr);
         }
 {% endfor %}

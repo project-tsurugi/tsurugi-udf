@@ -19,7 +19,7 @@
 #include <tuple>
 #include <vector>
 
-#include "udf/udf_loader.h"
+#include "udf_loader.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -61,10 +61,8 @@ py::dict column_to_dict(const column_descriptor* col) {
 
     // oneof_index
     if(col->has_oneof()) {
-        std::cout << "oneof_index: " << col->oneof_index().value() << std::endl;
         d["oneof_index"] = py::cast(col->oneof_index().value());
     } else {
-        std::cout << "oneof_index: None" << std::endl;
         d["oneof_index"] = py::none();
     }
 
@@ -127,9 +125,16 @@ py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
 }
 
 py::dict package_to_dict(const package_descriptor* pkg) {
+    py::dict version_dict;
+    version_dict["major"] = pkg->version().major();
+    version_dict["minor"] = pkg->version().minor();
+    version_dict["patch"] = pkg->version().patch();
+
     return py::dict(
         "package_name"_a = std::string(pkg->package_name()),
-        "services"_a = services_to_list(pkg->services())
+        "services"_a = services_to_list(pkg->services()),
+        "file_name"_a = std::string(pkg->file_name()),
+        "version"_a = version_dict
     );
 }
 

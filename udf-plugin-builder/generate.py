@@ -33,6 +33,7 @@ from common.descriptors import (
     PackageDescriptor,
     TYPE_KIND_MAP,
     FIELD_TYPE_MAP,
+    Version,
 )
 
 
@@ -142,6 +143,8 @@ def parse_package_descriptor(
             package = PackageDescriptor(
                 package_name=pkg,
                 services=services,
+                file_name=file_proto.name,
+                version=Version(1, 0, 0),
             )
             packages.append(package)
     return packages

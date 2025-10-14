@@ -1,15 +1,43 @@
 drop table if exists t_varchar;
 drop table if exists t_decimal;
 drop table if exists t_decimal2;
+drop table if exists t_date;
+drop table if exists t_date2;
+drop table if exists t_time;
+drop table if exists t_time2;
+drop table if exists t_timestamp;
+drop table if exists t_timestamp2;
+drop table if exists t_timestamptz;
 -- tablemake
 create table t_varchar (v varchar(30));
 create table t_decimal (v decimal(15, 2));
 create table t_decimal2 (v1 int ,v2 decimal(15, 1));
+create table t_date(v DATE);
+create table t_date2(v1 varchar(30),v2 DATE);
+create table t_time(v TIME);
+create table t_time2(v1 varchar(30),v2 TIME,v3 int);
+create table t_timestamp(v TIMESTAMP);
+create table t_timestamp2(v1 TIMESTAMP,v2 int);
+create table t_timestamptz(v TIMESTAMP WITH TIME ZONE);
 -- insert
 insert into t_varchar values ('hello world');
 insert into t_decimal values (1234.53);
 insert into t_decimal2 values (5,98765.4);
+insert into t_date VALUES(date'2000-01-01');
+insert into t_date2 VALUES('test', date'2099-12-31');
+insert into t_time VALUES(time'12:34:56');
+insert into t_time2 VALUES('t_time2', time'10:11:22', 33);
+insert into t_timestamp VALUES(timestamp'2001-01-01 11:22:33');
+insert into t_timestamp2 VALUES(timestamp'3101-11-08 11:00:33', 44);
+insert into t_timestamptz VALUES(timestamp with time zone'2000-01-02 11:22:33+09:00');
 -- tablemake
 select NestedHello(v) from t_varchar;
 select DecimalOne(v) from t_decimal;
-select DecimalTwo(v1,v2) t_decimal2;
+select DecimalTwo(v1,v2) from t_decimal2;
+select DateOne(v) from t_date;
+select DateTwo(v1,v2) from t_date2;
+select LocalTimeOne(v) from t_time;
+select LocalTimeTwo(v1,v2,v3) from t_time2;
+select LocalDatetimeOne(v) from t_timestamp;
+select LocalDatetimeTwo(v1,v2) from t_timestamp2;
+-- select OffsetDatetimeOne(v) from t_timestamptz;

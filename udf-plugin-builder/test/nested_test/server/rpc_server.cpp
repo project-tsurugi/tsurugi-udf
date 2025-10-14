@@ -25,8 +25,8 @@ class NestedImpl final : public Nested::Service {
     Status
     DecimalOne(ServerContext* context, const tsurugidb::udf::value::Decimal* request, SimpleValue* reply) override {
         std::cout << "[DecimalOne]" << std::endl;
-        std::cout << "unscaled_value size: " << request->unscaled_value().size()
-                  << ", exponent: " << request->exponent() << std::endl;
+        std::cout << " unscaled_value : " << request->unscaled_value() << "\n exponent: " << request->exponent()
+                  << std::endl;
 
         reply->set_value("DecimalOne received");
         return Status::OK;
@@ -35,10 +35,86 @@ class NestedImpl final : public Nested::Service {
     Status DecimalTwo(ServerContext* context, const AddDecimal* request, SimpleValue* reply) override {
         std::cout << "[DecimalTwo]" << std::endl;
         std::cout << "i32: " << request->i32() << std::endl;
-        std::cout << "unscaled_value size: " << request->dec().unscaled_value().size()
+        std::cout << "unscaled_value : " << request->dec().unscaled_value()
                   << ", exponent: " << request->dec().exponent() << std::endl;
 
         reply->set_value("DecimalTwo received");
+        return Status::OK;
+    }
+    Status
+    DateOne(ServerContext* context, const tsurugidb::udf::value::Date* request, tsurugidb::udf::value::Date* reply)
+        override {
+        std::cout << "[DateOne]" << std::endl;
+        std::cout << " days : " << request->days() << std::endl;
+
+        reply->set_days(request->days());
+        return Status::OK;
+    }
+    Status DateTwo(ServerContext* context, const AddDate* request, tsurugidb::udf::value::Date* reply) override {
+        std::cout << "[DateTwo]" << std::endl;
+        std::cout << " value : " << request->value() << std::endl;
+        std::cout << " days  : " << request->dec().days() << std::endl;
+        reply->set_days(request->dec().days());
+        return Status::OK;
+    }
+    Status LocalTimeOne(
+        ServerContext* context,
+        const tsurugidb::udf::value::LocalTime* request,
+        tsurugidb::udf::value::LocalTime* reply
+    ) override {
+        std::cout << "[LocalTimeOne]" << std::endl;
+        std::cout << " nanos : " << request->nanos() << std::endl;
+
+        reply->set_nanos(request->nanos());
+        return Status::OK;
+    }
+    Status LocalTimeTwo(ServerContext* context, const AddLocalTime* request, tsurugidb::udf::value::LocalTime* reply)
+        override {
+        std::cout << "[LocalTimeTwo]" << std::endl;
+        std::cout << " value : " << request->value() << std::endl;
+        std::cout << " dec->nanos() : " << request->dec().nanos() << std::endl;
+        std::cout << " vv : " << request->vv() << std::endl;
+        reply->set_nanos(request->dec().nanos());
+        return Status::OK;
+    }
+    Status LocalDatetimeOne(
+        ServerContext* context,
+        const tsurugidb::udf::value::LocalDatetime* request,
+        tsurugidb::udf::value::LocalDatetime* reply
+    ) override {
+        std::cout << "[LocalDatetimeOne]" << std::endl;
+        std::cout << " offset_seconds : " << request->offset_seconds() << std::endl;
+        std::cout << " nano_adjustment : " << request->nano_adjustment() << std::endl;
+        reply->set_offset_seconds(request->offset_seconds());
+        reply->set_nano_adjustment(request->nano_adjustment());
+        return Status::OK;
+    }
+    Status LocalDatetimeTwo(
+        ServerContext* context,
+        const AddLocalDatetime* request,
+        tsurugidb::udf::value::LocalDatetime* reply
+    ) override {
+        std::cout << "[LocalDatetimeTwo]" << std::endl;
+        std::cout << " dec->offset_seconds() : " << request->dec().offset_seconds() << std::endl;
+        std::cout << " dec->nano_adjustment() : " << request->dec().nano_adjustment() << std::endl;
+        std::cout << " vv() : " << request->vv() << std::endl;
+        reply->set_offset_seconds(request->dec().offset_seconds());
+        reply->set_nano_adjustment(request->dec().nano_adjustment());
+        return Status::OK;
+    }
+
+    Status OffsetDatetimeOne(
+        ServerContext* context,
+        const tsurugidb::udf::value::OffsetDatetime* request,
+        tsurugidb::udf::value::OffsetDatetime* reply
+    ) override {
+        std::cout << "[OffsetDatetimeOne]" << std::endl;
+        std::cout << " offset_seconds : " << request->offset_seconds() << std::endl;
+        std::cout << " nano_adjustment : " << request->nano_adjustment() << std::endl;
+        std::cout << " time_zone_offset : " << request->time_zone_offset() << std::endl;
+        reply->set_offset_seconds(request->offset_seconds());
+        reply->set_nano_adjustment(request->nano_adjustment());
+        reply->set_time_zone_offset(request->time_zone_offset());
         return Status::OK;
     }
 };

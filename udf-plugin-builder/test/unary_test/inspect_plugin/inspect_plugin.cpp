@@ -5,13 +5,13 @@
 #include <tuple>
 #include <vector>
 
-#include "task_manager.h"
 #include "descriptor_impl.h"
 #include "generic_client.h"
 #include "generic_client_factory.h"
 #include "generic_record_impl.h"
 #include "plugin_api.h"
 #include "plugin_loader.h"
+#include "task_manager.h"
 #include "udf_loader.h"
 
 #include <grpcpp/grpcpp.h>

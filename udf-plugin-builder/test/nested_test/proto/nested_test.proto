@@ -5,6 +5,13 @@ service Nested {
   rpc NestedHello(SimpleValue) returns (SimpleValue);
   rpc DecimalOne(tsurugidb.udf.value.Decimal) returns (SimpleValue);
   rpc DecimalTwo(AddDecimal) returns (SimpleValue);
+  rpc DateOne(tsurugidb.udf.value.Date) returns (tsurugidb.udf.value.Date);
+  rpc DateTwo(AddDate) returns (tsurugidb.udf.value.Date);
+  rpc LocalTimeOne(tsurugidb.udf.value.LocalTime) returns (tsurugidb.udf.value.LocalTime);
+  rpc LocalTimeTwo(AddLocalTime) returns (tsurugidb.udf.value.LocalTime);
+  rpc LocalDatetimeOne(tsurugidb.udf.value.LocalDatetime) returns (tsurugidb.udf.value.LocalDatetime);
+  rpc LocalDatetimeTwo(AddLocalDatetime) returns (tsurugidb.udf.value.LocalDatetime);
+  rpc OffsetDatetimeOne(tsurugidb.udf.value.OffsetDatetime) returns (tsurugidb.udf.value.OffsetDatetime);
 }
 message SimpleValue {
   string value = 1;
@@ -12,4 +19,19 @@ message SimpleValue {
 message AddDecimal {
   int32 i32 = 1;
   tsurugidb.udf.value.Decimal dec = 2;
+}
+message AddDate {
+  string value = 1;
+  tsurugidb.udf.value.Date dec = 2;
+}
+
+message AddLocalTime {
+  string value = 1;
+  tsurugidb.udf.value.LocalTime dec = 2;
+  sint32 vv = 3;
+}
+
+message AddLocalDatetime {
+  tsurugidb.udf.value.LocalDatetime dec = 2;
+  sint32 vv = 3;
 }

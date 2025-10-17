@@ -26,6 +26,7 @@
 #include "generic_record_impl.h"
 
 namespace plugin::udf {
+namespace {
 std::string_view to_string_view(function_kind_type kind) {
     using namespace std::literals;
     switch(kind) {
@@ -61,7 +62,7 @@ std::string_view to_string_view(type_kind_type kind) {
         default: return "UnknownTypeKind"sv;
     }
 }
-namespace {
+
 void add_column(const std::vector<column_descriptor*>& cols) {
     for(const auto* col: cols) {
         std::cout << "- column_name: " << col->column_name() << std::endl;

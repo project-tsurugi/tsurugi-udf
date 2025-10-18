@@ -115,13 +115,13 @@ def parse_package_descriptor(
         for service_proto in file_proto.service:
             functions = []
             for idx, method in enumerate(service_proto.method):
-                kind = "Unary"
+                kind = "unary"
                 if method.client_streaming and method.server_streaming:
-                    kind = "BidirectionalStreaming"
+                    kind = "bidirectional_streaming"
                 elif method.client_streaming:
-                    kind = "ClientStreaming"
+                    kind = "client_streaming"
                 elif method.server_streaming:
-                    kind = "ServerStreaming"
+                    kind = "server_streaming"
                 func = FunctionDescriptor(
                     function_index=function_counter,
                     function_name=method.name,

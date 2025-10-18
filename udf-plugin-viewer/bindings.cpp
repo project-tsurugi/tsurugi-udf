@@ -30,24 +30,24 @@ using namespace pybind11::literals;
 
 std::string type_kind_to_string(plugin::udf::type_kind_type kind) {
     switch(kind) {
-        case plugin::udf::type_kind_type::FLOAT8: return "FLOAT8";
-        case plugin::udf::type_kind_type::FLOAT4: return "FLOAT4";
-        case plugin::udf::type_kind_type::INT8: return "INT8";
-        case plugin::udf::type_kind_type::UINT8: return "UINT8";
-        case plugin::udf::type_kind_type::INT4: return "INT4";
-        case plugin::udf::type_kind_type::FIXED8: return "FIXED8";
-        case plugin::udf::type_kind_type::FIXED4: return "FIXED4";
-        case plugin::udf::type_kind_type::BOOL: return "BOOL";
-        case plugin::udf::type_kind_type::STRING: return "STRING";
-        case plugin::udf::type_kind_type::GROUP: return "GROUP";
-        case plugin::udf::type_kind_type::MESSAGE: return "MESSAGE";
-        case plugin::udf::type_kind_type::BYTES: return "BYTES";
-        case plugin::udf::type_kind_type::UINT4: return "UINT4";
-        case plugin::udf::type_kind_type::ENUM: return "ENUM";
-        case plugin::udf::type_kind_type::SINT4: return "SINT4";
-        case plugin::udf::type_kind_type::SINT8: return "SINT8";
-        case plugin::udf::type_kind_type::SFIXED8: return "SFIXED8";
-        case plugin::udf::type_kind_type::SFIXED4: return "SFIXED4";
+        case plugin::udf::type_kind_type::float8: return "float8";
+        case plugin::udf::type_kind_type::float4: return "float4";
+        case plugin::udf::type_kind_type::int8: return "int8";
+        case plugin::udf::type_kind_type::uint8: return "uint8";
+        case plugin::udf::type_kind_type::int4: return "int4";
+        case plugin::udf::type_kind_type::fixed8: return "fixed8";
+        case plugin::udf::type_kind_type::fixed4: return "fixed4";
+        case plugin::udf::type_kind_type::boolean: return "boolean";
+        case plugin::udf::type_kind_type::string: return "string";
+        case plugin::udf::type_kind_type::group: return "group";
+        case plugin::udf::type_kind_type::message: return "message";
+        case plugin::udf::type_kind_type::bytes: return "bytes";
+        case plugin::udf::type_kind_type::uint4: return "uint4";
+        case plugin::udf::type_kind_type::grpc_enum: return "grpc_enum";
+        case plugin::udf::type_kind_type::sint4: return "sint4";
+        case plugin::udf::type_kind_type::sint8: return "sint8";
+        case plugin::udf::type_kind_type::sfixed8: return "sfixed8";
+        case plugin::udf::type_kind_type::sfixed4: return "sfixed4";
         default: return "UNKNOWN";
     }
 }

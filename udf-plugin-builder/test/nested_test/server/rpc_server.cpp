@@ -117,6 +117,34 @@ class NestedImpl final : public Nested::Service {
         reply->set_time_zone_offset(request->time_zone_offset());
         return Status::OK;
     }
+    Status BlobReferenceOne(
+        ServerContext* context,
+        const tsurugidb::udf::value::BlobReference* request,
+        tsurugidb::udf::value::BlobReference* reply
+    ) override {
+        std::cout << "[BlobReferenceOne]" << std::endl;
+        std::cout << " storage_id : " << request->storage_id() << std::endl;
+        std::cout << " element_id : " << request->element_id() << std::endl;
+        std::cout << " tag : " << request->tag() << std::endl;
+        reply->set_storage_id(request->storage_id());
+        reply->set_element_id(request->element_id());
+        reply->set_tag(request->tag());
+        return Status::OK;
+    }
+    Status ClobReferenceOne(
+        ServerContext* context,
+        const tsurugidb::udf::value::ClobReference* request,
+        tsurugidb::udf::value::ClobReference* reply
+    ) override {
+        std::cout << "[ClobReferenceOne]" << std::endl;
+        std::cout << " storage_id : " << request->storage_id() << std::endl;
+        std::cout << " element_id : " << request->element_id() << std::endl;
+        std::cout << " tag : " << request->tag() << std::endl;
+        reply->set_storage_id(request->storage_id());
+        reply->set_element_id(request->element_id());
+        reply->set_tag(request->tag());
+        return Status::OK;
+    }
 };
 
 void RunServer(const std::string& server_address, const std::string& credentials) {

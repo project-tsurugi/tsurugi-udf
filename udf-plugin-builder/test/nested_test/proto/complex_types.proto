@@ -27,9 +27,13 @@ message OffsetDatetime {
 }
 
 message BlobReference {
-  bytes secret = 1;
+  uint64 storage_id = 1;
+  uint64 element_id = 2;
+  uint64 tag = 3;
 }
 
 message ClobReference {
-  bytes secret = 1;
+  uint64 storage_id = 1;
+  uint64 element_id = 2;
+  uint64 tag = 3;
 }

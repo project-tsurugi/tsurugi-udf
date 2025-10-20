@@ -12,6 +12,8 @@ service Nested {
   rpc LocalDatetimeOne(tsurugidb.udf.value.LocalDatetime) returns (tsurugidb.udf.value.LocalDatetime);
   rpc LocalDatetimeTwo(AddLocalDatetime) returns (tsurugidb.udf.value.LocalDatetime);
   rpc OffsetDatetimeOne(tsurugidb.udf.value.OffsetDatetime) returns (tsurugidb.udf.value.OffsetDatetime);
+  rpc BlobReferenceOne(tsurugidb.udf.value.BlobReference) returns (tsurugidb.udf.value.BlobReference);
+  rpc ClobReferenceOne(tsurugidb.udf.value.ClobReference) returns (tsurugidb.udf.value.ClobReference);
 }
 message SimpleValue {
   string value = 1;

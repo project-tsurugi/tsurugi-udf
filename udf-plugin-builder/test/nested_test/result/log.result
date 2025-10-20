@@ -16,3 +16,5 @@
 {"@#0":"2001-01-01T11:22:33"}
 // {"columns":[{"name":null,"label":"@#0","type":"TIME_POINT","dimension":0}]}
 {"@#0":"3101-11-08T11:00:33"}
+// {"columns":[{"name":null,"label":"@#0","type":"TIME_POINT_WITH_TIME_ZONE","dimension":0}]}
+{"@#0":"2000-01-02T02:22:33Z"}

@@ -40,4 +40,4 @@ select LocalTimeOne(v) from t_time;
 select LocalTimeTwo(v1,v2,v3) from t_time2;
 select LocalDatetimeOne(v) from t_timestamp;
 select LocalDatetimeTwo(v1,v2) from t_timestamp2;
--- select OffsetDatetimeOne(v) from t_timestamptz;
+select OffsetDatetimeOne(v) from t_timestamptz;

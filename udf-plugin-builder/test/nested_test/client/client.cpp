@@ -13,7 +13,7 @@ using namespace plugin::udf;
 // @see https://protobuf.dev/programming-guides/proto3/#scalar
 
 void print_error(const error_info& err) {
-    std::cerr << "RPC failed: code=" << err.code_string() << ", message=" << err.message() << std::endl;
+    std::cerr << "RPC failed: code=" << err.code() << ", message=" << err.message() << std::endl;
 }
 int main(int argc, char** argv) {
     std::string grpc_url = "localhost:50051";

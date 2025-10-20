@@ -13,7 +13,7 @@ using namespace plugin::udf;
 // @see https://protobuf.dev/programming-guides/proto3/#scalar
 
 void print_error(const error_info& err) {
-    std::cerr << "RPC failed: code=" << err.code_string() << ", message=" << err.message() << std::endl;
+    std::cerr << "RPC failed: code=" << err.code() << ", message=" << err.message() << std::endl;
 }
 int main(int argc, char** argv) {
     std::string grpc_url = "localhost:50051";
@@ -52,20 +52,6 @@ int main(int argc, char** argv) {
     {
         std::cout << "EchoOneOf connect" << std::endl;
         generic_record_impl request;
-        /*
-          sint64 aaa = 1;
-          oneof arg {
-            int64 int64_value = 2;
-            string string_value = 3;
-            bool bool_value = 4;
-          }
-          int32 bbb = 5;
-          oneof aab {
-            int64 int64_value2 = 6;
-            string string_value2 = 7;
-            bool bool_value2 = 8;
-         }
-        */
         request.add_int8(32);
         request.add_int8(32);
         request.add_int4(32);

@@ -152,8 +152,8 @@ PYBIND11_MODULE(udf_plugin, m) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
         auto results = loader->load(path);
         for(const auto& result: results) {
-            std::cerr << "[gRPC] " << result.status_string() << " file: " << result.file()
-                      << " detail: " << result.detail() << std::endl;
+            std::cerr << "[gRPC] " << result.status() << " file: " << result.file() << " detail: " << result.detail()
+                      << std::endl;
         }
         auto plugins = loader->get_plugins();
         std::vector<plugin_api*> apis;

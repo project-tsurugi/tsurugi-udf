@@ -124,10 +124,10 @@ class NestedImpl final : public Nested::Service {
     ) override {
         std::cout << "[BlobReferenceOne]" << std::endl;
         std::cout << " storage_id : " << request->storage_id() << std::endl;
-        std::cout << " element_id : " << request->element_id() << std::endl;
+        std::cout << " object_id : " << request->object_id() << std::endl;
         std::cout << " tag : " << request->tag() << std::endl;
         reply->set_storage_id(request->storage_id());
-        reply->set_element_id(request->element_id());
+        reply->set_object_id(request->object_id());
         reply->set_tag(request->tag());
         return Status::OK;
     }
@@ -138,10 +138,10 @@ class NestedImpl final : public Nested::Service {
     ) override {
         std::cout << "[ClobReferenceOne]" << std::endl;
         std::cout << " storage_id : " << request->storage_id() << std::endl;
-        std::cout << " element_id : " << request->element_id() << std::endl;
+        std::cout << " object_id : " << request->object_id() << std::endl;
         std::cout << " tag : " << request->tag() << std::endl;
         reply->set_storage_id(request->storage_id());
-        reply->set_element_id(request->element_id());
+        reply->set_object_id(request->object_id());
         reply->set_tag(request->tag());
         return Status::OK;
     }

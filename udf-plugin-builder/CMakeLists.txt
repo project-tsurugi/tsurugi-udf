@@ -27,7 +27,7 @@ if(NOT GRPC_CPP_PLUGIN_EXECUTABLE)
   message(FATAL_ERROR "grpc_cpp_plugin not found!")
 endif()
 
-set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/generate.py)
+set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_builder/generate.py)
 
 # ====== build type ======
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

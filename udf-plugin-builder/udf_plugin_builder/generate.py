@@ -237,7 +237,7 @@ def main():
         "rpc_client.h.j2": "rpc_client.h",
         "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
     }
-    template_dir = "templates"
+    template_dir = "udf_plugin_builder/templates"
     for template_file, output_file in templates.items():
         output_path = f"{out_dir}/{output_file}"
         generate_cpp_from_template(

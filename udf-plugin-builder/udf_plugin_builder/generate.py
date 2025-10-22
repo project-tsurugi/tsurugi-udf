@@ -12,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import shutil
 import sys
+import subprocess
 import os
 import json
 from tsurugi_udf_common import descriptors
@@ -34,6 +36,8 @@ TYPE_KIND_MAP = descriptors.TYPE_KIND_MAP
 FIELD_TYPE_MAP = descriptors.FIELD_TYPE_MAP
 Version = descriptors.Version
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATES_DIR = os.path.join(SCRIPT_DIR, "templates")
 
 def fetch_add_name(type_kind: str) -> str:
     return TYPE_KIND_MAP.get(type_kind, "/* no fetch, unknown type */")
@@ -43,6 +47,37 @@ def field_type_to_kind(field) -> str:
     """Protobuf field type番号 -> internal type名"""
     return FIELD_TYPE_MAP.get(field.type, f"TYPE_{field.type}")
 
+
+
+def find_grpc_cpp_plugin():
+    plugin = shutil.which("grpc_cpp_plugin")
+    if plugin is None:
+        print("[ERROR] grpc_cpp_plugin not found in PATH.")
+        sys.exit(1)
+    return plugin
+
+def run_protoc(proto_files, proto_path, out_dir, descriptor_set_out=None):
+    plugin_path = find_grpc_cpp_plugin()
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if descriptor_set_out is None:
+        descriptor_set_out = out_dir / "descriptor.pb"
+
+    protoc_cmd = [
+        "protoc",
+        f"-I{proto_path}",
+        f"--cpp_out={out_dir}",
+        f"--grpc_out={out_dir}",
+        f"--plugin=protoc-gen-grpc={plugin_path}",
+        f"--descriptor_set_out={descriptor_set_out}",
+        "--include_imports",
+    ]
+    protoc_cmd.extend(proto_files)
+
+    print("[INFO] Running protoc:", " ".join(str(x) for x in protoc_cmd))
+    subprocess.check_call(protoc_cmd)
+    return descriptor_set_out
 
 def parse_package_descriptor(
     desc_set: descriptor_pb2.FileDescriptorSet,
@@ -166,6 +201,11 @@ def parse_args():
         help="Path(s) to main .proto file(s) (default: sample + complex_types + primitive_types)",
     )
     parser.add_argument(
+        "--proto_path",
+        default="proto",
+        help="Directory containing .proto files (default: proto)",
+    )
+    parser.add_argument(
         "--out",
         default="out",
         help="Output directory for generated files (default: out)",
@@ -222,6 +262,7 @@ def generate_cpp_from_template(
 def main():
     args = parse_args()
     out_dir = args.out
+    descriptor_path = run_protoc(args.proto_file, args.proto_path, out_dir)
     descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
     desc_set = load_descriptor(descriptor_path)
     packages = parse_package_descriptor(desc_set)
@@ -233,11 +274,10 @@ def main():
         "rpc_client.h.j2": "rpc_client.h",
         "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
     }
-    template_dir = "udf_plugin_builder/templates"
     for template_file, output_file in templates.items():
         output_path = f"{out_dir}/{output_file}"
         generate_cpp_from_template(
-            packages, template_dir, template_file, output_path, proto_base_name
+            packages, TEMPLATES_DIR, template_file, output_path, proto_base_name
         )
 
 

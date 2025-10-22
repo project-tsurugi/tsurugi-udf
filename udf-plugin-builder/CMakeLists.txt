@@ -164,18 +164,12 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E echo "Generating out directory..."
   COMMAND ${CMAKE_COMMAND} -E make_directory ${OUT_DIR}
   COMMAND ${CMAKE_COMMAND} -E echo
-          "Generating C++ and gRPC code from proto files..."
-  COMMAND
-    ${PROTOC_EXECUTABLE} -I${PROTO_PATH} --cpp_out=${OUT_DIR}
-    --grpc_out=${OUT_DIR} --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN_EXECUTABLE}
-    --descriptor_set_out=${OUT_DIR}/descriptor.pb --include_imports
-    ${PROTO_FILES}
-  COMMAND ${CMAKE_COMMAND} -E echo "Generating code from proto and API..."
+          "Generating C++ and gRPC code from proto files via generate.py..."
   COMMAND ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
-          --out ${OUT_DIR}
+          --proto_path ${PROTO_PATH} --out ${OUT_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Running generate.py")
+  COMMENT "Running generate.py for proto and plugin API generation")
 
 # ====== proto library ======
 add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}

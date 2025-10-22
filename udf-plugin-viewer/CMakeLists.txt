@@ -36,9 +36,10 @@ pybind11_add_module(
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
   COMMAND
-    ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/../py/common/descriptors.py
+    ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/descriptors.py
     ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  DEPENDS ${CMAKE_SOURCE_DIR}/../py/common/descriptors.py)
+  DEPENDS ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/descriptors.py)
 
 add_custom_target(
   copy_descriptors ALL

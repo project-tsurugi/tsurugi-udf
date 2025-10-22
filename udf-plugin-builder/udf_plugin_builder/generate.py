@@ -15,6 +15,7 @@
 import sys
 import os
 import json
+from tsurugi_udf_common import descriptors
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import List
@@ -22,21 +23,16 @@ from jinja2 import Environment, FileSystemLoader
 from google.protobuf import descriptor_pb2
 
 
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "py"))
-)
-
 from dataclasses import asdict
-from common.descriptors import (
-    ColumnDescriptor,
-    RecordDescriptor,
-    FunctionDescriptor,
-    ServiceDescriptor,
-    PackageDescriptor,
-    TYPE_KIND_MAP,
-    FIELD_TYPE_MAP,
-    Version,
-)
+
+ColumnDescriptor = descriptors.ColumnDescriptor
+RecordDescriptor = descriptors.RecordDescriptor
+FunctionDescriptor = descriptors.FunctionDescriptor
+ServiceDescriptor = descriptors.ServiceDescriptor
+PackageDescriptor = descriptors.PackageDescriptor
+TYPE_KIND_MAP = descriptors.TYPE_KIND_MAP
+FIELD_TYPE_MAP = descriptors.FIELD_TYPE_MAP
+Version = descriptors.Version
 
 
 def fetch_add_name(type_kind: str) -> str:

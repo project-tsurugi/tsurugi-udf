@@ -110,7 +110,7 @@ set(PLUGIN_API_NAME
 message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
 
 # ====== tmp dir ======
-set(DEFAULT_TMP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tmp)
+set(DEFAULT_TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
 set(TMP_DIR
     ${DEFAULT_TMP_DIR}
     CACHE PATH
@@ -187,7 +187,7 @@ target_include_directories(
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
 # ====== output ini ======
-set(INI_FILE lib${PLUGIN_API_NAME}.ini)
+set(INI_FILE ${CMAKE_CURRENT_BINARY_DIR}/lib${PLUGIN_API_NAME}.ini)
 add_custom_command(
   OUTPUT ${INI_FILE}
   COMMAND ${CMAKE_COMMAND} -E echo "[grpc]" > ${INI_FILE}
@@ -201,7 +201,7 @@ add_custom_target(${PLUGIN_API_NAME}_ini ALL DEPENDS ${INI_FILE})
 add_custom_target(
   clean_out
   COMMAND ${CMAKE_COMMAND} -E rm -rf "${TMP_DIR}"
-  COMMENT "Removing out directory")
+  COMMENT "Removing tmp directory")
 set_property(
   DIRECTORY
   APPEND

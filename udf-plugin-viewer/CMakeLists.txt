@@ -25,7 +25,8 @@ find_package(
   Python3
   COMPONENTS Interpreter Development
   REQUIRED)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
+list(APPEND CMAKE_MODULE_PATH
+     "${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/cmake")
 find_package(nlohmann_json REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)

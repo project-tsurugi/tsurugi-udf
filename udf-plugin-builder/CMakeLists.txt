@@ -13,7 +13,8 @@ project(udf_app)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
+list(APPEND CMAKE_MODULE_PATH
+     "${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/cmake")
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(Python3 REQUIRED)

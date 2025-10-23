@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "udf-plugin-builder"
+version = "0.1.0"
+description = "UDF plugin builder for Tsurugi DB"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.8"
+dependencies = [
+  "tsurugi-udf-common>=0.1.0",
+  "jinja2",
+  "protobuf",
+]
+
+[project.scripts]
+udf-plugin-builder = "udf_plugin_builder.generate:main"
+
+[tool.setuptools]
+packages = ["udf_plugin_builder"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+udf_plugin_builder = ["templates/*"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["__pycache__"]
+
+[project.urls]
+Homepage = "https://github.com/project-tsurugi/tsurugi-udf"

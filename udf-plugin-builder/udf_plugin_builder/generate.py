@@ -217,6 +217,21 @@ def parse_args():
         default=None,
         help="Path to write descriptor.pb (default: <tmp>/descriptor.pb)",
     )
+    parser.add_argument(
+        "--plugin_api_name",
+        default="plugin_api",
+        help="Name of the generated plugin API library (used to name the ini: lib<name>.ini).",
+    )
+    parser.add_argument(
+        "--grpc_url",
+        default="localhost:50051",
+        help="gRPC server URL to write into the ini (default: localhost:50051).",
+    )
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="Path to write the generated ini file.",
+    )
 
     return parser.parse_args()
 
@@ -261,6 +276,21 @@ def generate_cpp_from_template(
     print(f"[OK] Generated C++ file from template: {output_cpp_path}")
 
 
+def generate_ini_file(plugin_name: str, grpc_url: str, out_dir: str):
+    """Generate .ini file for plugin"""
+    ini_path = Path(out_dir) / f"lib{plugin_name}.ini"
+    ini_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(ini_path, "w") as f:
+        f.write("[grpc]\n")
+        f.write(f"enabled=true\n")
+        f.write(f"url={grpc_url}\n")
+        f.write("credentials=insecure\n")
+
+    print(f"[OK] Generated ini file: {ini_path}")
+    return ini_path
+
+
 def main():
     args = parse_args()
     tmp_dir = args.tmp
@@ -281,6 +311,7 @@ def main():
         generate_cpp_from_template(
             packages, TEMPLATES_DIR, template_file, output_path, proto_base_name
         )
+    generate_ini_file(args.plugin_api_name, args.grpc_url, args.out or ".")
 
 
 if __name__ == "__main__":

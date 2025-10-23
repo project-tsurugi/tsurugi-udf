@@ -166,12 +166,13 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TMP_DIR}
   COMMAND ${CMAKE_COMMAND} -E echo
           "Generating C++ and gRPC code from proto files via generate.py..."
-  COMMAND ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
-          --proto_path ${PROTO_PATH} --tmp ${TMP_DIR}
+  COMMAND
+    ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
+    --proto_path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
+    ${PLUGIN_API_NAME} --grpc_url ${GRPC_URL} --out ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Running generate.py for proto and plugin API generation")
-
 # ====== proto library ======
 add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
                              ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
@@ -186,17 +187,6 @@ target_include_directories(
                              ${TMP_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
-# ====== output ini ======
-set(INI_FILE ${CMAKE_CURRENT_BINARY_DIR}/lib${PLUGIN_API_NAME}.ini)
-add_custom_command(
-  OUTPUT ${INI_FILE}
-  COMMAND ${CMAKE_COMMAND} -E echo "[grpc]" > ${INI_FILE}
-  COMMAND ${CMAKE_COMMAND} -E echo "url=${GRPC_URL}" >> ${INI_FILE}
-  COMMAND ${CMAKE_COMMAND} -E echo "credentials=insecure" >> ${INI_FILE}
-  DEPENDS ${PLUGIN_API_NAME}
-  COMMENT "Generating ${PLUGIN_API_NAME}.ini")
-
-add_custom_target(${PLUGIN_API_NAME}_ini ALL DEPENDS ${INI_FILE})
 # ====== clean target ======
 add_custom_target(
   clean_out

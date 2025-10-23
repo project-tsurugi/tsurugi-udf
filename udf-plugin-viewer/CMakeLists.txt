@@ -16,33 +16,30 @@ project(udf_plugin_viewer)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(TSURUGI_UDF_COMMON_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf)
+include_directories(${TSURUGI_UDF_COMMON_DIR}/include/udf)
 
 find_package(pybind11 REQUIRED)
 find_package(
   Python3
   COMPONENTS Interpreter Development
   REQUIRED)
-list(APPEND CMAKE_MODULE_PATH
-     "${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/cmake")
+list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
 find_package(nlohmann_json REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 
 pybind11_add_module(
-  udf_plugin bindings.cpp
-  ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/udf_loader.cpp
-  ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/error_info.cpp)
+  udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
+  ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  COMMAND
-    ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/descriptors.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  DEPENDS ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/descriptors.py)
+  COMMAND ${CMAKE_COMMAND} -E copy ${TSURUGI_UDF_COMMON_DIR}/descriptors.py
+          ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
+  DEPENDS ${TSURUGI_UDF_COMMON_DIR}/descriptors.py)
 
 add_custom_target(
   copy_descriptors ALL

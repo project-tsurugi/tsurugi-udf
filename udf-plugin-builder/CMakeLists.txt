@@ -12,9 +12,10 @@ project(udf_app)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(TSURUGI_UDF_COMMON_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
 
-list(APPEND CMAKE_MODULE_PATH
-     "${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/cmake")
+list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(Python3 REQUIRED)
@@ -156,8 +157,7 @@ endforeach()
 set(PLUGIN_GEN_SRCS
     ${TMP_DIR}/plugin_api_impl.cpp ${TMP_DIR}/rpc_client.cpp
     ${TMP_DIR}/rpc_client_factory.cpp
-    ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/descriptor_impl.cpp
-)
+    ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
 set(PLUGIN_GEN_HDRS ${TMP_DIR}/rpc_client.h)
 
 # ====== code generation rules ======
@@ -185,9 +185,7 @@ set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ====== output library ======
 add_library(${PLUGIN_API_NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
 target_include_directories(
-  ${PLUGIN_API_NAME}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf
-          ${TMP_DIR})
+  ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
 # ====== clean target ======
@@ -224,19 +222,14 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
       ${TMP_DIR}/rpc_client.cpp
       ${TMP_DIR}/rpc_client_factory.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/generic_record_impl.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/error_info.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/descriptor_impl.cpp
-    )
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME}
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf
-        ${TMP_DIR})
-    target_include_directories(
-      rpc_client
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf)
+      ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                                 ${TMP_DIR})
+    target_include_directories(rpc_client
+                               PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
   endif()
@@ -273,19 +266,14 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/client/client.cpp
       ${TMP_DIR}/rpc_client.cpp
       ${TMP_DIR}/rpc_client_factory.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/generic_record_impl.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/descriptor_impl.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/error_info.cpp
-    )
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME}
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf
-        ${TMP_DIR})
-    target_include_directories(
-      rpc_client_oneof
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf)
+      ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                                 ${TMP_DIR})
+    target_include_directories(rpc_client_oneof
+                               PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
     target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                    protobuf::libprotobuf)
   endif()
@@ -305,19 +293,14 @@ if(ENABLE_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/client/client.cpp
       ${TMP_DIR}/rpc_client.cpp
       ${TMP_DIR}/rpc_client_factory.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/generic_record_impl.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/descriptor_impl.cpp
-      ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/error_info.cpp
-    )
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
+      ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME}
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf
-        ${TMP_DIR})
-    target_include_directories(
-      rpc_client_nested_test
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf)
+      ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                                 ${TMP_DIR})
+    target_include_directories(rpc_client_nested_test
+                               PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
     target_link_libraries(
       rpc_client_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                      protobuf::libprotobuf)

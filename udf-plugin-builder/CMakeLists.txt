@@ -109,12 +109,13 @@ set(PLUGIN_API_NAME
     CACHE STRING "Name of the plugin_api library target (default: plugin_api)")
 message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
 
-# ====== output dir ======
-set(DEFAULT_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/out)
-set(OUT_DIR
-    ${DEFAULT_OUT_DIR}
+# ====== tmp dir ======
+set(DEFAULT_TMP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tmp)
+set(TMP_DIR
+    ${DEFAULT_TMP_DIR}
     CACHE PATH
-          "Output directory for generated code (default: ${DEFAULT_OUT_DIR})")
+          "Temporary directory for generated code (default: ${DEFAULT_TMP_DIR})"
+)
 # ====== gRPC URL option ======
 set(DEFAULT_GRPC_URL "localhost:50051")
 if(ENABLE_UNARY_TEST)
@@ -145,28 +146,28 @@ set(GRPC_GEN_HDRS "")
 
 foreach(proto_file IN LISTS PROTO_FILES)
   get_filename_component(proto_name ${proto_file} NAME_WE)
-  list(APPEND PROTO_GEN_SRCS ${OUT_DIR}/${proto_name}.pb.cc)
-  list(APPEND PROTO_GEN_HDRS ${OUT_DIR}/${proto_name}.pb.h)
-  list(APPEND GRPC_GEN_SRCS ${OUT_DIR}/${proto_name}.grpc.pb.cc)
-  list(APPEND GRPC_GEN_HDRS ${OUT_DIR}/${proto_name}.grpc.pb.h)
+  list(APPEND PROTO_GEN_SRCS ${TMP_DIR}/${proto_name}.pb.cc)
+  list(APPEND PROTO_GEN_HDRS ${TMP_DIR}/${proto_name}.pb.h)
+  list(APPEND GRPC_GEN_SRCS ${TMP_DIR}/${proto_name}.grpc.pb.cc)
+  list(APPEND GRPC_GEN_HDRS ${TMP_DIR}/${proto_name}.grpc.pb.h)
 endforeach()
 
 set(PLUGIN_GEN_SRCS
-    ${OUT_DIR}/plugin_api_impl.cpp ${OUT_DIR}/rpc_client.cpp
-    ${OUT_DIR}/rpc_client_factory.cpp
+    ${TMP_DIR}/plugin_api_impl.cpp ${TMP_DIR}/rpc_client.cpp
+    ${TMP_DIR}/rpc_client_factory.cpp
     ${CMAKE_SOURCE_DIR}/../src/udf/descriptor_impl.cpp)
-set(PLUGIN_GEN_HDRS ${OUT_DIR}/rpc_client.h)
+set(PLUGIN_GEN_HDRS ${TMP_DIR}/rpc_client.h)
 
 # ====== code generation rules ======
 add_custom_command(
   OUTPUT ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS} ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS}
          ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS}
   COMMAND ${CMAKE_COMMAND} -E echo "Generating out directory..."
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${OUT_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${TMP_DIR}
   COMMAND ${CMAKE_COMMAND} -E echo
           "Generating C++ and gRPC code from proto files via generate.py..."
   COMMAND ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
-          --proto_path ${PROTO_PATH} --out ${OUT_DIR}
+          --proto_path ${PROTO_PATH} --tmp ${TMP_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Running generate.py for proto and plugin API generation")
@@ -174,7 +175,7 @@ add_custom_command(
 # ====== proto library ======
 add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
                              ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
-target_include_directories(proto_lib PUBLIC ${OUT_DIR} ${GRPC_INCLUDE_DIRS})
+target_include_directories(proto_lib PUBLIC ${TMP_DIR} ${GRPC_INCLUDE_DIRS})
 target_link_libraries(proto_lib PUBLIC ${GRPC_LIBRARIES} protobuf::libprotobuf)
 set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -182,7 +183,7 @@ set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_library(${PLUGIN_API_NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
 target_include_directories(
   ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
-                             ${OUT_DIR})
+                             ${TMP_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
 # ====== output ini ======
@@ -199,12 +200,12 @@ add_custom_target(${PLUGIN_API_NAME}_ini ALL DEPENDS ${INI_FILE})
 # ====== clean target ======
 add_custom_target(
   clean_out
-  COMMAND ${CMAKE_COMMAND} -E rm -rf "${OUT_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E rm -rf "${TMP_DIR}"
   COMMENT "Removing out directory")
 set_property(
   DIRECTORY
   APPEND
-  PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${OUT_DIR}")
+  PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${TMP_DIR}")
 # ====== test options ======
 option(ENABLE_TESTS "Build tests" OFF)
 if(ENABLE_TESTS)
@@ -220,7 +221,7 @@ if(ENABLE_TESTS)
       rpc_server_unary_test
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_unary_test PRIVATE ${OUT_DIR}
+      rpc_server_unary_test PRIVATE ${TMP_DIR}
                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_unary_test PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -228,14 +229,14 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client
       ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
-      ${OUT_DIR}/rpc_client.cpp
-      ${OUT_DIR}/rpc_client_factory.cpp
+      ${TMP_DIR}/rpc_client.cpp
+      ${TMP_DIR}/rpc_client_factory.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp)
     target_include_directories(
       ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
-                                 ${OUT_DIR})
+                                 ${TMP_DIR})
     target_include_directories(
       rpc_client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -251,7 +252,7 @@ if(ENABLE_TESTS)
       rpc_server_load_another
       ${CMAKE_CURRENT_SOURCE_DIR}/test/load_another/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_load_another PRIVATE ${OUT_DIR}
+      rpc_server_load_another PRIVATE ${TMP_DIR}
                                       ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -264,7 +265,7 @@ if(ENABLE_TESTS)
       rpc_server_oneof_test
       ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_oneof_test PRIVATE ${OUT_DIR}
+      rpc_server_oneof_test PRIVATE ${TMP_DIR}
                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_oneof_test PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -272,14 +273,14 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client_oneof
       ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/client/client.cpp
-      ${OUT_DIR}/rpc_client.cpp
-      ${OUT_DIR}/rpc_client_factory.cpp
+      ${TMP_DIR}/rpc_client.cpp
+      ${TMP_DIR}/rpc_client_factory.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
     target_include_directories(
       ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
-                                 ${OUT_DIR})
+                                 ${TMP_DIR})
     target_include_directories(
       rpc_client_oneof PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -290,7 +291,7 @@ if(ENABLE_TESTS)
       rpc_server_nested_test
       ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_nested_test PRIVATE ${OUT_DIR}
+      rpc_server_nested_test PRIVATE ${TMP_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -299,14 +300,14 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client_nested_test
       ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/client/client.cpp
-      ${OUT_DIR}/rpc_client.cpp
-      ${OUT_DIR}/rpc_client_factory.cpp
+      ${TMP_DIR}/rpc_client.cpp
+      ${TMP_DIR}/rpc_client_factory.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/generic_record_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/descriptor_impl.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/../src/udf/error_info.cpp)
     target_include_directories(
       ${PLUGIN_API_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf
-                                 ${OUT_DIR})
+                                 ${TMP_DIR})
     target_include_directories(
       rpc_client_nested_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(

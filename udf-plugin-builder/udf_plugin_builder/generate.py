@@ -39,6 +39,7 @@ Version = descriptors.Version
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, "templates")
 
+
 def fetch_add_name(type_kind: str) -> str:
     return TYPE_KIND_MAP.get(type_kind, "/* no fetch, unknown type */")
 
@@ -48,7 +49,6 @@ def field_type_to_kind(field) -> str:
     return FIELD_TYPE_MAP.get(field.type, f"TYPE_{field.type}")
 
 
-
 def find_grpc_cpp_plugin():
     plugin = shutil.which("grpc_cpp_plugin")
     if plugin is None:
@@ -56,19 +56,20 @@ def find_grpc_cpp_plugin():
         sys.exit(1)
     return plugin
 
-def run_protoc(proto_files, proto_path, out_dir, descriptor_set_out=None):
+
+def run_protoc(proto_files, proto_path, tmp_dir, descriptor_set_out=None):
     plugin_path = find_grpc_cpp_plugin()
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    tmp_dir = Path(tmp_dir)
+    tmp_dir.mkdir(parents=True, exist_ok=True)
 
     if descriptor_set_out is None:
-        descriptor_set_out = out_dir / "descriptor.pb"
+        descriptor_set_out = tmp_dir / "descriptor.pb"
 
     protoc_cmd = [
         "protoc",
         f"-I{proto_path}",
-        f"--cpp_out={out_dir}",
-        f"--grpc_out={out_dir}",
+        f"--cpp_out={tmp_dir}",
+        f"--grpc_out={tmp_dir}",
         f"--plugin=protoc-gen-grpc={plugin_path}",
         f"--descriptor_set_out={descriptor_set_out}",
         "--include_imports",
@@ -78,6 +79,7 @@ def run_protoc(proto_files, proto_path, out_dir, descriptor_set_out=None):
     print("[INFO] Running protoc:", " ".join(str(x) for x in protoc_cmd))
     subprocess.check_call(protoc_cmd)
     return descriptor_set_out
+
 
 def parse_package_descriptor(
     desc_set: descriptor_pb2.FileDescriptorSet,
@@ -206,21 +208,21 @@ def parse_args():
         help="Directory containing .proto files (default: proto)",
     )
     parser.add_argument(
-        "--out",
-        default="out",
-        help="Output directory for generated files (default: out)",
+        "--tmp",
+        default="tmp",
+        help="Temporary directory for generated files (default: tmp)",
     )
     parser.add_argument(
         "--descriptor_set_out",
         default=None,
-        help="Path to write descriptor.pb (default: <out>/descriptor.pb)",
+        help="Path to write descriptor.pb (default: <tmp>/descriptor.pb)",
     )
 
     return parser.parse_args()
 
 
-def dump_packages_json(packages: List[PackageDescriptor], output_path: str):
-    with open(output_path, "w") as f:
+def dump_packages_json(packages: List[PackageDescriptor], tmp_path: str):
+    with open(tmp_path, "w") as f:
         json.dump([asdict(pkg) for pkg in packages], f, indent=2)
 
 
@@ -261,12 +263,12 @@ def generate_cpp_from_template(
 
 def main():
     args = parse_args()
-    out_dir = args.out
-    descriptor_path = run_protoc(args.proto_file, args.proto_path, out_dir)
-    descriptor_path = args.descriptor_set_out or f"{out_dir}/descriptor.pb"
+    tmp_dir = args.tmp
+    descriptor_path = run_protoc(args.proto_file, args.proto_path, tmp_dir)
+    descriptor_path = args.descriptor_set_out or f"{tmp_dir}/descriptor.pb"
     desc_set = load_descriptor(descriptor_path)
     packages = parse_package_descriptor(desc_set)
-    dump_packages_json(packages, f"{out_dir}/service_descriptors.json")
+    dump_packages_json(packages, f"{tmp_dir}/service_descriptors.json")
     proto_base_name = Path(parse_args().proto_file[0]).stem
     templates = {
         "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",
@@ -275,7 +277,7 @@ def main():
         "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
     }
     for template_file, output_file in templates.items():
-        output_path = f"{out_dir}/{output_file}"
+        output_path = f"{tmp_dir}/{output_file}"
         generate_cpp_from_template(
             packages, TEMPLATES_DIR, template_file, output_path, proto_base_name
         )

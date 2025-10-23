@@ -17,7 +17,8 @@ project(udf_plugin_viewer)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(${CMAKE_SOURCE_DIR}/../include/udf)
+include_directories(
+  ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/include/udf)
 
 find_package(pybind11 REQUIRED)
 find_package(
@@ -30,8 +31,9 @@ find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 
 pybind11_add_module(
-  udf_plugin bindings.cpp ${CMAKE_SOURCE_DIR}/../src/udf/udf_loader.cpp
-  ${CMAKE_SOURCE_DIR}/../src/udf/error_info.cpp)
+  udf_plugin bindings.cpp
+  ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/udf_loader.cpp
+  ${CMAKE_SOURCE_DIR}/../common/tsurugi_udf_common/src/udf/error_info.cpp)
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py

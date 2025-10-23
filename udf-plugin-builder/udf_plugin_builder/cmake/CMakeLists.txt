@@ -1,49 +1,59 @@
 cmake_minimum_required(VERSION 3.10)
 project(udf_app)
 
-# Usage: cmake -S . -B build \ -DPROTO_PATH="proto" \
-# -DPROTO_FILES="proto/sample.proto;proto/complex_types.proto;proto/primitive_types.proto"
-# \ -DPLUGIN_API_NAME="my_udf"
-#
-# Options: PROTO_PATH        Path to .proto files directory (default: proto)
-# PROTO_FILES       List of .proto files to compile (default: sample.proto,
-# complex_types.proto, primitive_types.proto) PLUGIN_API_NAME   Name of the
-# generated plugin_api library target (default: plugin_api)
+# ============================================================
+# Options
+# ============================================================
 option(USE_INSTALLED_TSURUGI_UDF_COMMON
        "Use installed tsurugi-udf-common instead of source" ON)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set(TEST_ROOT_DIR ${PROJECT_ROOT_DIR}/test)
+# ============================================================
+# Locate tsurugi_udf_common
+# ============================================================
 if(USE_INSTALLED_TSURUGI_UDF_COMMON)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
   execute_process(
     COMMAND
       ${Python3_EXECUTABLE} -c
-      "import tsurugi_udf_common, os; print(os.path.dirname(tsurugi_udf_common.__file__))"
+      "import tsurugi_udf_common, os, sys; sys.stdout.write(os.path.dirname(tsurugi_udf_common.__file__))"
     OUTPUT_VARIABLE TSURUGI_UDF_COMMON_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
-  set(TSURUGI_UDF_COMMON_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
+  set(TSURUGI_UDF_COMMON_DIR "${PROJECT_ROOT_DIR}/common/tsurugi_udf_common")
 endif()
+
 message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
+
+# ============================================================
+# Find dependencies
+# ============================================================
 list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
+
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(Python3 REQUIRED)
 find_program(PROTOC_EXECUTABLE protoc)
 find_package(Boost REQUIRED)
+
 if(NOT PROTOC_EXECUTABLE)
   message(FATAL_ERROR "protoc not found!")
 endif()
+
 find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
 if(NOT GRPC_CPP_PLUGIN_EXECUTABLE)
   message(FATAL_ERROR "grpc_cpp_plugin not found!")
 endif()
 
-set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_builder/generate.py)
+set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/../generate.py)
 
-# ====== build type ======
+# ============================================================
+# Build Type
+# ============================================================
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE
       Debug
@@ -52,107 +62,103 @@ endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
                                              "RelWithDebInfo" "MinSizeRel")
 
-# ====== proto files ======
+# ============================================================
+# Default proto settings
+# ============================================================
 set(DEFAULT_PROTO_FILES proto/sample.proto proto/complex_types.proto
                         proto/primitive_types.proto)
 set(DEFAULT_PROTO_PATH proto)
 
-# Override defaults if test options are enabled
+# ============================================================
+# Handle test options
+# ============================================================
 if(ENABLE_UNARY_TEST)
   if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH test/unary_test/proto)
+    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/unary_test/proto)
   endif()
   if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES test/unary_test/proto/test_all.proto)
+    set(DEFAULT_PROTO_FILES ${TEST_ROOT_DIR}/unary_test/proto/test_all.proto)
   endif()
 elseif(ENABLE_LOAD_ANOTHER_TEST)
   if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH test/load_another/proto)
+    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/load_another/proto)
   endif()
   if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES test/load_another/proto/sample.proto)
+    set(DEFAULT_PROTO_FILES ${TEST_ROOT_DIR}/load_another/proto/sample.proto)
   endif()
 elseif(ENABLE_ONEOF_TEST)
   if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH test/oneof_test/proto)
+    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/oneof_test/proto)
   endif()
   if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES test/oneof_test/proto/oneof_test.proto)
+    set(DEFAULT_PROTO_FILES ${TEST_ROOT_DIR}/oneof_test/proto/oneof_test.proto)
   endif()
 elseif(ENABLE_NESTED_TEST)
   if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH test/nested_test/proto)
+    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/nested_test/proto)
   endif()
   if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES test/nested_test/proto/nested_test.proto
-                            test/nested_test/proto/complex_types.proto)
+    set(DEFAULT_PROTO_FILES
+        ${TEST_ROOT_DIR}/nested_test/proto/nested_test.proto
+        ${TEST_ROOT_DIR}/nested_test/proto/complex_types.proto)
   endif()
 endif()
 
 set(PROTO_FILES
     ${DEFAULT_PROTO_FILES}
     CACHE STRING "List of proto files to generate")
-string(REPLACE ";" " " PROTO_FILES_STR "${PROTO_FILES}")
-
 set(PROTO_PATH
     ${DEFAULT_PROTO_PATH}
     CACHE STRING "Directories containing proto files")
 
-# ====== library name ======
+# ============================================================
+# Library name
+# ============================================================
 set(DEFAULT_PLUGIN_API_NAME plugin_api)
-
 if(ENABLE_UNARY_TEST)
-  if(NOT DEFINED PLUGIN_API_NAME)
-    set(DEFAULT_PLUGIN_API_NAME unary_test)
-  endif()
+  set(DEFAULT_PLUGIN_API_NAME unary_test)
 elseif(ENABLE_LOAD_ANOTHER_TEST)
-  if(NOT DEFINED PLUGIN_API_NAME)
-    set(DEFAULT_PLUGIN_API_NAME load_another)
-  endif()
+  set(DEFAULT_PLUGIN_API_NAME load_another)
 elseif(ENABLE_ONEOF_TEST)
-  if(NOT DEFINED PLUGIN_API_NAME)
-    set(DEFAULT_PLUGIN_API_NAME oneof_test)
-  endif()
+  set(DEFAULT_PLUGIN_API_NAME oneof_test)
 elseif(ENABLE_NESTED_TEST)
-  if(NOT DEFINED PLUGIN_API_NAME)
-    set(DEFAULT_PLUGIN_API_NAME nested_test)
-  endif()
+  set(DEFAULT_PLUGIN_API_NAME nested_test)
 endif()
+
 set(PLUGIN_API_NAME
     ${DEFAULT_PLUGIN_API_NAME}
     CACHE STRING "Name of the plugin_api library target (default: plugin_api)")
 message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
 
-# ====== tmp dir ======
+# ============================================================
+# Paths
+# ============================================================
 set(DEFAULT_TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
 set(TMP_DIR
     ${DEFAULT_TMP_DIR}
-    CACHE PATH
-          "Temporary directory for generated code (default: ${DEFAULT_TMP_DIR})"
-)
-# ====== gRPC URL option ======
+    CACHE PATH "Temporary directory for generated code")
+
+# ============================================================
+# gRPC URL (test-specific)
+# ============================================================
 set(DEFAULT_GRPC_URL "localhost:50051")
 if(ENABLE_UNARY_TEST)
-  if(NOT DEFINED GRPC_URL)
-    set(DEFAULT_GRPC_URL "localhost:50001")
-  endif()
+  set(DEFAULT_GRPC_URL "localhost:50001")
 elseif(ENABLE_LOAD_ANOTHER_TEST)
-  if(NOT DEFINED GRPC_URL)
-    set(DEFAULT_GRPC_URL "localhost:50002")
-  endif()
+  set(DEFAULT_GRPC_URL "localhost:50002")
 elseif(ENABLE_ONEOF_TEST)
-  if(NOT DEFINED GRPC_URL)
-    set(DEFAULT_GRPC_URL "localhost:50003")
-  endif()
+  set(DEFAULT_GRPC_URL "localhost:50003")
 elseif(ENABLE_NESTED_TEST)
-  if(NOT DEFINED GRPC_URL)
-    set(DEFAULT_GRPC_URL "localhost:50004")
-  endif()
+  set(DEFAULT_GRPC_URL "localhost:50004")
 endif()
+
 set(GRPC_URL
     ${DEFAULT_GRPC_URL}
-    CACHE STRING "gRPC server URL (default: ${DEFAULT_GRPC_URL})")
-# ====== list of generated files ======
+    CACHE STRING "gRPC server URL")
+
+# ============================================================
+# Proto/gRPC generation
+# ============================================================
 set(PROTO_GEN_SRCS "")
 set(PROTO_GEN_HDRS "")
 set(GRPC_GEN_SRCS "")
@@ -172,35 +178,42 @@ set(PLUGIN_GEN_SRCS
     ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
 set(PLUGIN_GEN_HDRS ${TMP_DIR}/rpc_client.h)
 
-# ====== code generation rules ======
+# ============================================================
+# Code generation rule
+# ============================================================
 add_custom_command(
   OUTPUT ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS} ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS}
          ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS}
-  COMMAND ${CMAKE_COMMAND} -E echo "Generating out directory..."
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TMP_DIR}
-  COMMAND ${CMAKE_COMMAND} -E echo
-          "Generating C++ and gRPC code from proto files via generate.py..."
   COMMAND
     ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
     --proto_path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
     ${PLUGIN_API_NAME} --grpc_url ${GRPC_URL} --out ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
   COMMENT "Running generate.py for proto and plugin API generation")
-# ====== proto library ======
+
+# ============================================================
+# Proto library
+# ============================================================
 add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
                              ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
 target_include_directories(proto_lib PUBLIC ${TMP_DIR} ${GRPC_INCLUDE_DIRS})
 target_link_libraries(proto_lib PUBLIC ${GRPC_LIBRARIES} protobuf::libprotobuf)
 set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# ====== output library ======
+# ============================================================
+# Plugin API library
+# ============================================================
 add_library(${PLUGIN_API_NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
 target_include_directories(
   ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
-# ====== clean target ======
+
+# ============================================================
+# Clean target
+# ============================================================
 add_custom_target(
   clean_out
   COMMAND ${CMAKE_COMMAND} -E rm -rf "${TMP_DIR}"
@@ -209,20 +222,22 @@ set_property(
   DIRECTORY
   APPEND
   PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${TMP_DIR}")
-# ====== test options ======
+
+# ============================================================
+# Tests
+# ============================================================
 option(ENABLE_TESTS "Build tests" OFF)
+
 if(ENABLE_TESTS)
   option(ENABLE_UNARY_TEST "Build unary_test" OFF)
   option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
-  # cmake .. -DPROTO_PATH="test/unary_test/proto"
-  # -DPROTO_FILES="test/unary_test/proto/test_all.proto" -DENABLE_TESTS=ON
-  # -DENABLE_UNARY_TEST=ON
+  option(ENABLE_ONEOF_TEST "Build oneof_test" OFF)
+  option(ENABLE_NESTED_TEST "Build nested_test" OFF)
   if(ENABLE_UNARY_TEST)
     message(STATUS "Building unary_test")
     # ====== rpc server/client ======
-    add_executable(
-      rpc_server_unary_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/server/rpc_server.cpp)
+    add_executable(rpc_server_unary_test
+                   ${TEST_ROOT_DIR}/unary_test/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_unary_test PRIVATE ${TMP_DIR}
                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
@@ -231,7 +246,7 @@ if(ENABLE_TESTS)
                                     protobuf::libprotobuf)
     add_executable(
       rpc_client
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/unary_test/client/client.cpp
+      ${TEST_ROOT_DIR}/unary_test/client/client.cpp
       ${TMP_DIR}/rpc_client.cpp
       ${TMP_DIR}/rpc_client_factory.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
@@ -245,18 +260,13 @@ if(ENABLE_TESTS)
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
   endif()
-  # cmake ../ -DPROTO_PATH="test/load_another/proto"
-  # -DPROTO_FILES="test/load_another/proto/sample.proto" -DENABLE_TESTS=ON
-  # -DENABLE_LOAD_ANOTHER_TEST=ON -DPLUGIN_API_NAME="load_another" ; make
   if(ENABLE_LOAD_ANOTHER_TEST)
     message(STATUS "Building load_another_test")
-    # ====== rpc server/client ======
-    add_executable(
-      rpc_server_load_another
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/load_another/server/rpc_server.cpp)
+    add_executable(rpc_server_load_another
+                   ${TEST_ROOT_DIR}/load_another/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_load_another PRIVATE ${TMP_DIR}
-                                      ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
+      rpc_server_load_another
+      PRIVATE ${TMP_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(
       rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
@@ -264,9 +274,8 @@ if(ENABLE_TESTS)
   if(ENABLE_ONEOF_TEST)
     message(STATUS "Building oneof_test")
     # ====== rpc server/client ======
-    add_executable(
-      rpc_server_oneof_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/server/rpc_server.cpp)
+    add_executable(rpc_server_oneof_test
+                   ${TEST_ROOT_DIR}/oneof_test/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_oneof_test PRIVATE ${TMP_DIR}
                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
@@ -275,7 +284,7 @@ if(ENABLE_TESTS)
                                     protobuf::libprotobuf)
     add_executable(
       rpc_client_oneof
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/oneof_test/client/client.cpp
+      ${TEST_ROOT_DIR}/oneof_test/client/client.cpp
       ${TMP_DIR}/rpc_client.cpp
       ${TMP_DIR}/rpc_client_factory.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
@@ -290,9 +299,8 @@ if(ENABLE_TESTS)
                                                    protobuf::libprotobuf)
   endif()
   if(ENABLE_NESTED_TEST)
-    add_executable(
-      rpc_server_nested_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/server/rpc_server.cpp)
+    add_executable(rpc_server_nested_test
+                   ${TEST_ROOT_DIR}/nested_test/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_nested_test PRIVATE ${TMP_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
@@ -302,7 +310,7 @@ if(ENABLE_TESTS)
 
     add_executable(
       rpc_client_nested_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/nested_test/client/client.cpp
+      ${TEST_ROOT_DIR}/nested_test/client/client.cpp
       ${TMP_DIR}/rpc_client.cpp
       ${TMP_DIR}/rpc_client_factory.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp

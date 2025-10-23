@@ -9,12 +9,24 @@ project(udf_app)
 # PROTO_FILES       List of .proto files to compile (default: sample.proto,
 # complex_types.proto, primitive_types.proto) PLUGIN_API_NAME   Name of the
 # generated plugin_api library target (default: plugin_api)
-
+option(USE_INSTALLED_TSURUGI_UDF_COMMON
+       "Use installed tsurugi-udf-common instead of source" ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(TSURUGI_UDF_COMMON_DIR
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
+if(USE_INSTALLED_TSURUGI_UDF_COMMON)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
+  execute_process(
+    COMMAND
+      ${Python3_EXECUTABLE} -c
+      "import tsurugi_udf_common, os; print(os.path.dirname(tsurugi_udf_common.__file__))"
+    OUTPUT_VARIABLE TSURUGI_UDF_COMMON_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+  set(TSURUGI_UDF_COMMON_DIR
+      "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
+endif()
+message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)

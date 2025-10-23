@@ -14,8 +14,26 @@
 cmake_minimum_required(VERSION 3.14)
 project(udf_plugin_viewer)
 
+option(USE_INSTALLED_TSURUGI_UDF_COMMON
+       "Use installed tsurugi-udf-common instead of source" ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(USE_INSTALLED_TSURUGI_UDF_COMMON)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+  execute_process(
+    COMMAND
+      ${Python3_EXECUTABLE} -c
+      "import tsurugi_udf_common, os; print(os.path.dirname(tsurugi_udf_common.__file__))"
+    OUTPUT_VARIABLE TSURUGI_UDF_COMMON_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
+else()
+  set(TSURUGI_UDF_COMMON_DIR
+      "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
+endif()
+message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
+
 set(TSURUGI_UDF_COMMON_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
 

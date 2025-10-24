@@ -7,16 +7,23 @@ project(udf_app)
 option(USE_INSTALLED_TSURUGI_UDF_COMMON
        "Use installed tsurugi-udf-common instead of source" ON)
 
+option(ENABLE_TESTS "Build tests" OFF)
+option(ENABLE_UNARY_TEST "Build unary_test" OFF)
+option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
+option(ENABLE_ONEOF_TEST "Build oneof_test" OFF)
+option(ENABLE_NESTED_TEST "Build nested_test" OFF)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 set(TEST_ROOT_DIR ${PROJECT_ROOT_DIR}/test)
+
 # ============================================================
 # Locate tsurugi_udf_common
 # ============================================================
 if(USE_INSTALLED_TSURUGI_UDF_COMMON)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
   execute_process(
     COMMAND
       ${Python3_EXECUTABLE} -c
@@ -52,110 +59,68 @@ endif()
 set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/../generate.py)
 
 # ============================================================
-# Build Type
+# Build type
 # ============================================================
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE
-      Debug
-      CACHE STRING "Choose the build type")
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-                                             "RelWithDebInfo" "MinSizeRel")
 
 # ============================================================
-# Default proto settings
+# Proto files
 # ============================================================
-set(DEFAULT_PROTO_FILES proto/sample.proto proto/complex_types.proto
-                        proto/primitive_types.proto)
-set(DEFAULT_PROTO_PATH proto)
 
+if(ENABLE_UNARY_TEST)
+  set(PROTO_PATH ${TEST_ROOT_DIR}/unary_test/proto)
+  set(PROTO_FILES ${TEST_ROOT_DIR}/unary_test/proto/test_all.proto)
+elseif(ENABLE_LOAD_ANOTHER_TEST)
+  set(PROTO_PATH ${TEST_ROOT_DIR}/load_another/proto)
+  set(PROTO_FILES ${TEST_ROOT_DIR}/load_another/proto/sample.proto)
+elseif(ENABLE_ONEOF_TEST)
+  set(PROTO_PATH ${TEST_ROOT_DIR}/oneof_test/proto)
+  set(PROTO_FILES ${TEST_ROOT_DIR}/oneof_test/proto/oneof_test.proto)
+elseif(ENABLE_NESTED_TEST)
+  set(PROTO_PATH ${TEST_ROOT_DIR}/nested_test/proto)
+  set(PROTO_FILES ${TEST_ROOT_DIR}/nested_test/proto/nested_test.proto
+                  ${TEST_ROOT_DIR}/nested_test/proto/complex_types.proto)
+endif()
+message(STATUS "Proto files: ${PROTO_FILES}")
+message(STATUS "Proto path: ${PROTO_PATH}")
 # ============================================================
-# Handle test options
+# Plugin API name
 # ============================================================
 if(ENABLE_UNARY_TEST)
-  if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/unary_test/proto)
-  endif()
-  if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES ${TEST_ROOT_DIR}/unary_test/proto/test_all.proto)
-  endif()
+  set(PLUGIN_API_NAME unary_test)
 elseif(ENABLE_LOAD_ANOTHER_TEST)
-  if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/load_another/proto)
-  endif()
-  if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES ${TEST_ROOT_DIR}/load_another/proto/sample.proto)
-  endif()
+  set(PLUGIN_API_NAME load_another)
 elseif(ENABLE_ONEOF_TEST)
-  if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/oneof_test/proto)
-  endif()
-  if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES ${TEST_ROOT_DIR}/oneof_test/proto/oneof_test.proto)
-  endif()
+  set(PLUGIN_API_NAME oneof_test)
 elseif(ENABLE_NESTED_TEST)
-  if(NOT DEFINED PROTO_PATH)
-    set(DEFAULT_PROTO_PATH ${TEST_ROOT_DIR}/nested_test/proto)
-  endif()
-  if(NOT DEFINED PROTO_FILES)
-    set(DEFAULT_PROTO_FILES
-        ${TEST_ROOT_DIR}/nested_test/proto/nested_test.proto
-        ${TEST_ROOT_DIR}/nested_test/proto/complex_types.proto)
-  endif()
+  set(PLUGIN_API_NAME nested_test)
+else()
+  set(PLUGIN_API_NAME plugin_api)
 endif()
-
-set(PROTO_FILES
-    ${DEFAULT_PROTO_FILES}
-    CACHE STRING "List of proto files to generate")
-set(PROTO_PATH
-    ${DEFAULT_PROTO_PATH}
-    CACHE STRING "Directories containing proto files")
-
-# ============================================================
-# Library name
-# ============================================================
-set(DEFAULT_PLUGIN_API_NAME plugin_api)
-if(ENABLE_UNARY_TEST)
-  set(DEFAULT_PLUGIN_API_NAME unary_test)
-elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(DEFAULT_PLUGIN_API_NAME load_another)
-elseif(ENABLE_ONEOF_TEST)
-  set(DEFAULT_PLUGIN_API_NAME oneof_test)
-elseif(ENABLE_NESTED_TEST)
-  set(DEFAULT_PLUGIN_API_NAME nested_test)
-endif()
-
-set(PLUGIN_API_NAME
-    ${DEFAULT_PLUGIN_API_NAME}
-    CACHE STRING "Name of the plugin_api library target (default: plugin_api)")
 message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
 
 # ============================================================
 # Paths
 # ============================================================
-set(DEFAULT_TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
-set(TMP_DIR
-    ${DEFAULT_TMP_DIR}
-    CACHE PATH "Temporary directory for generated code")
+set(TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
 
 # ============================================================
 # gRPC URL (test-specific)
 # ============================================================
-set(DEFAULT_GRPC_URL "localhost:50051")
 if(ENABLE_UNARY_TEST)
-  set(DEFAULT_GRPC_URL "localhost:50001")
+  set(GRPC_URL "localhost:50001")
 elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(DEFAULT_GRPC_URL "localhost:50002")
+  set(GRPC_URL "localhost:50002")
 elseif(ENABLE_ONEOF_TEST)
-  set(DEFAULT_GRPC_URL "localhost:50003")
+  set(GRPC_URL "localhost:50003")
 elseif(ENABLE_NESTED_TEST)
-  set(DEFAULT_GRPC_URL "localhost:50004")
+  set(GRPC_URL "localhost:50004")
+else()
+  set(GRPC_URL "localhost:50051")
 endif()
-
-set(GRPC_URL
-    ${DEFAULT_GRPC_URL}
-    CACHE STRING "gRPC server URL")
-
+message(STATUS "gRPC URL: ${GRPC_URL}")
 # ============================================================
 # Proto/gRPC generation
 # ============================================================
@@ -179,7 +144,7 @@ set(PLUGIN_GEN_SRCS
 set(PLUGIN_GEN_HDRS ${TMP_DIR}/rpc_client.h)
 
 # ============================================================
-# Code generation rule
+# Code generation command
 # ============================================================
 add_custom_command(
   OUTPUT ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS} ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS}
@@ -224,18 +189,12 @@ set_property(
   PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${TMP_DIR}")
 
 # ============================================================
-# Tests
+# Test executables
 # ============================================================
-option(ENABLE_TESTS "Build tests" OFF)
-
 if(ENABLE_TESTS)
-  option(ENABLE_UNARY_TEST "Build unary_test" OFF)
-  option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
-  option(ENABLE_ONEOF_TEST "Build oneof_test" OFF)
-  option(ENABLE_NESTED_TEST "Build nested_test" OFF)
+
   if(ENABLE_UNARY_TEST)
     message(STATUS "Building unary_test")
-    # ====== rpc server/client ======
     add_executable(rpc_server_unary_test
                    ${TEST_ROOT_DIR}/unary_test/server/rpc_server.cpp)
     target_include_directories(
@@ -244,6 +203,7 @@ if(ENABLE_TESTS)
     target_link_libraries(
       rpc_server_unary_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                     protobuf::libprotobuf)
+
     add_executable(
       rpc_client
       ${TEST_ROOT_DIR}/unary_test/client/client.cpp
@@ -253,13 +213,11 @@ if(ENABLE_TESTS)
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                                 ${TMP_DIR})
-    target_include_directories(rpc_client
-                               PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
+      rpc_client PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
   endif()
+
   if(ENABLE_LOAD_ANOTHER_TEST)
     message(STATUS "Building load_another_test")
     add_executable(rpc_server_load_another
@@ -271,9 +229,9 @@ if(ENABLE_TESTS)
       rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
   endif()
+
   if(ENABLE_ONEOF_TEST)
     message(STATUS "Building oneof_test")
-    # ====== rpc server/client ======
     add_executable(rpc_server_oneof_test
                    ${TEST_ROOT_DIR}/oneof_test/server/rpc_server.cpp)
     target_include_directories(
@@ -282,6 +240,7 @@ if(ENABLE_TESTS)
     target_link_libraries(
       rpc_server_oneof_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                     protobuf::libprotobuf)
+
     add_executable(
       rpc_client_oneof
       ${TEST_ROOT_DIR}/oneof_test/client/client.cpp
@@ -291,13 +250,11 @@ if(ENABLE_TESTS)
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                                 ${TMP_DIR})
-    target_include_directories(rpc_client_oneof
-                               PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
+      rpc_client_oneof PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
     target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                    protobuf::libprotobuf)
   endif()
+
   if(ENABLE_NESTED_TEST)
     add_executable(rpc_server_nested_test
                    ${TEST_ROOT_DIR}/nested_test/server/rpc_server.cpp)
@@ -317,10 +274,8 @@ if(ENABLE_TESTS)
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
     target_include_directories(
-      ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                                 ${TMP_DIR})
-    target_include_directories(rpc_client_nested_test
-                               PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
+      rpc_client_nested_test PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                                     ${TMP_DIR})
     target_link_libraries(
       rpc_client_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                      protobuf::libprotobuf)

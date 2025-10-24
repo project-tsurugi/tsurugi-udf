@@ -16,14 +16,13 @@ dependencies = [
 ]
 
 [project.scripts]
-udf-plugin-builder = "udf_plugin_builder.generate:main"
-
+udf-plugin-builder = "udf_plugin_builder.build_with_cmake:main"
 [tool.setuptools]
 packages = ["udf_plugin_builder"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-udf_plugin_builder = ["templates/*"]
+udf_plugin_builder = ["templates/*", "cmake/*"]
 
 [tool.setuptools.exclude-package-data]
 "*" = ["__pycache__"]

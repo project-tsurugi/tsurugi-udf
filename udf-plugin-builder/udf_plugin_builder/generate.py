@@ -313,6 +313,5 @@ def main():
         )
     generate_ini_file(args.plugin_api_name, args.grpc_url, args.out or ".")
 
-
 if __name__ == "__main__":
     main()

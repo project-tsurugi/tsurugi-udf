@@ -1,10 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shfmt -i 4 -ci -sr -w run.sh
 set -euo pipefail
+
 status=0
 OUT_DIR=${1:-$(pwd)}
 LIST=(load_another unary_test oneof_test nested_test)
-for i in ${LIST[@]}; do
+pids=()
+
+cleanup() {
+    echo "Cleaning up..."
+    for pid in "${pids[@]}"; do
+        if kill -0 "$pid" > /dev/null 2>&1; then
+            echo "Killing rpc_server (PID=$pid)"
+            kill "$pid" || true
+        fi
+    done
+    echo "Stopping Tsurugi..."
+    tgctl shutdown || true
+}
+trap cleanup EXIT
+
+# 各UDFビルド
+for i in "${LIST[@]}"; do
     (
         cd "$i"
         ./run.sh
@@ -12,19 +29,20 @@ for i in ${LIST[@]}; do
         cp "build/lib${i}.so" "$OUT_DIR"
     )
 done
-tgctl shutdown
+
+tgctl shutdown || true
 tgctl start
-pids=()
-for i in ${LIST[@]}; do
-    $i/build/rpc_server_${i} $OUT_DIR/lib${i}.ini >&log.${i} &
+
+for i in "${LIST[@]}"; do
+    "$i/build/rpc_server_${i}" "$OUT_DIR/lib${i}.ini" >&"log.${i}" &
     pid=$!
     pids+=("$pid")
     echo "Started rpc_server_${i} (PID=$pid)"
 done
 
-for i in ${LIST[@]}; do
-    tgsql -c ipc:tsurugi --script $i/script/test.sql >&log.${i}_tgsql
-    grep "@#0" log.${i}_tgsql >&log.${i}_result
+for i in "${LIST[@]}"; do
+    tgsql -c ipc:tsurugi --script "$i/script/test.sql" >&"log.${i}_tgsql" || status=1
+    grep "@#0" "log.${i}_tgsql" >&"log.${i}_result" || true
     if diff "$i/result/log.result" "log.${i}_result" > /dev/null 2>&1; then
         echo "OK: $i"
     else
@@ -33,10 +51,4 @@ for i in ${LIST[@]}; do
     fi
 done
 
-for pid in "${pids[@]}"; do
-    echo "Killing rpc_server (PID=$pid)"
-    kill "$pid" || true
-done
-
-tgctl shutdown
 exit $status

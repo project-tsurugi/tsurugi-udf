@@ -177,8 +177,8 @@ int main(int argc, char** argv) {
         boost::property_tree::ptree pt;
         try {
             boost::property_tree::ini_parser::read_ini(ini_file, pt);
-            server_address = pt.get<std::string>("grpc.url", server_address);
-            credentials = pt.get<std::string>("grpc.credentials", credentials);
+            server_address = pt.get<std::string>("udf.url", server_address);
+            credentials = pt.get<std::string>("udf.credentials", credentials);
             std::cout << "[INFO] Loaded gRPC settings from " << ini_file << "\n";
         } catch(const boost::property_tree::ini_parser_error& e) {
             std::cerr << "[WARN] Failed to read ini file '" << ini_file << "': " << e.what() << "\n";

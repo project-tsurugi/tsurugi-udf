@@ -43,21 +43,47 @@ std::vector<load_result> udf_loader::load(std::string_view dir_path) {
     fs::path path(dir_path);
     std::vector<load_result> results;
     std::vector<fs::path> files_to_load;
-    if(fs::is_directory(path)) {
-        for(auto const& entry: fs::directory_iterator(path)) {
-            if(entry.is_regular_file() && entry.path().extension() == ".so") { files_to_load.push_back(entry.path()); }
+    if(! fs::exists(path)) {
+        results.emplace_back(load_status::path_not_found, std::string(dir_path), "Directory not found");
+        return results;
+    }
+    if(! fs::is_directory(path)) {
+        results.emplace_back(load_status::path_not_found, std::string(dir_path), "Path is not a directory");
+        return results;
+    }
+    std::vector<fs::path> ini_files;
+    std::vector<fs::path> so_files;
+    for(auto const& entry: fs::directory_iterator(path)) {
+        if(entry.is_regular_file()) {
+            auto ext = entry.path().extension();
+            if(ext == ".ini") {
+                ini_files.emplace_back(entry.path());
+            } else if(ext == ".so") {
+                so_files.emplace_back(entry.path());
+            }
         }
-    } else if(fs::is_regular_file(path) && path.extension() == ".so") {
-        files_to_load.push_back(path);
-    } else {
+    }
+    if(ini_files.empty() && so_files.empty()) {
         results.emplace_back(
-            load_status::not_regular_file_or_dir,
+            load_status::no_ini_and_so_files,
             std::string(dir_path),
-            "Path is not a directory or .so file"
+            "No .ini or .so files found (UDF disabled)"
         );
         return results;
     }
-    for(auto const& file: files_to_load) {
+    for(auto const& so_file: so_files) {
+        fs::path ini_path = so_file;
+        ini_path.replace_extension(".ini");
+        if(! fs::exists(ini_path)) {
+            results.emplace_back(
+                load_status::ini_so_pair_mismatch,
+                so_file.string(),
+                "Missing paired .ini file for " + so_file.filename().string()
+            );
+            return results;
+        }
+    }
+    for(auto const& file: so_files) {
         std::string full_path = file.string();
         dlerror();
         void* handle = dlopen(full_path.c_str(), RTLD_NOW | RTLD_LOCAL);
@@ -109,18 +135,18 @@ load_result udf_loader::create_api_from_handle(void* handle, std::string const& 
         boost::property_tree::ptree pt;
         boost::property_tree::ini_parser::read_ini(ini_path.string(), pt);
 
-        if(auto opt = pt.get_optional<std::string>("grpc.url")) {
+        if(auto opt = pt.get_optional<std::string>("udf.url")) {
             ini_info = ini_path.string() + " exists.\n" + "set " + *opt + " to grpc.url\n";
             info.set_default_url(*opt);
         } else {
             ini_info = ini_path.string() + " exists.\n" +
-                "but grpc.url not found, Use default value:" + info.default_url() + "\n";
+                "but udf.url not found, Use default value:" + info.default_url() + "\n";
         }
-        if(auto opt = pt.get_optional<std::string>("grpc.credentials")) {
+        if(auto opt = pt.get_optional<std::string>("udf.credentials")) {
             info.set_default_auth(*opt);
-            ini_info = ini_info + "set: " + *opt + " to grpc.credentials\n";
+            ini_info = ini_info + "set: " + *opt + " to udf.credentials\n";
         } else {
-            ini_info = ini_info + "grpc.credentials not found, Use default value:" + info.default_auth() + "\n";
+            ini_info = ini_info + "udf.credentials not found, Use default value:" + info.default_auth() + "\n";
         }
     } else {
         ini_info = ini_path.string() + " does not exist. Use default value:" + info.default_url() + "\n";

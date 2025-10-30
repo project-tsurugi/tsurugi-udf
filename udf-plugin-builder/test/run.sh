@@ -15,8 +15,6 @@ cleanup() {
             kill "$pid" || true
         fi
     done
-    echo "Stopping Tsurugi..."
-    tgctl shutdown || true
 }
 trap cleanup EXIT
 

@@ -93,16 +93,16 @@ class OneImpl final : public One::Service {
     }
 };
 
-void RunServer(const std::string& server_address, const std::string& credentials) {
+void RunServer(const std::string& server_address, const std::string& secure) {
     OneImpl test_service;
 
 
     grpc::ServerBuilder builder;
 
-    if(credentials == "insecure") {
+    if(secure == "false") {
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     } else {
-        std::cerr << "[WARN] Unsupported credentials: " << credentials << " (falling back to insecure)\n";
+        std::cerr << "[WARN] Unsupported secure: " << secure << " (falling back to false)\n";
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     }
 
@@ -116,15 +116,15 @@ void RunServer(const std::string& server_address, const std::string& credentials
 
 int main(int argc, char** argv) {
     std::string server_address = "0.0.0.0:50051";
-    std::string credentials = "insecure";
+    std::string secure = "false";
 
     if(argc >= 2) {
         std::string ini_file = argv[1];
         boost::property_tree::ptree pt;
         try {
             boost::property_tree::ini_parser::read_ini(ini_file, pt);
-            server_address = pt.get<std::string>("udf.url", server_address);
-            credentials = pt.get<std::string>("udf.credentials", credentials);
+            server_address = pt.get<std::string>("udf.endpoint", server_address);
+            secure = pt.get<std::string>("udf.secure", secure);
             std::cout << "[INFO] Loaded gRPC settings from " << ini_file << "\n";
         } catch(const boost::property_tree::ini_parser_error& e) {
             std::cerr << "[WARN] Failed to read ini file '" << ini_file << "': " << e.what() << "\n";
@@ -134,6 +134,6 @@ int main(int argc, char** argv) {
         std::cout << "[INFO] No ini file specified. Using default gRPC settings\n";
     }
 
-    RunServer(server_address, credentials);
+    RunServer(server_address, secure);
     return 0;
 }

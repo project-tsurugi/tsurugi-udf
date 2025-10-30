@@ -284,8 +284,8 @@ def generate_ini_file(plugin_name: str, grpc_url: str, out_dir: str):
     with open(ini_path, "w") as f:
         f.write("[udf]\n")
         f.write(f"enabled=true\n")
-        f.write(f"url={grpc_url}\n")
-        f.write("credentials=insecure\n")
+        f.write(f"endpoint={grpc_url}\n")
+        f.write("secure=false\n")
 
     print(f"[OK] Generated ini file: {ini_path}")
     return ini_path

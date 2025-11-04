@@ -9,6 +9,30 @@ Tsurugi Database の UDF は **gRPC** を利用して外部サービスと通信
 ユーザーは `.proto` ファイルで関数インターフェースを定義し、`udf-plugin-builder` を用いて\
 UDF プラグインを生成することで、SQL から外部処理を透過的に呼び出せます。
 
+### インストール方法
+
+```bash
+cd tsurugi-udf
+cd udf-plugin-builder
+pip install .
+```
+
+#### 利用方法
+
+```bash
+udf-plugin-builder --proto_file sample.proto
+```
+
+配下にlibplugin_api.so libplugin_api.iniが生成されます
+
+| オプション               | 型                   | デフォルト値                               | 説明                                                                                                                                                 |
+| :------------------ | :------------------ | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--proto_file`      | 複数指定可| `proto/sample.proto`                 | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：<br>`--proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto` |
+| `--proto_path`      | 文字列                 | `なし`（未指定時は最初の `.proto` のディレクトリを使用） | `.proto` ファイルを含むディレクトリを指定します。`protoc` が依存ファイルを解決する際に使用されます。                                                                                        |
+| `--tmp`             | 文字列                 | `"tmp"`                              | 一時的なビルド用ディレクトリを指定します。ビルド後は自動的に削除されます。                                                                                                              |
+| `--plugin_api_name` | 文字列                 | `"plugin_api"`                       | 出力されるプラグインライブラリの名前を指定します。<br>例：`--plugin_api_name my_udf` → 出力ファイル名は `libmy_udf.so` / `libmy_udf.ini` になります。                                       |
+| `--grpc_url`        | 文字列                 | `"localhost:50051"`                  | gRPC サーバーの URL を指定します（CMake に渡される設定値として利用されます）。
+
 ______________________________________________________________________
 
 ## 利用の流れ
@@ -210,27 +234,7 @@ message HelloReply {
 service GreetingService {
   rpc SayHello (HelloRequest) returns (HelloReply);
 }
-```
-
-### インストール方法
-
-```bash
-cd tsurugi-udf
-cd udf-plugin-builder
-pip install .
-```
-
-______________________________________________________________________
-
-## CMake オプション
-
-| オプション               | 型                   | デフォルト値                               | 説明                                                                                                                                                 |
-| :------------------ | :------------------ | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--proto_file`      | 複数指定可| `proto/sample.proto`                 | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：<br>`--proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto` |
-| `--proto_path`      | 文字列                 | `なし`（未指定時は最初の `.proto` のディレクトリを使用） | `.proto` ファイルを含むディレクトリを指定します。`protoc` が依存ファイルを解決する際に使用されます。                                                                                        |
-| `--tmp`             | 文字列                 | `"tmp"`                              | 一時的なビルド用ディレクトリを指定します。ビルド後は自動的に削除されます。                                                                                                              |
-| `--plugin_api_name` | 文字列                 | `"plugin_api"`                       | 出力されるプラグインライブラリの名前を指定します。<br>例：`--plugin_api_name my_udf` → 出力ファイル名は `libmy_udf.so` / `libmy_udf.ini` になります。                                       |
-| `--grpc_url`        | 文字列                 | `"localhost:50051"`                  | gRPC サーバーの URL を指定します（CMake に渡される設定値として利用されます）。                                                                                                    |
+```                               |
 
 ______________________________________________________________________
 

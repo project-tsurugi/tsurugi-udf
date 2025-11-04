@@ -154,12 +154,13 @@ ______________________________________________________________________
 1. gRPC サーバを実装する
 1. `udf-plugin-builder` を利用して `UDF プラグイン` (共有ライブラリ（shared object）) を生成する。
 1. 生成した `UDF プラグイン` を、**Tsurugi Database** を起動するマシン上の任意のフォルダに配置する(/home/tsurugidb/plugins)
-1. `tsurugi.ini` に以下を追加してロードパス(/home/tsurugidb/plugins)と gRPCサーバのURL(localhost:50051) を指定する
+1. `tsurugi.ini` に以下を追加してプラグインディレクトリロードパス( plugin_directory=/home/tsurugidb/plugins)と gRPCサーバのendpoint(endpoint=localhost:50051) 、セキュアな通信の有無(secure=false)を指定する
 
 ```ini
-[SQL]
-loader_path=/home/tsurugidb/plugins
-grpc_url=localhost:50051
+[udf]
+    plugin_directory=/home/tsurugidb/plugins
+    endpoint=localhost:50051
+    secure=false
 ```
 
 1. `gRPC サーバ`を起動します。サーバの起動タイミングは、`UDF` 実行直前まで遅らせることも可能です。

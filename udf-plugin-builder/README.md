@@ -313,7 +313,7 @@ select echooneof(v1,v2,v3,v4) from a3;
 select echooneof(v1,v2,v3,v4) from a4;
 ```
 
-## 例2 tsurugidb.udf.value配下の利用
+## 例3 tsurugidb.udf.value配下の利用
 
 proto/complex_types.proto
 

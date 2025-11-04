@@ -245,7 +245,7 @@ ______________________________________________________________________
 
 ```ini
 [udf]
-    plugin_directory=/home/nishimura/grpc
+    plugin_directory=/home/tsurugidb/plugins
     endpoint=localhost:50051
     secure=false
 ```

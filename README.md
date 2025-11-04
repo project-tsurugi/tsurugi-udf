@@ -191,32 +191,35 @@ ______________________________________________________________________
 
 ### udf-plugin-builder
 
-`udf-plugin-builder` は **UDF プラグインを生成するビルドシステム** です。Protocol Buffers と gRPC を用いて `.proto` ファイルからコードを生成し、CMake により共有ライブラリをビルドします。
+`udf-plugin-builder` は **UDF プラグインを生成するビルドシステム** です。Protocol Buffers と gRPC を用いて `.proto` ファイルからコードを生成します。
 
-#### ビルド方法
+#### インストール手順
+
+##### 共通モジュールのインストール
+
+```bash
+cd tsurugi-udf
+cd common
+pip install .
+```
+
+#####
+
+##### udf-plugin-builderインストール
 
 ```bash
 cd udf-plugin-builder
-mkdir build
-cd build
-cmake .. \
--DCMAKE_BUILD_TYPE=Release \
--DPROTO_PATH="proto" \
--DPROTO_FILES="proto/sample.proto;proto/extra.proto" \ 
--DPLUGIN_API_NAME="my_udf"
-make
+cd common
+pip install .
 ```
 
-#### CMake オプション
+#### 利用方法
 
-| オプション名 | 説明 | 既定値 |
-|--------------|------|--------|
-| `PROTO_PATH` | `.proto` ファイル検索用ディレクトリ（protoc の -I と同様） | `proto` |
-| `PROTO_FILES` | コンパイル対象の `.proto` ファイルリスト（`;` 区切り）。2番目以降のファイルは先頭ファイルから import されるものに限定。import されないファイルを指定した場合は未定義動作。 | `proto/sample.proto; proto/complex_types.proto; proto/primitive_types.proto` |
-| `PLUGIN_API_NAME` | 生成されるプラグイン API ライブラリのターゲット名（`lib<name>.so` になる） | `plugin_api` |
+```bash
+udf-plugin-builder --proto_file sample.proto
+```
 
-詳細は [udf-plugin-builder/README.md](./udf-plugin-builder/README.md) を参照してください。
-
+配下にlibplugin_api.so libplugin_api.iniが生成されます
 ______________________________________________________________________
 
 ### udf-plugin-viewer

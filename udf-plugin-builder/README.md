@@ -59,7 +59,7 @@ ______________________________________________________________________
 
 - `syntax = "proto3";` を必ず指定する
 - `package tsurugidb` 以下にメッセージを定義してはいけない
-- `message` は **第二階層まで** 定義可能（第三階層以降は非対応）
+- `message` は tsurugidb.udf.value パッケージで使用される型に**第二階層まで** 定義可能（第三階層以降は非対応）
 - `repeated` は利用不可（将来対応予定）
 - `oneof` は利用可
 - `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）
@@ -71,17 +71,124 @@ ______________________________________________________________________
 
 ## 型対応表
 
-| Tsurugi Database | Protocol Buffers 型 |
-|------------------|---------------------|
-| `INT` | int32, uint32, sint32, fixed32, sfixed32 |
-| `BIGINT` | int64, uint64, sint64, fixed64, sfixed64 |
-| `BOOLEAN` | bool |
-| `REAL` / `FLOAT` | float |
-| `DOUBLE` | double |
-| `CHAR` / `VARCHAR` / `CHARACTER` / `CHARACTER VARYING` | string |
-| `BINARY` / `VARBINARY` / `BINARY VARYING` | bytes |
+| Tsurugi Database | Protocol Buffers 型 | 備考 |
+|------------------|---------------------|--|
+| `INT` | int32, uint32, sint32, fixed32, sfixed32 ||
+| `BIGINT` | int64, uint64, sint64, fixed64, sfixed64 ||
+| `BOOLEAN` | bool ||
+| `REAL` / `FLOAT` | float ||
+| `DOUBLE` | double ||
+| `CHAR` / `VARCHAR` / `CHARACTER` / `CHARACTER VARYING` | string ||
+| `BINARY` / `VARBINARY` / `BINARY VARYING` | bytes ||
+| DATE | tsurugidb.udf.value.Date | 日付 |
+| TIME | tsurugidb.udf.value.LocalTime | ローカル時刻 |
+| TIMESTAMP | tsurugidb.udf.value.LocalDatetime | ローカル日時 |
+| TIMESTAMP WITH TIME ZONE | tsurugidb.udf.value.OffsetDatetime | タイムゾーン付き日時 |
+| BLOB | tsurugidb.udf.value.BlobReference | BLOB参照 |
+| CLOB | tsurugidb.udf.value.ClobReference | CLOB参照 |
 
 ______________________________________________________________________
+
+### tsurugidb.udf.value 配下のデータ型定義について
+
+`tsurugidb.udf.value` パッケージには、UDF 関数における複合型（`DECIMAL`、`DATE`、`TIME`、`TIMESTAMP` など）を表現するための **特定のデータ型定義** が用意されています。  
+利用可能なデータ型は以下の 7 種類に限定されています。これ以外の型を `tsurugidb.udf.value` 配下に新規定義したり、別の型を参照することはできません。
+
+- `tsurugidb.udf.value.Decimal`
+- `tsurugidb.udf.value.Date`
+- `tsurugidb.udf.value.LocalTime`
+- `tsurugidb.udf.value.LocalDatetime`
+- `tsurugidb.udf.value.OffsetDatetime`
+- `tsurugidb.udf.value.BlobReference`
+- `tsurugidb.udf.value.ClobReference`
+
+#### 定義の記述方法
+
+##### Decimal
+
+```
+message Decimal {
+    // the signed unscaled value (2's complement, big endian).
+    bytes unscaled_value = 1;
+
+    // the exponent of the value (value = unscaled_value * 10^exponent).
+    sint32 exponent = 2;
+}
+```
+
+##### Date
+
+```
+message Date {
+    // the number of days since 1970-01-01.
+    sint32 days = 1;
+}
+```
+
+##### LocalTime
+
+```
+message LocalTime {
+    // the number of nanoseconds since midnight.
+    sint64 nanos = 1;
+}
+```
+
+##### LocalDatetime
+
+```
+message LocalDatetime {
+    // offset seconds from epoch (1970-01-01 00:00:00) at the local time zone.
+    sint64 offset_seconds = 1;
+    // nano-seconds adjustment [0, 10^9-1].
+    uint32 nano_adjustment = 2;
+}
+```
+
+##### OffsetDatetime
+
+```
+message OffsetDatetime {
+    // offset seconds from epoch (1970-01-01 00:00:00Z).
+    sint64 offset_seconds = 1;
+    // nano-seconds adjustment [0, 10^9-1].
+    uint32 nano_adjustment = 2;
+    // timezone offset in minute.
+    sint32 time_zone_offset = 3;
+}
+```
+
+##### BlobReference
+
+```
+message BlobReference {
+
+    // the ID of the storage where the BLOB data is stored.
+    uint64 storage_id = 1;
+
+    // the ID of the object within the BLOB storage.
+    uint64 object_id = 2;
+
+    // a tag for additional access control.
+    uint64 tag = 3;
+}
+```
+
+##### ClobReference
+
+```
+message ClobReference {
+
+    // the ID of the storage where the BLOB data is stored.
+    uint64 storage_id = 1;
+
+    // the ID of the object within the BLOB storage.
+    uint64 object_id = 2;
+
+    // a tag for additional access control.
+    uint64 tag = 3;
+}
+```
 
 ## 例
 

@@ -208,8 +208,8 @@ pip install .
 ##### udf-plugin-builderインストール
 
 ```bash
+cd tsurugi-udf
 cd udf-plugin-builder
-cd common
 pip install .
 ```
 

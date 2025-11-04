@@ -126,9 +126,7 @@ ______________________________________________________________________
 - `tsurugidb.udf.value.BlobReference`
 - `tsurugidb.udf.value.ClobReference`
 
-#### 定義の記述方法
-
-##### Decimal
+#### Decimal
 
 ```
 message Decimal {
@@ -140,7 +138,7 @@ message Decimal {
 }
 ```
 
-##### Date
+#### Date
 
 ```
 message Date {
@@ -149,7 +147,7 @@ message Date {
 }
 ```
 
-##### LocalTime
+#### LocalTime
 
 ```
 message LocalTime {
@@ -158,7 +156,7 @@ message LocalTime {
 }
 ```
 
-##### LocalDatetime
+#### LocalDatetime
 
 ```
 message LocalDatetime {
@@ -169,7 +167,7 @@ message LocalDatetime {
 }
 ```
 
-##### OffsetDatetime
+#### OffsetDatetime
 
 ```
 message OffsetDatetime {
@@ -182,7 +180,7 @@ message OffsetDatetime {
 }
 ```
 
-##### BlobReference
+#### BlobReference
 
 ```
 message BlobReference {
@@ -198,7 +196,7 @@ message BlobReference {
 }
 ```
 
-##### ClobReference
+#### ClobReference
 
 ```
 message ClobReference {

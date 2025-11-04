@@ -273,6 +273,8 @@ how are you? hello
 
 ## 例2 oneofの利用
 
+proto/oneof_test.proto
+
 ```
 syntax = "proto3";
 
@@ -298,6 +300,8 @@ service One {
   rpc EchoOneOf(MyRequest) returns (MyReply);
 }
 ```
+
+`udf-plugin-builder --proto_file proto/oneof_test.proto`
 
 対応するSQL
 

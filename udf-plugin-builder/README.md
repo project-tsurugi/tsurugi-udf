@@ -3,7 +3,7 @@
 ## 概要
 
 **udf-plugin-builder** は、[Tsurugi Database](https://github.com/project-tsurugi/tsurugidb) 向けの\
-**UDF (User-Defined Function) プラグイン**と**プラグイン設定ファイル**を自動生成・ビルドするためのツールです。
+**UDF (User-Defined Function) プラグイン**と**プラグイン設定ファイル**を自動生成するツールです。
 
 Tsurugi Database の UDF は **gRPC** を利用して外部サービスと通信します。\
 ユーザーは `.proto` ファイルで関数インターフェースを定義し、`udf-plugin-builder` を用いて\
@@ -24,7 +24,7 @@ ______________________________________________________________________
 
 ## ビルド成果物
 
-`make` を実行すると、以下のファイルが生成されます。
+`udf-plugin-builder` を実行すると、以下のファイルが生成されます。
 
 - **プラグイン本体 (.so)**
 
@@ -38,13 +38,15 @@ ______________________________________________________________________
   - 内容は以下の形式です。
 
 ```ini
-[grpc]
-url=localhost:50001
-credentials=insecure
+[udf]
+enabled=true
+endpoint=localhost:50002
+secure=false
 ```
 
-- `url` … gRPC サーバのエンドポイント (`host:port` 形式)
-- `credentials` … 認証方式（現状は `insecure` のみサポート）
+- `enabled` .soを読み込むか否か？
+- `endpoint` … gRPC サーバのエンドポイント (`host:port` 形式)
+- `secure` … 認証方式（現状は `false` のみサポート）
 
 注 `.ini` は自分で作成・編集することも可能ですが、デフォルトでは `.so` とペアで生成されるため、そのまま利用できます。
 
@@ -57,12 +59,12 @@ ______________________________________________________________________
 
 - `syntax = "proto3";` を必ず指定する
 - `package tsurugidb` 以下にメッセージを定義してはいけない
-- `message` は **第一階層のみ** 定義可能（ネスト禁止、将来対応予定）
+- `message` は **第二階層まで** 定義可能（第三階層以降は非対応）
 - `repeated` は利用不可（将来対応予定）
-- `oneof` は引数のみ利用可、戻り値で利用不可（将来対応予定）
+- `oneof` は利用可
 - `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）
 - **rpc 名は SQL 関数名になるため一意である必要がある**
-- 戻り値は単一フィールドのみ対応（将来拡張予定）
+- 戻り値は複数指定不可
 - リクエストメッセージのフィールド順 = SQL 関数の引数順
 
 ______________________________________________________________________
@@ -103,45 +105,25 @@ service GreetingService {
 }
 ```
 
-### ビルド方法
+### インストール方法
 
 ```bash
+cd tsurugi-udf
 cd udf-plugin-builder
-mkdir build && cd build
-cmake ..   -DCMAKE_BUILD_TYPE=Release   -DPROTO_PATH="proto"   -DPROTO_FILES="proto/hello.proto"   -DPLUGIN_API_NAME="my_udf"
-make
+pip install .
 ```
 
 ______________________________________________________________________
 
 ## CMake オプション
 
-| オプション名 | 説明 | 既定値 |
-|--------------|------|--------|
-| `PROTO_PATH` | `.proto` ファイル検索用ディレクトリ（`-I` と同等） | `proto` |
-| `PROTO_FILES` | ビルド対象 `.proto` ファイルリスト（`;` 区切り） | `proto/sample.proto;proto/complex_types.proto;proto/primitive_types.proto` |
-| `PLUGIN_API_NAME` | 生成されるライブラリ名 (`lib<name>.so`) | `plugin_api` |
-| `GRPC_URL` | `.ini` に埋め込まれる gRPC サーバ URL | `localhost:50051` |
-
-______________________________________________________________________
-
-## PROTO_PATH と PROTO_FILES の指定
-
-- `PROTO_PATH` は protoc の `-I` と同様の意味です。\
-  `.proto` ファイル検索用のディレクトリを指定します。
-- `PROTO_FILES` はコンパイル対象の `.proto` ファイルのリストです。
-- 両方とも **相対パスか絶対パスのどちらかを統一して指定する必要** があります。
-  - 例: 相対パスの場合
-
-    ```bash
-    -DPROTO_PATH="proto" -DPROTO_FILES="proto/hello.proto"
-    ```
-
-  - 例: 絶対パスの場合
-
-    ```bash
-    -DPROTO_PATH="/home/user/udf-plugin-builder/proto" -DPROTO_FILES="/home/user/udf-plugin-builder/proto/hello.proto"
-    ```
+| オプション               | 型                   | デフォルト値                               | 説明                                                                                                                                                 |
+| :------------------ | :------------------ | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--proto_file`      | 複数指定可| `proto/sample.proto`                 | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：<br>`--proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto` |
+| `--proto_path`      | 文字列                 | `なし`（未指定時は最初の `.proto` のディレクトリを使用） | `.proto` ファイルを含むディレクトリを指定します。`protoc` が依存ファイルを解決する際に使用されます。                                                                                        |
+| `--tmp`             | 文字列                 | `"tmp"`                              | 一時的なビルド用ディレクトリを指定します。ビルド後は自動的に削除されます。                                                                                                              |
+| `--plugin_api_name` | 文字列                 | `"plugin_api"`                       | 出力されるプラグインライブラリの名前を指定します。<br>例：`--plugin_api_name my_udf` → 出力ファイル名は `libmy_udf.so` / `libmy_udf.ini` になります。                                       |
+| `--grpc_url`        | 文字列                 | `"localhost:50051"`                  | gRPC サーバーの URL を指定します（CMake に渡される設定値として利用されます）。                                                                                                    |
 
 ______________________________________________________________________
 
@@ -151,14 +133,15 @@ ______________________________________________________________________
 1. `tsurugi.ini` にロードパスを追加
 
 ```ini
-[SQL]
-loader_path=/home/tsurugidb/plugins
-grpc_url=localhost:50051
+[udf]
+    plugin_directory=/home/nishimura/grpc
+    endpoint=localhost:50051
+    secure=false
 ```
 
-- `loader_path` はディレクトリまたは単一ファイルを指定可能
+- `plugin_directory` はディレクトリを指定
 - 複数のプラグインを配置可能だが、**rpc 名の競合は禁止**
-- tsurugi.iniのgrpc_urlは設定ファイル（`.ini`）が見つからない場合に適用されるgrpc_urlです。
+- tsurugi.iniのendpointおよびsecureは個別設定ファイル（`.ini`）で指定されていない場合に適用されるgrpc_urlです。
 
 ______________________________________________________________________
 

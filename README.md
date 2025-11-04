@@ -70,13 +70,13 @@ service GreetingService {
 
 - `syntax = "proto3";` を必ず指定する
 - `package tsurugidb` 以下にメッセージを定義してはいけない
-- `message` は **第一階層のみ** 定義可能（ネストしたメッセージは不可、将来対応予定）
-- `repeated` は利用できない(対応予定なし)
-- `oneof` は利用できない（オーバーロードや可変引数は現状非対応、将来対応予定）
-- `rpc` メソッドは **[Unary RPC](https://grpc.io/docs/what-is-grpc/core-concepts/#unary-rpc) のみ** サポート（`stream` キーワードを含む Streaming RPC は現状非対応、将来対応予定）
-- **rpc 名は SQL 関数名として利用されるため、service や package に関わらず一意である必要がある**
-- 戻り値は **単一フィールドのみサポート**（将来的には複数フィールドも対応予定）
-- リクエストメッセージの **フィールド定義順** が SQL 関数の引数順に対応する
+- `message` 通常はネスト不可。tsurugidb.udf.value パッケージで使用される型なら**第二階層まで** 定義可能（第三階層以降は非対応）
+- `repeated` は利用不可（将来対応予定）
+- `oneof` は利用可
+- `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）
+- **rpc 名は SQL 関数名になるため一意である必要がある**
+- 戻り値は複数指定不可
+- リクエストメッセージのフィールド順 = SQL 関数の引数順
 
 ## gRPCサーバ
 

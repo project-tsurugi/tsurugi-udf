@@ -220,7 +220,7 @@ message ClobReference {
 
 `proto/hello.proto`
 
-```proto
+```
 syntax = "proto3";
 
 message HelloRequest {

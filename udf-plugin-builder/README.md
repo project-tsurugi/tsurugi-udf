@@ -234,6 +234,8 @@ service GreetingService {
 }
 ```
 
+`udf-plugin-builder --proto_file proto/hello.proto`
+
 ______________________________________________________________________
 
 ## Tsurugi Database 設定

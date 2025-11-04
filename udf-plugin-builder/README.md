@@ -212,7 +212,7 @@ message ClobReference {
 }
 ```
 
-## 例
+## 例1
 
 ### `.proto` 定義例
 
@@ -269,4 +269,85 @@ SELECT sayhello(c0) FROM t;
 sayhello
 ----------------
 how are you? hello
+```
+
+## 例2 oneofの利用
+
+```
+syntax = "proto3";
+
+message MyRequest {
+  sint64 aaa = 1;
+  oneof arg {
+    int64 int64_value = 2;
+    string string_value = 3;
+    bool bool_value = 4;
+  }
+  int32 bbb = 5;
+  oneof aab {
+    int64 int64_value2 = 6;
+    string string_value2 = 7;
+    bool bool_value2 = 8;
+  }
+}
+
+message MyReply {
+  string string_result = 2;
+}
+service One {
+  rpc EchoOneOf(MyRequest) returns (MyReply);
+}
+```
+
+対応するSQL
+
+```
+create table a1 (v1 bigint,v2 bigint,v3 int,v4 bigint);
+create table a2 (v1 bigint,v2 varchar(30),v3 int,v4 bigint);
+create table a3 (v1 bigint,v2 bigint,v3 int,v4 varchar(30));
+create table a4 (v1 bigint,v2 varchar(30),v3 int,v4 varchar(30));
+...
+select echooneof(v1,v2,v3,v4) from a1;
+select echooneof(v1,v2,v3,v4) from a2;
+select echooneof(v1,v2,v3,v4) from a3;
+select echooneof(v1,v2,v3,v4) from a4;
+```
+
+## 例2 tsurugidb.udf.value配下の利用
+
+proto/complex_types.proto
+
+```
+syntax = "proto3";
+
+package tsurugidb.udf.value;
+
+message Decimal {
+  bytes unscaled_value = 1;
+  sint32 exponent = 2;
+}
+```
+
+proto/nested_test.proto
+
+```
+syntax = "proto3";
+
+import "complex_types.proto";
+service Nested {
+  rpc DecimalOne(tsurugidb.udf.value.Decimal) returns (SimpleValue);
+}
+message SimpleValue {
+  string value = 1;
+}
+```
+
+`udf-plugin-builder --proto_file proto/nested_test.proto proto/complex_types.proto`
+
+対応するSQL
+
+```
+create table t_decimal (v decimal(15, 2));
+...
+select DecimalOne(v) from t_decimal;
 ```

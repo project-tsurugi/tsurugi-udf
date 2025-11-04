@@ -234,7 +234,7 @@ message HelloReply {
 service GreetingService {
   rpc SayHello (HelloRequest) returns (HelloReply);
 }
-```                               |
+```
 
 ______________________________________________________________________
 

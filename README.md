@@ -191,7 +191,7 @@ ______________________________________________________________________
 
 ### udf-plugin-builder
 
-`udf-plugin-builder` は **UDF プラグインを生成するビルドシステム** です。Protocol Buffers と gRPC を用いて `.proto` ファイルからコードを生成します。
+`udf-plugin-builder` は **UDF プラグインを生成するツール** です。Protocol Buffers と gRPC を用いて `.proto` ファイルからコードを生成します。
 
 #### インストール手順
 

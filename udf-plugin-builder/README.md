@@ -1,359 +1,116 @@
-# udf-plugin-builder
+# UDF Plugin Builder
 
-## 概要
+## Overview
 
-**udf-plugin-builder** は、[Tsurugi Database](https://github.com/project-tsurugi/tsurugidb) 向けの\
-**UDF (User-Defined Function) プラグイン**と**プラグイン設定ファイル**を自動生成するツールです。
+**udf-plugin-builder** is a Python-based build tool for creating **Tsurugi Database** UDF (User Defined Function) plugins.\
+It allows developers to compile `.proto` files and generate shared object (`.so`) plugin files via CMake, directly from the command line or Python.
 
-Tsurugi Database の UDF は **gRPC** を利用して外部サービスと通信します。\
-ユーザーは `.proto` ファイルで関数インターフェースを定義し、`udf-plugin-builder` を用いて\
-UDF プラグインを生成することで、SQL から外部処理を透過的に呼び出せます。
+______________________________________________________________________
 
-### インストール方法
+## Features
+
+- Build UDF plugins automatically with a single command
+- Support multiple `.proto` files
+- CMake-based build process
+- Automatic temporary directory handling
+- Cross-platform (Linux, macOS)
+- Can be installed via **pip**
+
+______________________________________________________________________
+
+## Requirements
+
+### C++ Side
+
+| Component | Version | Description |
+|------------|----------|--------------|
+| **CMake** | ≥ 3.14 | Build system configuration |
+| **C++ Compiler** | C++17 or later (e.g., g++, clang++) | Required for modern C++ features |
+| **protoc** | Latest | Protocol Buffers compiler |
+| **grpc_cpp_plugin** | Latest | gRPC C++ code generation plugin |
+| **Protobuf** | Latest | Protocol Buffers runtime |
+| **gRPC** | Latest | gRPC C++ library |
+| **ninja** | Recommended | Fast build backend for CMake |
+
+### Python Side
+
+| Component | Version | Description |
+|------------|----------|--------------|
+| **Python** | ≥ 3.8 | Required runtime |
+| **pip** | Latest recommended | Python package manager |
+| **jinja2** | Latest | Template engine for code generation |
+| **pybind11** | Latest | C++/Python binding library |
+| **scikit-build-core** | Latest | CMake-based Python build tool |
+| **nlohmann_json** | Latest | JSON library for C++ |
+
+## Installation
+
+You can install this package using `pip`:
 
 ```bash
-cd tsurugi-udf
-cd udf-plugin-builder
-pip install .
+pip install udf-plugin-builder
 ```
 
-#### 利用方法
+To install it locally for development:
 
 ```bash
-udf-plugin-builder --proto_file sample.proto
+pip install -e .
 ```
 
-配下にlibplugin_api.so libplugin_api.iniが生成されます
+## Usage
 
-| オプション               | 型                   | デフォルト値                               | 説明                                                                                                                                                 |
-| :------------------ | :------------------ | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--proto_file`      | 複数指定可| `proto/sample.proto`                 | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：<br>`--proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto` |
-| `--proto_path`      | 文字列                 | `なし`（未指定時は最初の `.proto` のディレクトリを使用） | `.proto` ファイルを含むディレクトリを指定します。`protoc` が依存ファイルを解決する際に使用されます。                                                                                        |
-| `--tmp`             | 文字列                 | `"tmp"`                              | 一時的なビルド用ディレクトリを指定します。ビルド後は自動的に削除されます。                                                                                                              |
-| `--plugin_api_name` | 文字列                 | `"plugin_api"`                       | 出力されるプラグインライブラリの名前を指定します。<br>例：`--plugin_api_name my_udf` → 出力ファイル名は `libmy_udf.so` / `libmy_udf.ini` になります。                                       |
-| `--grpc_url`        | 文字列                 | `"localhost:50051"`                  | gRPC サーバーの URL を指定します（CMake に渡される設定値として利用されます）。
+### Basic Command
 
-______________________________________________________________________
-
-## 利用の流れ
-
-1. `.proto` ファイルで UDF のインターフェースを定義
-1. gRPC サーバに処理を実装（本ツールではサーバ実装は対象外）
-1. `udf-plugin-builder` を使って UDF プラグイン（`.so`）と設定ファイル（`.ini`）をビルド
-1. `tsurugi.ini` にプラグインロードパスを設定
-1. gRPC サーバを起動
-1. SQL から UDF を呼び出す
-
-______________________________________________________________________
-
-## ビルド成果物
-
-`udf-plugin-builder` を実行すると、以下のファイルが生成されます。
-
-- **プラグイン本体 (.so)**
-
-  - 例: `libmy_udf.so`
-  - TsurugiDB がロードする共有ライブラリです。
-
-- **設定ファイル (.ini)**
-
-  - 例: `libmy_udf.ini`
-  - `.so` と同じディレクトリに配置され、TsurugiDB が自動的に認識します。
-  - 内容は以下の形式です。
-
-```ini
-[udf]
-enabled=true
-endpoint=localhost:50002
-secure=false
+```bash
+udf-plugin-builder --proto_file proto/sample.proto
 ```
 
-- `enabled` .soを読み込むか否か？
-- `endpoint` … gRPC サーバのエンドポイント (`host:port` 形式)
-- `secure` … 認証方式（現状は `false` のみサポート）
+### Multiple .proto Files
 
-注 `.ini` は自分で作成・編集することも可能ですが、デフォルトでは `.so` とペアで生成されるため、そのまま利用できます。
-
-______________________________________________________________________
-
-## .proto 記述ルール（制約）
-
-`udf-plugin-builder` では Protocol Buffers (`proto3`) の全機能は利用できません。\
-現在の制約は以下の通りです。
-
-- `syntax = "proto3";` を必ず指定する
-- `package tsurugidb` 以下にメッセージを定義してはいけない
-- `message` 通常はネスト不可。tsurugidb.udf.value パッケージで使用される型なら**第二階層まで** 定義可能（第三階層以降は非対応）
-- `repeated` は利用不可（将来対応予定）
-- `oneof` は利用可
-- `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）
-- **rpc 名は SQL 関数名になるため一意である必要がある**
-- 戻り値は複数指定不可
-- リクエストメッセージのフィールド順 = SQL 関数の引数順
-
-______________________________________________________________________
-
-## 型対応表
-
-| Tsurugi Database | Protocol Buffers 型 | 備考 |
-|------------------|---------------------|--|
-| `INT` | int32, uint32, sint32, fixed32, sfixed32 ||
-| `BIGINT` | int64, uint64, sint64, fixed64, sfixed64 ||
-| `BOOLEAN` | bool ||
-| `REAL` / `FLOAT` | float ||
-| `DOUBLE` | double ||
-| `CHAR` / `VARCHAR` / `CHARACTER` / `CHARACTER VARYING` | string ||
-| `BINARY` / `VARBINARY` / `BINARY VARYING` | bytes ||
-| DATE | tsurugidb.udf.value.Date | 日付 |
-| TIME | tsurugidb.udf.value.LocalTime | ローカル時刻 |
-| TIMESTAMP | tsurugidb.udf.value.LocalDatetime | ローカル日時 |
-| TIMESTAMP WITH TIME ZONE | tsurugidb.udf.value.OffsetDatetime | タイムゾーン付き日時 |
-| BLOB | tsurugidb.udf.value.BlobReference | BLOB参照 |
-| CLOB | tsurugidb.udf.value.ClobReference | CLOB参照 |
-
-______________________________________________________________________
-
-### tsurugidb.udf.value 配下のデータ型定義について
-
-`tsurugidb.udf.value` パッケージには、UDF 関数における複合型（`DECIMAL`、`DATE`、`TIME`、`TIMESTAMP` など）を表現するための **特定のデータ型定義** が用意されています。  
-利用可能なデータ型は以下の 7 種類に限定されています。これ以外の型を `tsurugidb.udf.value` 配下に新規定義したり、別の型を参照することはできません。
-
-- `tsurugidb.udf.value.Decimal`
-- `tsurugidb.udf.value.Date`
-- `tsurugidb.udf.value.LocalTime`
-- `tsurugidb.udf.value.LocalDatetime`
-- `tsurugidb.udf.value.OffsetDatetime`
-- `tsurugidb.udf.value.BlobReference`
-- `tsurugidb.udf.value.ClobReference`
-
-#### Decimal
-
-```
-message Decimal {
-    // the signed unscaled value (2's complement, big endian).
-    bytes unscaled_value = 1;
-
-    // the exponent of the value (value = unscaled_value * 10^exponent).
-    sint32 exponent = 2;
-}
+```bash
+udf-plugin-builder --proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto
 ```
 
-#### Date
+### Specify Proto Path
 
-```
-message Date {
-    // the number of days since 1970-01-01.
-    sint32 days = 1;
-}
+```bash
+udf-plugin-builder --proto_path proto --proto_file proto/sample.proto
 ```
 
-#### LocalTime
+### Full Example
 
-```
-message LocalTime {
-    // the number of nanoseconds since midnight.
-    sint64 nanos = 1;
-}
-```
-
-#### LocalDatetime
-
-```
-message LocalDatetime {
-    // offset seconds from epoch (1970-01-01 00:00:00) at the local time zone.
-    sint64 offset_seconds = 1;
-    // nano-seconds adjustment [0, 10^9-1].
-    uint32 nano_adjustment = 2;
-}
+```bash
+udf-plugin-builder \
+  --proto_path proto \
+  --proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
+  --plugin_api_name plugin_api \
+  --grpc_url localhost:50051
 ```
 
-#### OffsetDatetime
+## Options
 
-```
-message OffsetDatetime {
-    // offset seconds from epoch (1970-01-01 00:00:00Z).
-    sint64 offset_seconds = 1;
-    // nano-seconds adjustment [0, 10^9-1].
-    uint32 nano_adjustment = 2;
-    // timezone offset in minute.
-    sint32 time_zone_offset = 3;
-}
-```
+| Option | Description | Default |
+| ------------------- | ------------------------------------------------------ | -------------------- |
+| `--proto_file` | Path(s) to `.proto` file(s). Multiple files supported. | `proto/sample.proto` |
+| `--proto_path` | Directory containing `.proto` files. | `None` |
+| `--plugin_api_name` | Plugin API library name. | `plugin_api` |
+| `--grpc_url` | gRPC server URL for communication. | `localhost:50051` |
+| `--build_dir` | Temporary directory used for CMake build. | `tmp/` |
 
-#### BlobReference
+## Run Tests
 
-```
-message BlobReference {
+You can run tests after installing the package:
 
-    // the ID of the storage where the BLOB data is stored.
-    uint64 storage_id = 1;
-
-    // the ID of the object within the BLOB storage.
-    uint64 object_id = 2;
-
-    // a tag for additional access control.
-    uint64 tag = 3;
-}
+```bash
+pytest
 ```
 
-#### ClobReference
+or directly with:
 
-```
-message ClobReference {
-
-    // the ID of the storage where the BLOB data is stored.
-    uint64 storage_id = 1;
-
-    // the ID of the object within the BLOB storage.
-    uint64 object_id = 2;
-
-    // a tag for additional access control.
-    uint64 tag = 3;
-}
+```bash
+python -m pytest
 ```
 
-## 例1
+## License
 
-### `.proto` 定義例
-
-`proto/hello.proto`
-
-```
-syntax = "proto3";
-
-message HelloRequest {
-  string name = 1;
-}
-
-message HelloReply {
-  string message = 1;
-}
-
-service GreetingService {
-  rpc SayHello (HelloRequest) returns (HelloReply);
-}
-```
-
-`udf-plugin-builder --proto_file proto/hello.proto`
-
-______________________________________________________________________
-
-## Tsurugi Database 設定
-
-1. 生成した `.so` と `.ini` を TsurugiDB のプラグインディレクトリに配置（例: `/home/tsurugidb/plugins`）
-1. `tsurugi.ini` にロードパスを追加
-
-```ini
-[udf]
-    plugin_directory=/home/tsurugidb/plugins
-    endpoint=localhost:50051
-    secure=false
-```
-
-- `plugin_directory` はディレクトリを指定
-- 複数のプラグインを配置可能だが、**rpc 名の競合は禁止**
-- tsurugi.iniのendpointおよびsecureは個別設定ファイル（`.ini`）で指定されていない場合に適用されるgrpc_urlです。
-
-______________________________________________________________________
-
-## UDF 利用例
-
-```sql
-CREATE TABLE t (c0 VARCHAR(255));
-INSERT INTO t (c0) VALUES ('how are you?');
--- SQL では関数名は大文字小文字を区別しない
-SELECT sayhello(c0) FROM t;
-```
-
-### 実行結果例
-
-```
-sayhello
-----------------
-how are you? hello
-```
-
-## 例2 oneofの利用
-
-proto/oneof_test.proto
-
-```
-syntax = "proto3";
-
-message MyRequest {
-  sint64 aaa = 1;
-  oneof arg {
-    int64 int64_value = 2;
-    string string_value = 3;
-    bool bool_value = 4;
-  }
-  int32 bbb = 5;
-  oneof aab {
-    int64 int64_value2 = 6;
-    string string_value2 = 7;
-    bool bool_value2 = 8;
-  }
-}
-
-message MyReply {
-  string string_result = 2;
-}
-service One {
-  rpc EchoOneOf(MyRequest) returns (MyReply);
-}
-```
-
-`udf-plugin-builder --proto_file proto/oneof_test.proto`
-
-対応するSQL
-
-```
-create table a1 (v1 bigint,v2 bigint,v3 int,v4 bigint);
-create table a2 (v1 bigint,v2 varchar(30),v3 int,v4 bigint);
-create table a3 (v1 bigint,v2 bigint,v3 int,v4 varchar(30));
-create table a4 (v1 bigint,v2 varchar(30),v3 int,v4 varchar(30));
-...
-select echooneof(v1,v2,v3,v4) from a1;
-select echooneof(v1,v2,v3,v4) from a2;
-select echooneof(v1,v2,v3,v4) from a3;
-select echooneof(v1,v2,v3,v4) from a4;
-```
-
-## 例3 tsurugidb.udf.value配下の利用
-
-proto/complex_types.proto
-
-```
-syntax = "proto3";
-
-package tsurugidb.udf.value;
-
-message Decimal {
-  bytes unscaled_value = 1;
-  sint32 exponent = 2;
-}
-```
-
-proto/nested_test.proto
-
-```
-syntax = "proto3";
-
-import "complex_types.proto";
-service Nested {
-  rpc DecimalOne(tsurugidb.udf.value.Decimal) returns (SimpleValue);
-}
-message SimpleValue {
-  string value = 1;
-}
-```
-
-`udf-plugin-builder --proto_file proto/nested_test.proto proto/complex_types.proto`
-
-対応するSQL
-
-```
-create table t_decimal (v decimal(15, 2));
-...
-select DecimalOne(v) from t_decimal;
-```
+[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)

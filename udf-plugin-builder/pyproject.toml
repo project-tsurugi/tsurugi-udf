@@ -15,8 +15,14 @@ dependencies = [
   "protobuf",
 ]
 
+optional-dependencies.test = [
+  "pytest>=7.0",
+  "pytest-cov",
+]
+
 [project.scripts]
 udf-plugin-builder = "udf_plugin_builder.build_with_cmake:main"
+
 [tool.setuptools]
 packages = ["udf_plugin_builder"]
 include-package-data = true
@@ -29,3 +35,10 @@ udf_plugin_builder = ["templates/*", "cmake/*"]
 
 [project.urls]
 Homepage = "https://github.com/project-tsurugi/tsurugi-udf"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-v --color=yes"
+testpaths = [
+  "tests",
+]

@@ -14,7 +14,11 @@ def parse_args():
     parser.add_argument(
         "--proto_file",
         nargs="+",
-        default=["proto/sample.proto"],
+        default=[
+            "proto/sample.proto",
+            "proto/complex_types.proto",
+            "proto/primitive_types.proto",
+        ],
         help="Path(s) to main .proto file(s)",
     )
     parser.add_argument(

@@ -14,9 +14,8 @@ name = "udf-plugin-builder"
 version = "0.1.0"
 description = "UDF plugin builder for Tsurugi DB"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
-
 # ----------------------------------------------
 # Dependencies
 # ----------------------------------------------
@@ -26,7 +25,7 @@ dependencies = [
   "protobuf>=4.0",
   "pybind11>=2.10",
   "scikit-build-core>=0.5",
-  "nlohmann-json",
+  "nlohmann-json"
 ]
 
 # ----------------------------------------------
@@ -35,7 +34,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest>=7.0",
-  "pytest-cov",
+  "pytest-cov"
 ]
 
 # ----------------------------------------------
@@ -51,22 +50,23 @@ udf-plugin-builder = "udf_plugin_builder.build_with_cmake:main"
 Homepage = "https://github.com/project-tsurugi/tsurugi-udf"
 
 # ==============================================
+# pytest Configuration
+# ==============================================
+[tool.pytest]
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-v --color=yes"
+testpaths = ["tests"]
+
+# ==============================================
 # setuptools Configuration
 # ==============================================
 [tool.setuptools]
 packages = ["udf_plugin_builder"]
 include-package-data = true
 
-[tool.setuptools.package-data]
-udf_plugin_builder = ["templates/*", "cmake/*"]
-
 [tool.setuptools.exclude-package-data]
 "*" = ["__pycache__"]
 
-# ==============================================
-# pytest Configuration
-# ==============================================
-[tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-v --color=yes"
-testpaths = ["tests"]
+[tool.setuptools.package-data]
+udf_plugin_builder = ["templates/*", "cmake/*"]

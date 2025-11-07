@@ -13,7 +13,6 @@ ______________________________________________________________________
 - Support multiple `.proto` files
 - CMake-based build process
 - Automatic temporary directory handling
-- Cross-platform (Linux, macOS)
 - Can be installed via **pip**
 
 ______________________________________________________________________

@@ -1,9 +1,6 @@
-[tool.scikit-build]
-build-dir = "build"
-wheel.packages = ["udf_plugin_viewer"]
-
-[tool.scikit-build.cmake.define]
-CMAKE_CXX_STANDARD = "17"
+[build-system]
+requires = ["scikit-build-core", "pybind11", "ninja"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "udf-plugin-viewer"
@@ -11,10 +8,18 @@ version = "0.1.0"
 description = "UDF plugin metadata viewer"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = []
+dependencies = [
+  "jinja2>=3.1.0",
+  "pybind11>=2.11.0",
+  "tsurugi-udf-common>=0.1.0"
+]
 
-[build-system]
-requires = ["scikit-build-core", "pybind11", "ninja"]
-build-backend = "scikit_build_core.build"
 [project.scripts]
 udf-plugin-viewer = "udf_plugin_viewer.__main__:main"
+
+[tool.scikit-build]
+build-dir = "build"
+
+[tool.scikit-build.cmake.define]
+CMAKE_CXX_STANDARD = "17"
+wheel.packages = ["udf_plugin_viewer"]

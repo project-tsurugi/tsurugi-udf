@@ -2,7 +2,7 @@
 
 ## Overview
 
-tsurugi-udf-common provides shared utilities and definitions used by both udf-plugin-builder and udf-plugin-viewer.
+**tsurugi-udf-common** provides shared utilities and definitions used by both **udf-plugin-builder** and **udf-plugin-viewer**.
 It offers consistent interfaces, common helper functions, and protocol definitions for building
 and managing User Defined Function (UDF) plugins in Tsurugi Database.
 
@@ -16,7 +16,6 @@ ______________________________________________________________________
 - Common data structures and helper utilities for UDF development
 - Shared configuration and constants between plugin tools
 - Lightweight dependency for Python-based UDF tools
-- Cross-platform compatibility (Linux, macOS)
 - Installable via pip
 
 ______________________________________________________________________
@@ -25,7 +24,7 @@ ______________________________________________________________________
 
 | Component | Version | Description |
 |------------|----------|--------------|
-| **Python**  | ≥ 3.8 |Required runtime |
+| **Python** | ≥ 3.8 |Required runtime |
 | **pip** | Latest |recommended Python package manager |
 | **protobuf** | Latest |Protocol Buffers runtime |
 | **jinja2** | Latest | Template rendering (if used by utilities) |

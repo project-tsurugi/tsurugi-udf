@@ -1,28 +1,58 @@
+# ==============================================
+# pyproject.toml for udf-plugin-builder
+# ==============================================
+
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# ==============================================
+# Project Metadata
+# ==============================================
 [project]
 name = "udf-plugin-builder"
 version = "0.1.0"
 description = "UDF plugin builder for Tsurugi DB"
 readme = "README.md"
-license = "Apache-2.0"
+license = { text = "Apache-2.0" }
 requires-python = ">=3.8"
+
+# ----------------------------------------------
+# Dependencies
+# ----------------------------------------------
 dependencies = [
   "tsurugi-udf-common>=0.1.0",
-  "jinja2",
-  "protobuf",
+  "jinja2>=3.0",
+  "protobuf>=4.0",
+  "pybind11>=2.10",
+  "scikit-build-core>=0.5",
+  "nlohmann-json",
 ]
 
-optional-dependencies.test = [
+# ----------------------------------------------
+# Optional dependencies (e.g. for testing)
+# ----------------------------------------------
+[project.optional-dependencies]
+test = [
   "pytest>=7.0",
   "pytest-cov",
 ]
 
+# ----------------------------------------------
+# CLI entry point
+# ----------------------------------------------
 [project.scripts]
 udf-plugin-builder = "udf_plugin_builder.build_with_cmake:main"
 
+# ----------------------------------------------
+# URLs
+# ----------------------------------------------
+[project.urls]
+Homepage = "https://github.com/project-tsurugi/tsurugi-udf"
+
+# ==============================================
+# setuptools Configuration
+# ==============================================
 [tool.setuptools]
 packages = ["udf_plugin_builder"]
 include-package-data = true
@@ -33,12 +63,10 @@ udf_plugin_builder = ["templates/*", "cmake/*"]
 [tool.setuptools.exclude-package-data]
 "*" = ["__pycache__"]
 
-[project.urls]
-Homepage = "https://github.com/project-tsurugi/tsurugi-udf"
-
+# ==============================================
+# pytest Configuration
+# ==============================================
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-v --color=yes"
-testpaths = [
-  "tests",
-]
+testpaths = ["tests"]

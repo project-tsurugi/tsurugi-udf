@@ -98,7 +98,7 @@ udf-plugin-builder \
 | `--grpc_url` | gRPC server URL for communication. | `localhost:50051` |
 | `--build_dir` | Temporary directory used for CMake build. | `tmp/` |
 
-## Run Tests
+## How to Test
 
 You can run tests after installing the package:
 
@@ -111,6 +111,10 @@ or directly with:
 ```bash
 python -m pytest
 ```
+
+## How to Use
+
+[udf-plugin-builder guide (ja)](../docs/udf-plugin-builder_ja.md)
 
 ## License
 

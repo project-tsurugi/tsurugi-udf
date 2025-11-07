@@ -3,7 +3,7 @@
 **tsurugi-udf** is a collection of tools for developing and using `User-Defined Functions (UDFs)` for [Tsurugi Database](https://github.com/project-tsurugi/tsurugidb)
 .
 
-This repository consists of two main modules:
+This repository consists of three main modules:
 
 - **[udf-plugin-common](common/README.md)**\
    A shared utilities and definitions used by both udf-plugin-builder and udf-plugin-viewer.

@@ -36,7 +36,7 @@ ______________________________________________________________________
 You can install the package via pip:
 
 ```bash
-pip install udf-plugin-viewer
+pip install .
 ```
 
 For local development:

@@ -2,11 +2,13 @@
 
 **tsurugi-udf** は [Tsurugi Database](https://github.com/project-tsurugi/tsurugidb) 向けのユーザー定義関数 (`UDF: User-Defined Function`) を開発・利用するためのツール群です。
 
-本リポジトリは以下の 2 つのモジュールから構成されています:
+本リポジトリは以下の 3 つのモジュールから構成されています:
 
-- **[udf-plugin-builder](./udf-plugin-builder/)**\
+- **[udf-plugin-common](../common/README.md)**\
+  **udf-plugin-builder** と **udf-plugin-viewer**の両方で使用される、共通のユーティリティおよび定義
+- **[udf-plugin-builder](./udf-plugin-builder_ja.md)**\
   **Tsurugi Database**にロード可能な `UDF プラグイン` (共有ライブラリ（shared object）) を自動生成・ビルドする仕組み
-- **[udf-plugin-viewer](./udf-plugin-viewer/)**\
+- **[udf-plugin-viewer](./udf-plugin-viewer_ja.md)**\
   生成した `UDF プラグイン`のメタデータをロードし、内容を表示するためのツール
 
 ______________________________________________________________________
@@ -204,7 +206,7 @@ cd common
 pip install .
 ```
 
-#####
+##### 
 
 ##### udf-plugin-builderインストール
 
@@ -222,13 +224,13 @@ udf-plugin-builder --proto_file sample.proto
 
 配下にlibplugin_api.so libplugin_api.iniが生成されます
 
-| オプション               | 型                   | デフォルト値                               | 説明                                                                                                                                                 |
+| オプション | 型 | デフォルト値 | 説明 |
 | :------------------ | :------------------ | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--proto_file`      | 複数指定可| `proto/sample.proto`                 | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：<br>`--proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto` |
-| `--proto_path`      | 文字列                 | `なし`（未指定時は最初の `.proto` のディレクトリを使用） | `.proto` ファイルを含むディレクトリを指定します。`protoc` が依存ファイルを解決する際に使用されます。                                                                                        |
-| `--tmp`             | 文字列                 | `"tmp"`                              | 一時的なビルド用ディレクトリを指定します。ビルド後は自動的に削除されます。                                                                                                              |
-| `--plugin_api_name` | 文字列                 | `"plugin_api"`                       | 出力されるプラグインライブラリの名前を指定します。<br>例：`--plugin_api_name my_udf` → 出力ファイル名は `libmy_udf.so` / `libmy_udf.ini` になります。                                       |
-| `--grpc_url`        | 文字列                 | `"localhost:50051"`                  | gRPC サーバーの URL を指定します（CMake に渡される設定値として利用されます）。                                                                                                    |
+| `--proto_file` | 複数指定可| `proto/sample.proto` | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：<br>`--proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto` |
+| `--proto_path` | 文字列 | `なし`（未指定時は最初の `.proto` のディレクトリを使用） | `.proto` ファイルを含むディレクトリを指定します。`protoc` が依存ファイルを解決する際に使用されます。 |
+| `--tmp` | 文字列 | `"tmp"` | 一時的なビルド用ディレクトリを指定します。ビルド後は自動的に削除されます。 |
+| `--plugin_api_name` | 文字列 | `"plugin_api"` | 出力されるプラグインライブラリの名前を指定します。<br>例：`--plugin_api_name my_udf` → 出力ファイル名は `libmy_udf.so` / `libmy_udf.ini` になります。 |
+| `--grpc_url` | 文字列 | `"localhost:50051"` | gRPC サーバーの URL を指定します（CMake に渡される設定値として利用されます）。 |
 
 ______________________________________________________________________
 

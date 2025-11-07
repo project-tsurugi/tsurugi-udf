@@ -49,7 +49,7 @@ ______________________________________________________________________
 You can install this package using `pip`:
 
 ```bash
-pip install udf-plugin-builder
+pip install .
 ```
 
 To install it locally for development:

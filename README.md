@@ -8,11 +8,18 @@ This repository consists of three main modules:
 - **[udf-plugin-common](common/README.md)**\
    A shared utilities and definitions used by both udf-plugin-builder and udf-plugin-viewer.
 
-- **[udf-plugin-builder](docs/udf-plugin-builder_ja.md)**\
+- **[udf-plugin-builder](udf-plugin-builder/README.md)**\
   A build toolchain that automatically generates and compiles UDF plugins (shared libraries) loadable by Tsurugi Database.
 
-- **[udf-plugin-viewer](docs/udf-plugin-viewer_ja.md)**\
+- **[udf-plugin-viewer](udf-plugin-viewer/README.md)**\
   A viewer tool that loads and displays metadata from generated UDF plugins.
+
+## User's guide
+
+- **[tsurugi-udf guide(ja)](docs/udf-guide_ja.md)**
+  - **[udf-plugin-common](common/README.md)**
+  - **[udf-plugin-builder guide (ja)](docs/udf-plugin-builder_ja.md)**
+  - **[udf-plugin-viewer guide (ja)](docs/udf-plugin-viewer_ja.md)**
 
 ## Requirements
 

@@ -23,7 +23,7 @@ ______________________________________________________________________
 
 | Component | Version | Description |
 |------------|----------|--------------|
-| **CMake** | ≥ 3.14 | Build system configuration |
+| **CMake** | ≥ 3.15 | Build system configuration |
 | **C++ Compiler** | C++17 or later (e.g., g++, clang++) | Required for modern C++ features |
 | **protoc** | Latest | Protocol Buffers compiler |
 | **grpc_cpp_plugin** | Latest | gRPC C++ code generation plugin |

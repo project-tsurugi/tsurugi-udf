@@ -27,7 +27,7 @@ This repository consists of three main modules:
 
 | Component | Version | Description |
 |------------|----------|--------------|
-| **CMake** | ≥ 3.14 | Build system configuration |
+| **CMake** | ≥ 3.15 | Build system configuration |
 | **C++ Compiler** | C++17 or later (e.g., g++, clang++) | Required for modern C++ features |
 | **protoc** | Latest | Protocol Buffers compiler |
 | **grpc_cpp_plugin** | Latest | gRPC C++ code generation plugin |
@@ -42,7 +42,8 @@ ______________________________________________________________________
 | Component | Version | Description |
 |------------|----------|--------------|
 | **Python** | ≥ 3.8 | |
-| **pip** | Latest recommended | Python package manager |
+| **python3-dev** | Corresponding version | Python C API / headers for building pybind11 extensions |
+| **pip** | **≥ 24.0** | Python package manager |
 | **jinja2** | Latest | Template engine for code generation |
 | **pybind11** | Latest | C++/Python binding library |
 | **scikit-build-core** | Latest | CMake-based Python build tool |

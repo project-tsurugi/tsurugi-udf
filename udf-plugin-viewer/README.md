@@ -23,12 +23,17 @@ ______________________________________________________________________
 
 | Component | Version | Description |
 | ---------------- | ----------------------------------- | ------------------------------------------ |
-| **CMake** | ≥ 3.14 | Build system configuration |
+| **CMake** | ≥ 3.15 | Build system configuration |
 | **C++ Compiler** | C++17 or later (e.g., g++, clang++) | Needed to compile plugins |
 | **Protobuf** | Latest | Protocol Buffers runtime |
 | **gRPC** | Latest | gRPC C++ library (if plugin uses services) |
-| **pybind11** | Latest | For Python binding to plugin C++ metadata |
-
+| **Python** | ≥ 3.8 | |
+| **python3-dev** | Corresponding version | Python C API / headers for building pybind11 extensions |
+| **pip** | **≥ 24.0** | Python package manager |
+| **jinja2** | Latest | Template engine for code generation |
+| **pybind11** | Latest | C++/Python binding library |
+| **scikit-build-core** | Latest | CMake-based Python build tool |
+| **nlohmann_json** | Latest | JSON support |
 ______________________________________________________________________
 
 ## Installation

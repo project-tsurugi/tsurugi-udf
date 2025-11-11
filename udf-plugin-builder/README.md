@@ -36,7 +36,7 @@ ______________________________________________________________________
 | Component | Version | Description |
 |------------|----------|--------------|
 | **Python** | ≥ 3.8 | Required runtime |
-| **pip** | Latest recommended | Python package manager |
+| **pip** | **≥ 24.0** | Python package manager |
 | **tsurugi-udf-common** | ≥ 0.1.0 | Common definitions and utilities for UDF plugins |
 | **jinja2** | Latest | Template engine for code generation |
 | **protobuf** | Latest | Protocol Buffers library |

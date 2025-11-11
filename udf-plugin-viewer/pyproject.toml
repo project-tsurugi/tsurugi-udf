@@ -19,7 +19,6 @@ udf-plugin-viewer = "udf_plugin_viewer.__main__:main"
 
 [tool.scikit-build]
 build-dir = "build"
-
+wheel.packages = ["udf_plugin_viewer"]
 [tool.scikit-build.cmake.define]
 CMAKE_CXX_STANDARD = "17"
-wheel.packages = ["udf_plugin_viewer"]

@@ -108,6 +108,7 @@ public:
      * @param dir_path Path to a plugin file or a directory containing plugins.
      */
     [[nodiscard]] std::vector<load_result> load(std::string_view dir_path) override;
+    [[nodiscard]] std::vector<load_result> view_load(std::string_view so_path);
     /**
      * @brief Unloads all currently loaded plugins.
      *

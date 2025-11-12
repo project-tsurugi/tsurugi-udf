@@ -150,7 +150,7 @@ PYBIND11_MODULE(udf_plugin, m) {
     m.doc() = "UDF Plugin Loader (with nested record support)";
     m.def("load_plugin", [](const std::string& path) {
         static std::unique_ptr<udf_loader> loader = std::make_unique<udf_loader>();
-        auto results = loader->load(path);
+        auto results = loader->view_load(path);
         for(const auto& result: results) {
             std::cerr << "[gRPC] " << result.status() << " file: " << result.file() << " detail: " << result.detail()
                       << std::endl;

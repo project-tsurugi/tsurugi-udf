@@ -90,6 +90,41 @@ udf_loader::parse_ini(fs::path const& ini_path, std::vector<load_result>& result
     }
 }
 
+std::vector<load_result> udf_loader::view_load(std::string_view so_path) {
+    std::vector<load_result> results;
+    fs::path path(so_path);
+
+    if(! fs::exists(path)) {
+        results.emplace_back(load_status::path_not_found, std::string(so_path), "Shared library not found");
+        return results;
+    }
+
+    if(! path.has_extension() || path.extension() != ".so") {
+        results.emplace_back(load_status::no_ini_and_so_files, std::string(so_path), "File is not a .so library");
+        return results;
+    }
+
+    dlerror();
+    void* handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    const char* err = dlerror();
+    if(! handle || err) {
+        results.emplace_back(
+            load_status::dlopen_failed,
+            std::string(so_path),
+            err ? err : "dlopen failed with unknown error"
+        );
+        return results;
+    }
+
+    constexpr const char* default_endpoint = "localhost:0";
+    constexpr const char* default_secure = "false";
+
+    auto res = create_api_from_handle(handle, path.string(), default_endpoint, default_secure);
+    results.push_back(std::move(res));
+
+    return results;
+}
+
 std::vector<load_result> udf_loader::load(std::string_view dir_path) {
 
     fs::path path(dir_path);

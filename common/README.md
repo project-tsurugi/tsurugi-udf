@@ -25,7 +25,7 @@ ______________________________________________________________________
 | Component | Version | Description |
 |------------|----------|--------------|
 | **Python** | ≥ 3.8 |Required runtime |
-| **pip** | Latest |recommended Python package manager |
+| **pip** | ≥ 24.0 |recommended Python package manager |
 | **protobuf** | Latest |Protocol Buffers runtime |
 | **jinja2** | Latest | Template rendering (if used by utilities) |
 

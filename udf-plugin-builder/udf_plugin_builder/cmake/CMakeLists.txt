@@ -108,15 +108,15 @@ set(TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
 # gRPC URL (test-specific)
 # ============================================================
 if(ENABLE_UNARY_TEST)
-  set(GRPC_URL "localhost:50001")
+  set(GRPC_ENDPOINT "localhost:50001")
 elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(GRPC_URL "localhost:50002")
+  set(GRPC_ENDPOINT "localhost:50002")
 elseif(ENABLE_ONEOF_TEST)
-  set(GRPC_URL "localhost:50003")
+  set(GRPC_ENDPOINT "localhost:50003")
 elseif(ENABLE_NESTED_TEST)
-  set(GRPC_URL "localhost:50004")
+  set(GRPC_ENDPOINT "localhost:50004")
 endif()
-message(STATUS "gRPC URL: ${GRPC_URL}")
+message(STATUS "gRPC endpoint: ${GRPC_ENDPOINT}")
 # ============================================================
 # Proto/gRPC generation
 # ============================================================
@@ -149,7 +149,8 @@ add_custom_command(
   COMMAND
     ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
     --proto_path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
-    ${PLUGIN_API_NAME} --grpc_url ${GRPC_URL} --out ${CMAKE_CURRENT_BINARY_DIR}
+    ${PLUGIN_API_NAME} --grpc-endpoint ${GRPC_ENDPOINT} --out
+    ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
   COMMENT "Running generate.py for proto and plugin API generation")

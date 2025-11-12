@@ -3,7 +3,7 @@
 ## Overview
 
 **udf-plugin-builder** is a Python-based build tool for creating **Tsurugi Database** UDF (User Defined Function) plugins.\
-It allows developers to compile `.proto` files and generate shared object (`.so`) plugin files via CMake, directly from the command line or Python.
+It allows developers to compile `.proto` files and generate shared object (`.so`) plugin files and ini files (`.ini`) via CMake, directly from the command line or Python.
 
 ______________________________________________________________________
 
@@ -85,7 +85,7 @@ udf-plugin-builder \
   --proto_path proto \
   --proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
   --plugin_api_name plugin_api \
-  --grpc_url localhost:50051
+  --grpc-endpoint localhost:50051
 ```
 
 ## Options
@@ -95,7 +95,7 @@ udf-plugin-builder \
 | `--proto_file` | Path(s) to `.proto` file(s). Multiple files supported. | `proto/sample.proto` |
 | `--proto_path` | Directory containing `.proto` files. | `None` |
 | `--plugin_api_name` | Plugin API library name. | `plugin_api` |
-| `--grpc_url` | gRPC server URL for communication. | `localhost:50051` |
+| `--grpc-endpoint` | gRPC server endpoint for communication. | `localhost:50051` |
 | `--build_dir` | Temporary directory used for CMake build. | `tmp/` |
 
 ## How to Test

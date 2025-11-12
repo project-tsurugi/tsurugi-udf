@@ -30,7 +30,9 @@ def parse_args():
     parser.add_argument(
         "--plugin_api_name", default="plugin_api", help="Name of the plugin API library"
     )
-    parser.add_argument("--grpc_url", default="localhost:50051", help="gRPC server URL")
+    parser.add_argument(
+        "--grpc-endpoint", default="localhost:50051", help="gRPC server URL"
+    )
 
     return parser.parse_args()
 
@@ -57,7 +59,7 @@ def main():
     print(f"[INFO] Building with CMake in {build_dir}")
     print(f"[INFO] Using proto files: {args.proto_file}")
     print(f"[INFO] Proto path: {proto_path}")
-    print(f"[INFO] gRPC URL: {args.grpc_url}")
+    print(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
     # CMake configure
     cmake_cmd = [
         "cmake",
@@ -69,7 +71,7 @@ def main():
         f"-DPROTO_FILES={proto_files_str}",
         f"-DPLUGIN_API_NAME={args.plugin_api_name}",
         f"-DTMP_DIR={tmp_dir}",
-        f"-DGRPC_URL={args.grpc_url}",
+        f"-DGRPC_ENDPOINT={args.grpc_endpoint}",
     ]
     print(f"[CMD] {' '.join(cmake_cmd)}")
     subprocess.check_call(cmake_cmd)

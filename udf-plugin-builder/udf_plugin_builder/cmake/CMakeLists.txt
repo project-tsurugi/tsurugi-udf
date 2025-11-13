@@ -12,6 +12,7 @@ option(ENABLE_UNARY_TEST "Build unary_test" OFF)
 option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
 option(ENABLE_ONEOF_TEST "Build oneof_test" OFF)
 option(ENABLE_NESTED_TEST "Build nested_test" OFF)
+option(ENABLE_1113_TEST "Build 1113_test" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -82,6 +83,10 @@ elseif(ENABLE_NESTED_TEST)
   set(PROTO_PATH ${TEST_ROOT_DIR}/nested_test/proto)
   set(PROTO_FILES ${TEST_ROOT_DIR}/nested_test/proto/nested_test.proto
                   ${TEST_ROOT_DIR}/nested_test/proto/complex_types.proto)
+elseif(ENABLE_1113_TEST)
+  set(PROTO_PATH ${TEST_ROOT_DIR}/1113/proto)
+  set(PROTO_FILES ${TEST_ROOT_DIR}/1113/proto/1113.proto)
+
 endif()
 message(STATUS "Proto files: ${PROTO_FILES}")
 message(STATUS "Proto path: ${PROTO_PATH}")
@@ -96,6 +101,8 @@ elseif(ENABLE_ONEOF_TEST)
   set(NAME oneof_test)
 elseif(ENABLE_NESTED_TEST)
   set(NAME nested_test)
+elseif(ENABLE_1113_TEST)
+  set(NAME 1113)
 endif()
 message(STATUS "Plugin API library name: ${NAME}")
 
@@ -115,6 +122,8 @@ elseif(ENABLE_ONEOF_TEST)
   set(GRPC_ENDPOINT "localhost:50003")
 elseif(ENABLE_NESTED_TEST)
   set(GRPC_ENDPOINT "localhost:50004")
+elseif(ENABLE_1113_TEST)
+  set(GRPC_ENDPOINT "localhost:50005")
 endif()
 message(STATUS "gRPC endpoint: ${GRPC_ENDPOINT}")
 # ============================================================
@@ -276,5 +285,14 @@ if(ENABLE_TESTS)
     target_link_libraries(
       rpc_client_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                      protobuf::libprotobuf)
+  endif()
+  if(ENABLE_1113_TEST)
+    message(STATUS "Building 1113_test")
+    add_executable(rpc_server_1113 ${TEST_ROOT_DIR}/1113/server/rpc_server.cpp)
+    target_include_directories(
+      rpc_server_1113 PRIVATE ${BUILD_DIR}
+                              ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
+    target_link_libraries(rpc_server_1113 PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                                  protobuf::libprotobuf)
   endif()
 endif()

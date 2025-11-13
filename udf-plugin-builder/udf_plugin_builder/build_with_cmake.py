@@ -25,7 +25,7 @@ def parse_args():
         "--proto-path", default=None, help="Directory containing .proto files"
     )
     parser.add_argument(
-        "--tmp", default="tmp", help="Temporary directory for generated files"
+        "--build-dir", default="tmp", help="Temporary directory for generated files"
     )
     parser.add_argument(
         "--plugin_api_name", default="plugin_api", help="Name of the plugin API library"
@@ -41,13 +41,13 @@ def main():
     args = parse_args()
 
     script_dir = Path(__file__).resolve().parent
-    tmp_dir = Path.cwd() / args.tmp
+    build_dir = Path.cwd() / args.build_dir
     out_dir = Path.cwd()
-    build_dir = tmp_dir
+    build_dir_full = build_dir
 
-    if build_dir.exists():
-        shutil.rmtree(build_dir)
-    build_dir.mkdir(parents=True)
+    if build_dir_full.exists():
+        shutil.rmtree(build_dir_full)
+    build_dir_full.mkdir(parents=True)
 
     proto_files = [str(Path(p).resolve()) for p in args.proto_file]
     proto_files_str = ";".join(proto_files)
@@ -56,7 +56,7 @@ def main():
     else:
         proto_path = str(Path(proto_files[0]).parent.resolve())
 
-    print(f"[INFO] Building with CMake in {build_dir}")
+    print(f"[INFO] Building with CMake in {build_dir_full}")
     print(f"[INFO] Using proto files: {args.proto_file}")
     print(f"[INFO] Proto path: {proto_path}")
     print(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
@@ -64,29 +64,29 @@ def main():
     cmake_cmd = [
         "cmake",
         "-B",
-        str(build_dir),
+        str(build_dir_full),
         "-S",
         str(script_dir / "cmake"),
         f"-DPROTO_PATH={proto_path}",
         f"-DPROTO_FILES={proto_files_str}",
         f"-DPLUGIN_API_NAME={args.plugin_api_name}",
-        f"-DTMP_DIR={tmp_dir}",
+        f"-DBUILD_DIR={build_dir}",
         f"-DGRPC_ENDPOINT={args.grpc_endpoint}",
     ]
     print(f"[CMD] {' '.join(cmake_cmd)}")
     subprocess.check_call(cmake_cmd)
 
-    build_cmd = ["cmake", "--build", str(build_dir), "--", "-j"]
+    build_cmd = ["cmake", "--build", str(build_dir_full), "--", "-j"]
     print(f"[INFO] Building: {' '.join(build_cmd)}")
     subprocess.check_call(build_cmd)
 
     lib_name = f"lib{args.plugin_api_name}.so"
     ini_name = f"lib{args.plugin_api_name}.ini"
 
-    shutil.copy(build_dir / lib_name, out_dir / lib_name)
-    shutil.copy(build_dir / ini_name, out_dir / ini_name)
+    shutil.copy(build_dir_full / lib_name, out_dir / lib_name)
+    shutil.copy(build_dir_full / ini_name, out_dir / ini_name)
 
-    shutil.rmtree(tmp_dir)
+    shutil.rmtree(build_dir)
 
     print(f"[INFO] Finished. Files created in {out_dir}: {lib_name}, {ini_name}")
 

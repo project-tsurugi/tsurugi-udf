@@ -57,19 +57,19 @@ def find_grpc_cpp_plugin():
     return plugin
 
 
-def run_protoc(proto_files, proto_path, tmp_dir, descriptor_set_out=None):
+def run_protoc(proto_files, proto_path, build_dir, descriptor_set_out=None):
     plugin_path = find_grpc_cpp_plugin()
-    tmp_dir = Path(tmp_dir)
-    tmp_dir.mkdir(parents=True, exist_ok=True)
+    build_dir = Path(build_dir)
+    build_dir.mkdir(parents=True, exist_ok=True)
 
     if descriptor_set_out is None:
-        descriptor_set_out = tmp_dir / "descriptor.pb"
+        descriptor_set_out = build_dir / "descriptor.pb"
 
     protoc_cmd = [
         "protoc",
         f"-I{proto_path}",
-        f"--cpp_out={tmp_dir}",
-        f"--grpc_out={tmp_dir}",
+        f"--cpp_out={build_dir}",
+        f"--grpc_out={build_dir}",
         f"--plugin=protoc-gen-grpc={plugin_path}",
         f"--descriptor_set_out={descriptor_set_out}",
         "--include_imports",
@@ -208,7 +208,7 @@ def parse_args():
         help="Directory containing .proto files (default: proto)",
     )
     parser.add_argument(
-        "--tmp",
+        "--build-dir",
         default="tmp",
         help="Temporary directory for generated files (default: tmp)",
     )
@@ -236,8 +236,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def dump_packages_json(packages: List[PackageDescriptor], tmp_path: str):
-    with open(tmp_path, "w") as f:
+def dump_packages_json(packages: List[PackageDescriptor], build_path: str):
+    with open(build_path, "w") as f:
         json.dump([asdict(pkg) for pkg in packages], f, indent=2)
 
 
@@ -293,12 +293,12 @@ def generate_ini_file(plugin_name: str, grpc_endpoint: str, out_dir: str):
 
 def main():
     args = parse_args()
-    tmp_dir = args.tmp
-    descriptor_path = run_protoc(args.proto_file, args.proto_path, tmp_dir)
-    descriptor_path = args.descriptor_set_out or f"{tmp_dir}/descriptor.pb"
+    build_dir = args.build_dir
+    descriptor_path = run_protoc(args.proto_file, args.proto_path, build_dir)
+    descriptor_path = args.descriptor_set_out or f"{build_dir}/descriptor.pb"
     desc_set = load_descriptor(descriptor_path)
     packages = parse_package_descriptor(desc_set)
-    dump_packages_json(packages, f"{tmp_dir}/service_descriptors.json")
+    dump_packages_json(packages, f"{build_dir}/service_descriptors.json")
     proto_base_name = Path(parse_args().proto_file[0]).stem
     templates = {
         "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",
@@ -307,7 +307,7 @@ def main():
         "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
     }
     for template_file, output_file in templates.items():
-        output_path = f"{tmp_dir}/{output_file}"
+        output_path = f"{build_dir}/{output_file}"
         generate_cpp_from_template(
             packages, TEMPLATES_DIR, template_file, output_path, proto_base_name
         )

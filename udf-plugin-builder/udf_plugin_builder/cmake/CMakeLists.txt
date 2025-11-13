@@ -102,7 +102,7 @@ message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
 # ============================================================
 # Paths
 # ============================================================
-set(TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
 
 # ============================================================
 # gRPC URL (test-specific)
@@ -127,17 +127,17 @@ set(GRPC_GEN_HDRS "")
 
 foreach(proto_file IN LISTS PROTO_FILES)
   get_filename_component(proto_name ${proto_file} NAME_WE)
-  list(APPEND PROTO_GEN_SRCS ${TMP_DIR}/${proto_name}.pb.cc)
-  list(APPEND PROTO_GEN_HDRS ${TMP_DIR}/${proto_name}.pb.h)
-  list(APPEND GRPC_GEN_SRCS ${TMP_DIR}/${proto_name}.grpc.pb.cc)
-  list(APPEND GRPC_GEN_HDRS ${TMP_DIR}/${proto_name}.grpc.pb.h)
+  list(APPEND PROTO_GEN_SRCS ${BUILD_DIR}/${proto_name}.pb.cc)
+  list(APPEND PROTO_GEN_HDRS ${BUILD_DIR}/${proto_name}.pb.h)
+  list(APPEND GRPC_GEN_SRCS ${BUILD_DIR}/${proto_name}.grpc.pb.cc)
+  list(APPEND GRPC_GEN_HDRS ${BUILD_DIR}/${proto_name}.grpc.pb.h)
 endforeach()
 
 set(PLUGIN_GEN_SRCS
-    ${TMP_DIR}/plugin_api_impl.cpp ${TMP_DIR}/rpc_client.cpp
-    ${TMP_DIR}/rpc_client_factory.cpp
+    ${BUILD_DIR}/plugin_api_impl.cpp ${BUILD_DIR}/rpc_client.cpp
+    ${BUILD_DIR}/rpc_client_factory.cpp
     ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
-set(PLUGIN_GEN_HDRS ${TMP_DIR}/rpc_client.h)
+set(PLUGIN_GEN_HDRS ${BUILD_DIR}/rpc_client.h)
 
 # ============================================================
 # Code generation command
@@ -145,10 +145,10 @@ set(PLUGIN_GEN_HDRS ${TMP_DIR}/rpc_client.h)
 add_custom_command(
   OUTPUT ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS} ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS}
          ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${TMP_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_DIR}
   COMMAND
     ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto-file ${PROTO_FILES}
-    --proto-path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
+    --proto-path ${PROTO_PATH} --build-dir ${BUILD_DIR} --plugin_api_name
     ${PLUGIN_API_NAME} --grpc-endpoint ${GRPC_ENDPOINT} --out
     ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
@@ -160,7 +160,7 @@ add_custom_command(
 # ============================================================
 add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
                              ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
-target_include_directories(proto_lib PUBLIC ${TMP_DIR} ${GRPC_INCLUDE_DIRS})
+target_include_directories(proto_lib PUBLIC ${BUILD_DIR} ${GRPC_INCLUDE_DIRS})
 target_link_libraries(proto_lib PUBLIC ${GRPC_LIBRARIES} protobuf::libprotobuf)
 set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -169,7 +169,7 @@ set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ============================================================
 add_library(${PLUGIN_API_NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
 target_include_directories(
-  ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
+  ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${BUILD_DIR})
 target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                  protobuf::libprotobuf)
 
@@ -178,12 +178,12 @@ target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
 # ============================================================
 add_custom_target(
   clean_out
-  COMMAND ${CMAKE_COMMAND} -E rm -rf "${TMP_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E rm -rf "${BUILD_DIR}"
   COMMENT "Removing tmp directory")
 set_property(
   DIRECTORY
   APPEND
-  PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${TMP_DIR}")
+  PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${BUILD_DIR}")
 
 # ============================================================
 # Test executables
@@ -195,7 +195,7 @@ if(ENABLE_TESTS)
     add_executable(rpc_server_unary_test
                    ${TEST_ROOT_DIR}/unary_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_unary_test PRIVATE ${TMP_DIR}
+      rpc_server_unary_test PRIVATE ${BUILD_DIR}
                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_unary_test PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -204,13 +204,13 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client
       ${TEST_ROOT_DIR}/unary_test/client/client.cpp
-      ${TMP_DIR}/rpc_client.cpp
-      ${TMP_DIR}/rpc_client_factory.cpp
+      ${BUILD_DIR}/rpc_client.cpp
+      ${BUILD_DIR}/rpc_client_factory.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
     target_include_directories(
-      rpc_client PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
+      rpc_client PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${BUILD_DIR})
     target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
                                              protobuf::libprotobuf)
   endif()
@@ -221,7 +221,7 @@ if(ENABLE_TESTS)
                    ${TEST_ROOT_DIR}/load_another/server/rpc_server.cpp)
     target_include_directories(
       rpc_server_load_another
-      PRIVATE ${TMP_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
+      PRIVATE ${BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
     target_link_libraries(
       rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
@@ -232,7 +232,7 @@ if(ENABLE_TESTS)
     add_executable(rpc_server_oneof_test
                    ${TEST_ROOT_DIR}/oneof_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_oneof_test PRIVATE ${TMP_DIR}
+      rpc_server_oneof_test PRIVATE ${BUILD_DIR}
                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_oneof_test PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -241,13 +241,14 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client_oneof
       ${TEST_ROOT_DIR}/oneof_test/client/client.cpp
-      ${TMP_DIR}/rpc_client.cpp
-      ${TMP_DIR}/rpc_client_factory.cpp
+      ${BUILD_DIR}/rpc_client.cpp
+      ${BUILD_DIR}/rpc_client_factory.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
     target_include_directories(
-      rpc_client_oneof PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${TMP_DIR})
+      rpc_client_oneof PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                               ${BUILD_DIR})
     target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
                                                    protobuf::libprotobuf)
   endif()
@@ -256,7 +257,7 @@ if(ENABLE_TESTS)
     add_executable(rpc_server_nested_test
                    ${TEST_ROOT_DIR}/nested_test/server/rpc_server.cpp)
     target_include_directories(
-      rpc_server_nested_test PRIVATE ${TMP_DIR}
+      rpc_server_nested_test PRIVATE ${BUILD_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
     target_link_libraries(
       rpc_server_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
@@ -265,14 +266,14 @@ if(ENABLE_TESTS)
     add_executable(
       rpc_client_nested_test
       ${TEST_ROOT_DIR}/nested_test/client/client.cpp
-      ${TMP_DIR}/rpc_client.cpp
-      ${TMP_DIR}/rpc_client_factory.cpp
+      ${BUILD_DIR}/rpc_client.cpp
+      ${BUILD_DIR}/rpc_client_factory.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
       ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
     target_include_directories(
       rpc_client_nested_test PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                                     ${TMP_DIR})
+                                     ${BUILD_DIR})
     target_link_libraries(
       rpc_client_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
                                      protobuf::libprotobuf)

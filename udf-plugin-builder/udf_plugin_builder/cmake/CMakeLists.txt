@@ -13,6 +13,9 @@ option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
 option(ENABLE_ONEOF_TEST "Build oneof_test" OFF)
 option(ENABLE_NESTED_TEST "Build nested_test" OFF)
 option(ENABLE_1113_TEST "Build 1113_test" OFF)
+if(NOT OUTPUT_DIR OR OUTPUT_DIR STREQUAL "")
+  set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -158,7 +161,7 @@ add_custom_command(
   COMMAND
     ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto-file ${PROTO_FILES}
     --proto-path ${PROTO_PATH} --build-dir ${BUILD_DIR} --name ${NAME}
-    --grpc-endpoint ${GRPC_ENDPOINT} --out ${CMAKE_CURRENT_BINARY_DIR}
+    --grpc-endpoint ${GRPC_ENDPOINT} --output-dir ${OUTPUT_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
   COMMENT "Running generate.py for proto and plugin API generation")
@@ -180,7 +183,11 @@ target_include_directories(${NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
                                            ${BUILD_DIR})
 target_link_libraries(${NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
                                       protobuf::libprotobuf)
-
+if(OUTPUT_DIR)
+  message(STATUS "Setting output directory to ${OUTPUT_DIR}")
+  set_target_properties(${NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                           ${OUTPUT_DIR})
+endif()
 # ============================================================
 # Clean target
 # ============================================================

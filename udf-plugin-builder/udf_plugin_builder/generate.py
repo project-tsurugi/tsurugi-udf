@@ -228,7 +228,7 @@ def parse_args():
         help="gRPC server URL to write into the ini (default: localhost:50051).",
     )
     parser.add_argument(
-        "--out",
+        "--output-dir",
         default=None,
         help="Path to write the generated ini file.",
     )
@@ -311,7 +311,8 @@ def main():
         generate_cpp_from_template(
             packages, TEMPLATES_DIR, template_file, output_path, proto_base_name
         )
-    generate_ini_file(args.name, args.grpc_endpoint, args.out or ".")
+    out_dir = Path(args.output_dir) if args.output_dir else Path.cwd()
+    generate_ini_file(args.name, args.grpc_endpoint, out_dir)
 
 
 if __name__ == "__main__":

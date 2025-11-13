@@ -37,6 +37,11 @@ def parse_args():
     parser.add_argument(
         "--grpc-endpoint", default="localhost:50051", help="gRPC server endpoint"
     )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Path to write the generated ini file.",
+    )
 
     return parser.parse_args()
 
@@ -46,7 +51,7 @@ def main():
 
     script_dir = Path(__file__).resolve().parent
     build_dir = Path.cwd() / args.build_dir
-    out_dir = Path.cwd()
+    out_dir = Path(args.output_dir) if args.output_dir else Path.cwd()
     build_dir_full = build_dir
 
     if build_dir_full.exists():

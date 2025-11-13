@@ -22,7 +22,7 @@ def parse_args():
         help="Path(s) to main .proto file(s)",
     )
     parser.add_argument(
-        "--proto_path", default=None, help="Directory containing .proto files"
+        "--proto-path", default=None, help="Directory containing .proto files"
     )
     parser.add_argument(
         "--tmp", default="tmp", help="Temporary directory for generated files"

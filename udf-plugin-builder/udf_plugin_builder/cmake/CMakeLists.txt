@@ -148,7 +148,7 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TMP_DIR}
   COMMAND
     ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto-file ${PROTO_FILES}
-    --proto_path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
+    --proto-path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
     ${PLUGIN_API_NAME} --grpc-endpoint ${GRPC_ENDPOINT} --out
     ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}

@@ -75,14 +75,14 @@ udf-plugin-builder --proto-file proto/sample.proto proto/complex_types.proto pro
 ### Specify Proto Path
 
 ```bash
-udf-plugin-builder --proto_path proto --proto-file proto/sample.proto
+udf-plugin-builder --proto-path proto --proto-file proto/sample.proto
 ```
 
 ### Full Example
 
 ```bash
 udf-plugin-builder \
-  --proto_path proto \
+  --proto-path proto \
   --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
   --plugin_api_name plugin_api \
   --grpc-endpoint localhost:50051
@@ -93,7 +93,7 @@ udf-plugin-builder \
 | Option | Description | Default |
 | ------------------- | ------------------------------------------------------ | -------------------- |
 | `--proto-file` | Path(s) to `.proto` file(s). Multiple files supported. | `proto/sample.proto` |
-| `--proto_path` | Directory containing `.proto` files. | `None` |
+| `--proto-path` | Directory containing `.proto` files. | `None` |
 | `--plugin_api_name` | Plugin API library name. | `plugin_api` |
 | `--grpc-endpoint` | gRPC server endpoint for communication. | `localhost:50051` |
 | `--build_dir` | Temporary directory used for CMake build. | `tmp/` |

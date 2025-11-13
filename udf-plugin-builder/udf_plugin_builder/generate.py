@@ -203,7 +203,7 @@ def parse_args():
         help="Path(s) to main .proto file(s) (default: sample + complex_types + primitive_types)",
     )
     parser.add_argument(
-        "--proto_path",
+        "--proto-path",
         default="proto",
         help="Directory containing .proto files (default: proto)",
     )

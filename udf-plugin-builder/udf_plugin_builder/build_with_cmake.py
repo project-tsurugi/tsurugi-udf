@@ -4,9 +4,10 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+import sys
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description="Build UDF plugin with CMake (control proto files from Python)"
     )
@@ -31,8 +32,8 @@ def parse_args():
     )
     parser.add_argument(
         "--name",
-        default="plugin_api",
-        help="Base name used for the generated plugin library (.so) and configuration file (.ini). (default: plugin_api)",
+        required=True,
+        help="Base name used for the generated plugin library (.so) and configuration file (.ini).",
     )
     parser.add_argument(
         "--grpc-endpoint", default="localhost:50051", help="gRPC server endpoint"
@@ -43,11 +44,11 @@ def parse_args():
         help="Path to write the generated ini file.",
     )
 
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
-def main():
-    args = parse_args()
+def run(args=None):
+    args = parse_args(args)
 
     script_dir = Path(__file__).resolve().parent
     build_dir = Path.cwd() / args.build_dir
@@ -74,6 +75,7 @@ def main():
     print(f"[INFO] Using proto files: {args.proto_file}")
     print(f"[INFO] Proto path: {proto_path}")
     print(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
+
     # CMake configure
     cmake_cmd = [
         "cmake",
@@ -103,6 +105,10 @@ def main():
     shutil.rmtree(build_dir)
 
     print(f"[INFO] Finished. Files created in {out_dir}: {lib_name}, {ini_name}")
+
+
+def main():
+    run(sys.argv[1:])
 
 
 if __name__ == "__main__":

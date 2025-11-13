@@ -63,19 +63,19 @@ pip install -e .
 ### Basic Command
 
 ```bash
-udf-plugin-builder --proto_file proto/sample.proto
+udf-plugin-builder --proto-file proto/sample.proto
 ```
 
 ### Multiple .proto Files
 
 ```bash
-udf-plugin-builder --proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto
+udf-plugin-builder --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto
 ```
 
 ### Specify Proto Path
 
 ```bash
-udf-plugin-builder --proto_path proto --proto_file proto/sample.proto
+udf-plugin-builder --proto_path proto --proto-file proto/sample.proto
 ```
 
 ### Full Example
@@ -83,7 +83,7 @@ udf-plugin-builder --proto_path proto --proto_file proto/sample.proto
 ```bash
 udf-plugin-builder \
   --proto_path proto \
-  --proto_file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
+  --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
   --plugin_api_name plugin_api \
   --grpc-endpoint localhost:50051
 ```
@@ -92,7 +92,7 @@ udf-plugin-builder \
 
 | Option | Description | Default |
 | ------------------- | ------------------------------------------------------ | -------------------- |
-| `--proto_file` | Path(s) to `.proto` file(s). Multiple files supported. | `proto/sample.proto` |
+| `--proto-file` | Path(s) to `.proto` file(s). Multiple files supported. | `proto/sample.proto` |
 | `--proto_path` | Directory containing `.proto` files. | `None` |
 | `--plugin_api_name` | Plugin API library name. | `plugin_api` |
 | `--grpc-endpoint` | gRPC server endpoint for communication. | `localhost:50051` |

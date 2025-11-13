@@ -12,7 +12,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--proto_file",
+        "--proto-file",
         nargs="+",
         default=[
             "proto/sample.proto",

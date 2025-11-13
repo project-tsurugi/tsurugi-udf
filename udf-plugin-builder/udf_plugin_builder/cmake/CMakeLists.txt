@@ -147,7 +147,7 @@ add_custom_command(
          ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TMP_DIR}
   COMMAND
-    ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto_file ${PROTO_FILES}
+    ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto-file ${PROTO_FILES}
     --proto_path ${PROTO_PATH} --tmp ${TMP_DIR} --plugin_api_name
     ${PLUGIN_API_NAME} --grpc-endpoint ${GRPC_ENDPOINT} --out
     ${CMAKE_CURRENT_BINARY_DIR}

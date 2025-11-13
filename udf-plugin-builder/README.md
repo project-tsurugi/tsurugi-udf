@@ -84,19 +84,20 @@ udf-plugin-builder --proto-path proto --proto-file proto/sample.proto
 udf-plugin-builder \
   --proto-path proto \
   --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
-  --plugin_api_name plugin_api \
+  --name plugin_api \
   --grpc-endpoint localhost:50051
 ```
 
 ## Options
 
 | Option | Description | Default |
-| ------------------- | ------------------------------------------------------ | -------------------- |
-| `--proto-file` | Path(s) to `.proto` file(s). Multiple files supported. | `proto/sample.proto` |
-| `--proto-path` | Directory containing `.proto` files. | `None` |
-| `--plugin_api_name` | Plugin API library name. | `plugin_api` |
-| `--grpc-endpoint` | gRPC server endpoint for communication. | `localhost:50051` |
-| `--build_dir` | Temporary directory used for CMake build. | `tmp/` |
+|-- | -- | --|
+| `--proto-file` | Path(s) to .proto file(s). Multiple files supported. | proto/sample.proto
+| `--proto-path` | Directory containing .proto files. | None
+| `--name` | Base name used for the generated plugin library( .so ) and its configuration file(.ini). | plugin_api
+| `--grpc-endpoint` | gRPC server endpoint for communication. | localhost:50051
+| `--build-dir` | Temporary directory used for the CMake build process. | tmp/|
+| `--output-dir` | Destination directory where the generated .so and .ini files are placed. | . |
 
 ## How to Test
 

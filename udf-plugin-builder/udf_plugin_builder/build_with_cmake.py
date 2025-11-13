@@ -22,16 +22,20 @@ def parse_args():
         help="Path(s) to main .proto file(s)",
     )
     parser.add_argument(
-        "--proto-path", default=None, help="Directory containing .proto files"
+        "--proto-path",
+        default=None,
+        help="Directory containing .proto files (default: automatically inferred from the first .proto file).",
     )
     parser.add_argument(
         "--build-dir", default="tmp", help="Temporary directory for generated files"
     )
     parser.add_argument(
-        "--plugin_api_name", default="plugin_api", help="Name of the plugin API library"
+        "--name",
+        default="plugin_api",
+        help="Base name used for the generated plugin library (.so) and configuration file (.ini). (default: plugin_api)",
     )
     parser.add_argument(
-        "--grpc-endpoint", default="localhost:50051", help="gRPC server URL"
+        "--grpc-endpoint", default="localhost:50051", help="gRPC server endpoint"
     )
 
     return parser.parse_args()
@@ -69,7 +73,7 @@ def main():
         str(script_dir / "cmake"),
         f"-DPROTO_PATH={proto_path}",
         f"-DPROTO_FILES={proto_files_str}",
-        f"-DPLUGIN_API_NAME={args.plugin_api_name}",
+        f"-DNAME={args.name}",
         f"-DBUILD_DIR={build_dir}",
         f"-DGRPC_ENDPOINT={args.grpc_endpoint}",
     ]
@@ -80,8 +84,8 @@ def main():
     print(f"[INFO] Building: {' '.join(build_cmd)}")
     subprocess.check_call(build_cmd)
 
-    lib_name = f"lib{args.plugin_api_name}.so"
-    ini_name = f"lib{args.plugin_api_name}.ini"
+    lib_name = f"lib{args.name}.so"
+    ini_name = f"lib{args.name}.ini"
 
     shutil.copy(build_dir_full / lib_name, out_dir / lib_name)
     shutil.copy(build_dir_full / ini_name, out_dir / ini_name)

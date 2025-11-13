@@ -89,15 +89,15 @@ message(STATUS "Proto path: ${PROTO_PATH}")
 # Plugin API name
 # ============================================================
 if(ENABLE_UNARY_TEST)
-  set(PLUGIN_API_NAME unary_test)
+  set(NAME unary_test)
 elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(PLUGIN_API_NAME load_another)
+  set(NAME load_another)
 elseif(ENABLE_ONEOF_TEST)
-  set(PLUGIN_API_NAME oneof_test)
+  set(NAME oneof_test)
 elseif(ENABLE_NESTED_TEST)
-  set(PLUGIN_API_NAME nested_test)
+  set(NAME nested_test)
 endif()
-message(STATUS "Plugin API library name: ${PLUGIN_API_NAME}")
+message(STATUS "Plugin API library name: ${NAME}")
 
 # ============================================================
 # Paths
@@ -148,9 +148,8 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_DIR}
   COMMAND
     ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto-file ${PROTO_FILES}
-    --proto-path ${PROTO_PATH} --build-dir ${BUILD_DIR} --plugin_api_name
-    ${PLUGIN_API_NAME} --grpc-endpoint ${GRPC_ENDPOINT} --out
-    ${CMAKE_CURRENT_BINARY_DIR}
+    --proto-path ${PROTO_PATH} --build-dir ${BUILD_DIR} --name ${NAME}
+    --grpc-endpoint ${GRPC_ENDPOINT} --out ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
   COMMENT "Running generate.py for proto and plugin API generation")
@@ -167,11 +166,11 @@ set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # ============================================================
 # Plugin API library
 # ============================================================
-add_library(${PLUGIN_API_NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
-target_include_directories(
-  ${PLUGIN_API_NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${BUILD_DIR})
-target_link_libraries(${PLUGIN_API_NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                                 protobuf::libprotobuf)
+add_library(${NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
+target_include_directories(${NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                                           ${BUILD_DIR})
+target_link_libraries(${NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
+                                      protobuf::libprotobuf)
 
 # ============================================================
 # Clean target

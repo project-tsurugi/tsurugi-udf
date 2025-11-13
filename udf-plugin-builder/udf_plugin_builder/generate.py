@@ -218,7 +218,7 @@ def parse_args():
         help="Path to write descriptor.pb (default: <tmp>/descriptor.pb)",
     )
     parser.add_argument(
-        "--plugin_api_name",
+        "--name",
         default="plugin_api",
         help="Name of the generated plugin API library (used to name the ini: lib<name>.ini).",
     )
@@ -311,7 +311,7 @@ def main():
         generate_cpp_from_template(
             packages, TEMPLATES_DIR, template_file, output_path, proto_base_name
         )
-    generate_ini_file(args.plugin_api_name, args.grpc_endpoint, args.out or ".")
+    generate_ini_file(args.name, args.grpc_endpoint, args.out or ".")
 
 
 if __name__ == "__main__":

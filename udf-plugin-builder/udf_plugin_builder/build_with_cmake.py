@@ -52,6 +52,11 @@ def main():
     script_dir = Path(__file__).resolve().parent
     build_dir = Path.cwd() / args.build_dir
     out_dir = Path(args.output_dir) if args.output_dir else Path.cwd()
+    if args.output_dir:
+        if not out_dir.exists():
+            raise FileNotFoundError(f"--output-dir '{out_dir}' does not exist.")
+        if not out_dir.is_dir():
+            raise NotADirectoryError(f"--output-dir '{out_dir}' is not a directory.")
     build_dir_full = build_dir
 
     if build_dir_full.exists():

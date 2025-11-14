@@ -63,19 +63,19 @@ pip install -e .
 ### Basic Command
 
 ```bash
-udf-plugin-builder --proto-file proto/sample.proto
+udf-plugin-builder --proto-file proto/sample.proto --name plugin_api
 ```
 
 ### Multiple .proto Files
 
 ```bash
-udf-plugin-builder --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto
+udf-plugin-builder --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto --name plugin_api
 ```
 
 ### Specify Proto Path
 
 ```bash
-udf-plugin-builder --proto-path proto --proto-file proto/sample.proto
+udf-plugin-builder --proto-path proto --proto-file proto/sample.proto --name plugin_api
 ```
 
 ### Full Example
@@ -90,14 +90,14 @@ udf-plugin-builder \
 
 ## Options
 
-| Option | Description | Default |
-|-- | -- | --|
-| `--proto-file` | Path(s) to .proto file(s). Multiple files supported. | proto/sample.proto
-| `--proto-path` | Directory containing .proto files. | None
-| `--name` | Base name used for the generated plugin library( .so ) and its configuration file(.ini). | plugin_api
-| `--grpc-endpoint` | gRPC server endpoint for communication. | localhost:50051
-| `--build-dir` | Temporary directory used for the CMake build process. | tmp/|
-| `--output-dir` | Destination directory where the generated .so and .ini files are placed. | . |
+| Option | Description | Default | Required |
+|--------|-------------|---------|----------|
+| `--proto-file` | Path(s) to .proto file(s). Multiple files supported. | None | **Yes** |
+| `--proto-path` | Directory containing .proto files. | first proto file | No |
+| `--name` | Base name used for the generated plugin library (.so) and its configuration file (.ini). | None | **Yes** |
+| `--grpc-endpoint` | gRPC server endpoint for communication. | localhost:50051 | No |
+| `--build-dir` | Temporary directory used for the CMake build process. | tmp/ | No |
+| `--output-dir` | Destination directory where the generated .so and .ini files are placed. | . | No |
 
 ## How to Test
 

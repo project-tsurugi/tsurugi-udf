@@ -106,8 +106,8 @@ rpc_client::rpc_client(std::shared_ptr<grpc::Channel> channel)
 {% endfor %}
     :
 {% for pkg_name, svc_name in stubs %}
-    {{ pkg_name }}_{{ svc_name }}_stub_(
-        {{ pkg_name }}::{{ svc_name }}::NewStub(channel)
+    {{ pkg_name | replace('.', '_') }}_{{ svc_name }}_stub_(
+        {{ pkg_name | replace('.', '::') }}::{{ svc_name }}::NewStub(channel)
     ){% if not loop.last %},{% endif %}
 {% endfor %}
 {}
@@ -139,7 +139,7 @@ void rpc_client::call(ClientContext& context,
             {{ emit_setters("req", fn.input_record, "", False) }}
 
             // Call
-            Status status = {{ pkg.package_name }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
+            Status status = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
 
             if (status.ok()) {
                 // Write response into generic_record (nested -> flatten)

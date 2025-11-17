@@ -22,6 +22,6 @@ class rpc_client : public generic_client {
     {% endfor %}
 {% endfor %}
 {% for pkg_name, svc_name in stubs %}
-    std::unique_ptr<{{ pkg_name }}::{{ svc_name }}::Stub> {{ pkg_name }}_{{ svc_name }}_stub_;
+    std::unique_ptr<{{ pkg_name | replace('.', '::') }}::{{ svc_name }}::Stub> {{ pkg_name | replace('.', '_') }}_{{ svc_name }}_stub_;
 {% endfor %}
 };

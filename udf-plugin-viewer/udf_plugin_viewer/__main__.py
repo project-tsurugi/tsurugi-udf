@@ -14,6 +14,7 @@
 import os
 import sys
 import json
+from pathlib import Path
 
 from udf_plugin_viewer.descriptors import (
     PackageDescriptor,
@@ -30,7 +31,23 @@ def main():
         print(f"Usage: {os.path.basename(sys.argv[0])} <path_to_plugin.so>")
         sys.exit(1)
 
-    path = sys.argv[1]
-    packages = udf_plugin.load_plugin(path)
-    json_output = json.dumps(packages, indent=2)
+    path = Path(sys.argv[1])
+    so_files = []
+    if path.is_dir():
+        for p in path.iterdir():
+            if p.is_file() and p.suffix == ".so":
+                so_files.append(str(p))
+        if not so_files:
+            print(f"No .so files found in directory: {path}")
+            sys.exit(1)
+    elif path.is_file():
+        so_files.append(str(path))
+    else:
+        print(f"Error: {path} is neither file nor directory")
+        sys.exit(1)
+    all_packages = []
+    for so in sorted(so_files):
+        packages = udf_plugin.load_plugin(so)
+        all_packages.extend(packages)
+    json_output = json.dumps(all_packages, indent=2)
     print(json_output)

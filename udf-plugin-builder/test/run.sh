@@ -4,7 +4,7 @@ set -euo pipefail
 
 status=0
 OUT_DIR=${1:-$(pwd)}
-LIST=(load_another unary_test oneof_test nested_test 1113)
+LIST=(load_another unary_test oneof_test nested_test 1113 package_test)
 pids=()
 
 cleanup() {

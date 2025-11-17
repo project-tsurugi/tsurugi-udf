@@ -5,3 +5,10 @@ udf-plugin-builder/test/build/
 udf-plugin-builder/test/unary_test/build
 udf-plugin-builder/test/load_another/build
 udf-plugin-builder/test/oneof_test/build
+common/build/
+common/tsurugi_udf_common.egg-info/
+udf-plugin-builder/udf_plugin_builder.egg-info/
+udf-plugin-viewer/build
+udf-plugin-builder/tests/__pycache__
+udf-plugin-viewer/udf_plugin_viewer/descriptors.py
+udf-plugin-viewer/udf_plugin_viewer/*.so

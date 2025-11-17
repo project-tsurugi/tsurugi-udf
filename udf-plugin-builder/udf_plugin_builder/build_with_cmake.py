@@ -28,7 +28,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         "--name",
-        required=True,
+        required=False,
         help="Base name used for the generated plugin library (.so) and configuration file (.ini).",
     )
     parser.add_argument(
@@ -56,6 +56,12 @@ def run(args=None):
             raise NotADirectoryError(f"--output-dir '{out_dir}' is not a directory.")
     build_dir_full = build_dir
 
+    name = ""
+    if args.name:
+        name = args.name
+    else:
+        first_proto = Path(args.proto_file[0])
+        name = first_proto.stem
     if build_dir_full.exists():
         shutil.rmtree(build_dir_full)
     build_dir_full.mkdir(parents=True)
@@ -81,7 +87,7 @@ def run(args=None):
         str(script_dir / "cmake"),
         f"-DPROTO_PATH={proto_path}",
         f"-DPROTO_FILES={proto_files_str}",
-        f"-DNAME={args.name}",
+        f"-DNAME={name}",
         f"-DBUILD_DIR={build_dir}",
         f"-DGRPC_ENDPOINT={args.grpc_endpoint}",
     ]
@@ -92,8 +98,8 @@ def run(args=None):
     print(f"[INFO] Building: {' '.join(build_cmd)}")
     subprocess.check_call(build_cmd)
 
-    lib_name = f"lib{args.name}.so"
-    ini_name = f"lib{args.name}.ini"
+    lib_name = f"lib{name}.so"
+    ini_name = f"lib{name}.ini"
 
     shutil.copy(build_dir_full / lib_name, out_dir / lib_name)
     shutil.copy(build_dir_full / ini_name, out_dir / ini_name)

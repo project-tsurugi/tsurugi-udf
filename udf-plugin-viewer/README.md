@@ -11,7 +11,7 @@ ______________________________________________________________________
 
 ## Features
 
-- Load and inspect a compiled .so UDF plugin file
+- Load and inspect a compiled .so UDF plugin file and directory
 - Display plugin metadata: packages, services, functions, input/output types
 - Provide human-readable summary of plugin structure
 - Useful for debugging, validation, or documentation of UDF plugins
@@ -34,6 +34,7 @@ ______________________________________________________________________
 | **pybind11** | Latest | C++/Python binding library |
 | **scikit-build-core** | Latest | CMake-based Python build tool |
 | **nlohmann_json** | Latest | JSON support |
+
 ______________________________________________________________________
 
 ## Installation

@@ -117,7 +117,9 @@ message(STATUS "Plugin API library name: ${NAME}")
 # ============================================================
 # Paths
 # ============================================================
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/tmp)
+if(NOT DEFINED BUILD_DIR)
+  set(BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/tmp")
+endif()
 
 # ============================================================
 # gRPC URL (test-specific)

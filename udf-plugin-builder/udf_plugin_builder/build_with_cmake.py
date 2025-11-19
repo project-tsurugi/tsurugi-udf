@@ -54,8 +54,23 @@ def run(args=None):
             raise FileNotFoundError(f"--output-dir '{out_dir}' does not exist.")
         if not out_dir.is_dir():
             raise NotADirectoryError(f"--output-dir '{out_dir}' is not a directory.")
-    build_dir_full = build_dir
-
+    build_dir_full = build_dir.resolve()
+    if build_dir_full == out_dir.resolve():
+        raise RuntimeError(
+            f"--build-dir '{build_dir_full}' must not be the same as --output-dir."
+        )
+    if hasattr(out_dir.resolve(), "is_relative_to"):
+        # Python 3.9+
+        if out_dir.resolve().is_relative_to(build_dir_full):
+            raise RuntimeError(
+                f"--output-dir '{out_dir.resolve()}' must not be inside --build-dir '{build_dir_full}'."
+            )
+    else:
+        # Python 3.8 and below
+        if build_dir_full in out_dir.resolve().parents:
+            raise RuntimeError(
+                f"--output-dir '{out_dir.resolve()}' must not be inside --build-dir '{build_dir_full}'."
+            )
     name = ""
     if args.name:
         name = args.name

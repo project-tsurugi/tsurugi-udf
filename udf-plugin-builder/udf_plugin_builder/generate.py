@@ -564,12 +564,23 @@ def generate_ini_file(plugin_name: str, grpc_endpoint: str, out_dir: str):
     return ini_path
 
 
+def check_no_oneof(record: RecordDescriptor, fn_name: str):
+    for col in record.columns:
+        if col.oneof_index is not None or col.oneof_name is not None:
+            raise ValueError(
+                f"oneof is not allowed in output record.\n"
+                f"Function: {fn_name}\n"
+                f"Column: index={col.index}, name='{col.column_name}', "
+                f"oneof_index={col.oneof_index}, oneof_name={col.oneof_name}"
+            )
+
+
 def check_forbidden_function_names(packages):
     forbidden = TSURUGI_RESERVED_KEYWORDS
-
     for pkg in packages:
         for svc in pkg.services:
             for fn in svc.functions:
+                check_no_oneof(fn.output_record, fn.function_name)
                 if fn.function_name.lower() in forbidden:
                     raise ValueError(
                         f"Function name '{fn.function_name}' is forbidden because "

@@ -93,6 +93,15 @@ def run(args=None):
     print(f"[INFO] Proto path: {proto_path}")
     print(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
 
+    build_type_env = os.environ.get("BUILD_TYPE", "").strip()
+    if not build_type_env:
+        build_type = "Release"
+    else:
+        build_type = build_type_env.capitalize()
+    if build_type not in ("Debug", "Release"):
+        raise RuntimeError(
+            f"Invalid build type: {build_type}. Must be Debug or Release."
+        )
     # CMake configure
     cmake_cmd = [
         "cmake",
@@ -105,13 +114,27 @@ def run(args=None):
         f"-DNAME={name}",
         f"-DBUILD_DIR={build_dir}",
         f"-DGRPC_ENDPOINT={args.grpc_endpoint}",
+        f"-DCMAKE_BUILD_TYPE={build_type}",
     ]
-    print(f"[CMD] {' '.join(cmake_cmd)}")
-    subprocess.check_call(cmake_cmd)
+    if build_type == "Release":
+        cmake_cmd.append("-Wno-dev")
+        subprocess.check_call(
+            cmake_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+    else:
+        print(f"[CMD] {' '.join(cmake_cmd)}")
+        subprocess.check_call(cmake_cmd)
 
     build_cmd = ["cmake", "--build", str(build_dir_full), "--", "-j"]
-    print(f"[INFO] Building: {' '.join(build_cmd)}")
-    subprocess.check_call(build_cmd)
+    if build_type == "Release":
+        build_cmd.append("--quiet")
+        try:
+            subprocess.check_call(build_cmd, stdout=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            sys.exit(1)
+    else:
+        print(f"[INFO] Building: {' '.join(build_cmd)}")
+        subprocess.check_call(build_cmd)
 
     lib_name = f"lib{name}.so"
     ini_name = f"lib{name}.ini"

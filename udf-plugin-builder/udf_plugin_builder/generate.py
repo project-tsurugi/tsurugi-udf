@@ -39,6 +39,30 @@ Version = descriptors.Version
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, "templates")
 
+
+def get_build_type() -> str:
+    """Return normalized build type: 'Debug' or 'Release'. Default is 'Release'."""
+    val = os.environ.get("BUILD_TYPE", "").strip().lower()
+    if val == "debug":
+        return "Debug"
+    else:
+        # empty or anything else -> Release
+        return "Release"
+
+
+BUILD_TYPE = get_build_type()
+DEBUG = BUILD_TYPE == "Debug"
+
+
+def is_release_build() -> bool:
+    return BUILD_TYPE == "Release"
+
+
+def log(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)
+
+
 # @see https://github.com/project-tsurugi/tsurugidb/blob/master/docs/sql-features.md#reserved-words
 TSURUGI_RESERVED_KEYWORDS = {
     "abs",
@@ -325,7 +349,7 @@ def field_type_to_kind(field) -> str:
 def find_grpc_cpp_plugin():
     plugin = shutil.which("grpc_cpp_plugin")
     if plugin is None:
-        print("[ERROR] grpc_cpp_plugin not found in PATH.")
+        print("\033[91m[ERROR]\033[0m grpc_cpp_plugin not found in PATH.")
         sys.exit(1)
     return plugin
 
@@ -349,8 +373,13 @@ def run_protoc(proto_files, proto_path, build_dir, descriptor_set_out=None):
     ]
     protoc_cmd.extend(proto_files)
 
-    print("[INFO] Running protoc:", " ".join(str(x) for x in protoc_cmd))
-    subprocess.check_call(protoc_cmd)
+    log("[INFO] Running protoc:", " ".join(str(x) for x in protoc_cmd))
+    if DEBUG:
+        subprocess.check_call(protoc_cmd)
+    else:
+        subprocess.check_call(
+            protoc_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
     return descriptor_set_out
 
 
@@ -564,15 +593,24 @@ def generate_ini_file(plugin_name: str, grpc_endpoint: str, out_dir: str):
     return ini_path
 
 
+def handle_value_error(e: ValueError):
+    if DEBUG:
+        raise e
+    else:
+        print(f"\033[91m[ERROR]\033[0m {e}", file=sys.stderr)
+        os._exit(1)
+
+
 def check_no_oneof(record: RecordDescriptor, fn_name: str):
     for col in record.columns:
         if col.oneof_index is not None or col.oneof_name is not None:
-            raise ValueError(
+            e = ValueError(
                 f"oneof is not allowed in output record.\n"
-                f"Function: {fn_name}\n"
-                f"Column: index={col.index}, name='{col.column_name}', "
+                f"  Function: {fn_name}\n"
+                f"  Column: index={col.index}, name='{col.column_name}', "
                 f"oneof_index={col.oneof_index}, oneof_name={col.oneof_name}"
             )
+            handle_value_error(e)
 
 
 def check_forbidden_function_names(packages):
@@ -582,11 +620,12 @@ def check_forbidden_function_names(packages):
             for fn in svc.functions:
                 check_no_oneof(fn.output_record, fn.function_name)
                 if fn.function_name.lower() in forbidden:
-                    raise ValueError(
-                        f"Function name '{fn.function_name}' is forbidden because "
-                        f"it is a reserved keyword in Tsurugi. "
-                        f"(service: '{svc.service_name}', package: '{pkg.package_name}')"
+                    e = ValueError(
+                        f"Function name '{fn.function_name}' is forbidden because it is a reserved keyword in Tsurugi.\n"
+                        f"  Service: {svc.service_name}\n"
+                        f"  Package: {pkg.package_name}"
                     )
+                    handle_value_error(e)
 
 
 def main():

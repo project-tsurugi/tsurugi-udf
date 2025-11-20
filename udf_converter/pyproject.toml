@@ -1,0 +1,20 @@
+[build-system]
+requires = [
+    "setuptools>=65.0",
+    "wheel>=0.38",
+    "grpcio-tools>=1.56"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "udf_converter"
+version = "0.1.0"
+description = "UDF type converter for TsurugiDB"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "protobuf>=4.24",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

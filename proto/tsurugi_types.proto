@@ -1,5 +1,8 @@
 syntax = "proto3";
 package tsurugidb.udf;
+
+option java_package = "com.tsurugidb.udf";
+
 // buf format -w
 message Decimal {
   // the signed unscaled value (2's complement, big endian).

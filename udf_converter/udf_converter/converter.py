@@ -1,5 +1,5 @@
 from decimal import Decimal
-from .tsurugi_types_pb2 import Decimal as PbDecimal
+from .tsurugi_types_c4c2090500a0eacbc6950e80b7923136_pb2 import Decimal as PbDecimal
 
 
 def to_pb_decimal(value: Decimal) -> PbDecimal:

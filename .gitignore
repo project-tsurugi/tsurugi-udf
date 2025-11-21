@@ -12,3 +12,6 @@ udf-plugin-viewer/build
 udf-plugin-builder/tests/__pycache__
 udf-plugin-viewer/udf_plugin_viewer/descriptors.py
 udf-plugin-viewer/udf_plugin_viewer/*.so
+udf_converter/build
+udf_converter/udf_converter.egg-info
+

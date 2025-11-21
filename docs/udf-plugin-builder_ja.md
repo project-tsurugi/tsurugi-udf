@@ -83,7 +83,7 @@ ______________________________________________________________________
 
 - `syntax = "proto3";` を必ず指定する
 - `package tsurugidb` 以下にメッセージを定義してはいけない
-- `message` 通常はネスト不可。tsurugidb.udf.value パッケージで使用される型なら**第二階層まで** 定義可能（第三階層以降は非対応）
+- `message` 通常はネスト不可。tsurugidb.udf パッケージで使用される型なら**第二階層まで** 定義可能（第三階層以降は非対応）
 - `repeated` は利用不可（将来対応予定）
 - `oneof` は利用可
 - `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）
@@ -105,27 +105,27 @@ ______________________________________________________________________
 | `DOUBLE` | double ||
 | `CHAR` / `VARCHAR` / `CHARACTER` / `CHARACTER VARYING` | string ||
 | `BINARY` / `VARBINARY` / `BINARY VARYING` | bytes ||
-| DATE | tsurugidb.udf.value.Date | 日付 |
-| TIME | tsurugidb.udf.value.LocalTime | ローカル時刻 |
-| TIMESTAMP | tsurugidb.udf.value.LocalDatetime | ローカル日時 |
-| TIMESTAMP WITH TIME ZONE | tsurugidb.udf.value.OffsetDatetime | タイムゾーン付き日時 |
-| BLOB | tsurugidb.udf.value.BlobReference | BLOB参照 |
-| CLOB | tsurugidb.udf.value.ClobReference | CLOB参照 |
+| DATE | tsurugidb.udf.Date | 日付 |
+| TIME | tsurugidb.udf.LocalTime | ローカル時刻 |
+| TIMESTAMP | tsurugidb.udf.LocalDatetime | ローカル日時 |
+| TIMESTAMP WITH TIME ZONE | tsurugidb.udf.OffsetDatetime | タイムゾーン付き日時 |
+| BLOB | tsurugidb.udf.BlobReference | BLOB参照 |
+| CLOB | tsurugidb.udf.ClobReference | CLOB参照 |
 
 ______________________________________________________________________
 
-### tsurugidb.udf.value 配下のデータ型定義について
+### tsurugidb.udf 配下のデータ型定義について
 
-`tsurugidb.udf.value` パッケージには、UDF 関数における複合型（`DECIMAL`、`DATE`、`TIME`、`TIMESTAMP` など）を表現するための **特定のデータ型定義** が用意されています。\
-利用可能なデータ型は以下の 7 種類に限定されています。これ以外の型を `tsurugidb.udf.value` 配下に新規定義したり、別の型を参照することはできません。
+`tsurugidb.udf` パッケージには、UDF 関数における複合型（`DECIMAL`、`DATE`、`TIME`、`TIMESTAMP` など）を表現するための **特定のデータ型定義** が用意されています。\
+利用可能なデータ型は以下の 7 種類に限定されています。これ以外の型を `tsurugidb.udf` 配下に新規定義したり、別の型を参照することはできません。
 
-- `tsurugidb.udf.value.Decimal`
-- `tsurugidb.udf.value.Date`
-- `tsurugidb.udf.value.LocalTime`
-- `tsurugidb.udf.value.LocalDatetime`
-- `tsurugidb.udf.value.OffsetDatetime`
-- `tsurugidb.udf.value.BlobReference`
-- `tsurugidb.udf.value.ClobReference`
+- `tsurugidb.udf.Decimal`
+- `tsurugidb.udf.Date`
+- `tsurugidb.udf.LocalTime`
+- `tsurugidb.udf.LocalDatetime`
+- `tsurugidb.udf.OffsetDatetime`
+- `tsurugidb.udf.BlobReference`
+- `tsurugidb.udf.ClobReference`
 
 #### Decimal
 
@@ -320,14 +320,14 @@ select echooneof(v1,v2,v3,v4) from a3;
 select echooneof(v1,v2,v3,v4) from a4;
 ```
 
-## 例3 tsurugidb.udf.value配下の利用
+## 例3 tsurugidb.udf配下の利用
 
 proto/complex_types.proto
 
 ```
 syntax = "proto3";
 
-package tsurugidb.udf.value;
+package tsurugidb.udf;
 
 message Decimal {
   bytes unscaled_value = 1;
@@ -342,7 +342,7 @@ syntax = "proto3";
 
 import "complex_types.proto";
 service Nested {
-  rpc DecimalOne(tsurugidb.udf.value.Decimal) returns (SimpleValue);
+  rpc DecimalOne(tsurugidb.udf.Decimal) returns (SimpleValue);
 }
 message SimpleValue {
   string value = 1;

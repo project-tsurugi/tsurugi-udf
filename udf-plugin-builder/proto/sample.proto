@@ -12,7 +12,7 @@ service Greeter {
 }
 service Byer {
   rpc SayWorld(StringValue) returns (StringValue);
-  rpc DecDecimal(tsurugidb.udf.value.Decimal) returns (tsurugidb.udf.value.LocalTime);
+  rpc DecDecimal(tsurugidb.udf.Decimal) returns (tsurugidb.udf.LocalTime);
 }
 message Bye {
   string value = 1;

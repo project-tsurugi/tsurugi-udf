@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tsurugidb.udf.value;
+package tsurugidb.udf;
 
 message Decimal {
   bytes unscaled_value = 1;

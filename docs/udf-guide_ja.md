@@ -72,7 +72,7 @@ service GreetingService {
 
 - `syntax = "proto3";` を必ず指定する
 - `package tsurugidb` 以下にメッセージを定義してはいけない
-- `message` 通常はネスト不可。tsurugidb.udf.value パッケージで使用される型なら**第二階層まで** 定義可能（第三階層以降は非対応）
+- `message` 通常はネスト不可。tsurugidb.udf パッケージで使用される型なら**第二階層まで** 定義可能（第三階層以降は非対応）
 - `repeated` は利用不可（将来対応予定）
 - `oneof` は利用可
 - `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）

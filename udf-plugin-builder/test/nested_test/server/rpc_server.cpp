@@ -23,7 +23,7 @@ class NestedImpl final : public Nested::Service {
         return Status::OK;
     }
     Status
-    DecimalOne(ServerContext* context, const tsurugidb::udf::value::Decimal* request, SimpleValue* reply) override {
+    DecimalOne(ServerContext* context, const tsurugidb::udf::Decimal* request, SimpleValue* reply) override {
         std::cout << "[DecimalOne]" << std::endl;
         std::cout << " unscaled_value : " << request->unscaled_value() << "\n exponent: " << request->exponent()
                   << std::endl;
@@ -42,7 +42,7 @@ class NestedImpl final : public Nested::Service {
         return Status::OK;
     }
     Status
-    DateOne(ServerContext* context, const tsurugidb::udf::value::Date* request, tsurugidb::udf::value::Date* reply)
+    DateOne(ServerContext* context, const tsurugidb::udf::Date* request, tsurugidb::udf::Date* reply)
         override {
         std::cout << "[DateOne]" << std::endl;
         std::cout << " days : " << request->days() << std::endl;
@@ -50,7 +50,7 @@ class NestedImpl final : public Nested::Service {
         reply->set_days(request->days());
         return Status::OK;
     }
-    Status DateTwo(ServerContext* context, const AddDate* request, tsurugidb::udf::value::Date* reply) override {
+    Status DateTwo(ServerContext* context, const AddDate* request, tsurugidb::udf::Date* reply) override {
         std::cout << "[DateTwo]" << std::endl;
         std::cout << " value : " << request->value() << std::endl;
         std::cout << " days  : " << request->dec().days() << std::endl;
@@ -59,8 +59,8 @@ class NestedImpl final : public Nested::Service {
     }
     Status LocalTimeOne(
         ServerContext* context,
-        const tsurugidb::udf::value::LocalTime* request,
-        tsurugidb::udf::value::LocalTime* reply
+        const tsurugidb::udf::LocalTime* request,
+        tsurugidb::udf::LocalTime* reply
     ) override {
         std::cout << "[LocalTimeOne]" << std::endl;
         std::cout << " nanos : " << request->nanos() << std::endl;
@@ -68,7 +68,7 @@ class NestedImpl final : public Nested::Service {
         reply->set_nanos(request->nanos());
         return Status::OK;
     }
-    Status LocalTimeTwo(ServerContext* context, const AddLocalTime* request, tsurugidb::udf::value::LocalTime* reply)
+    Status LocalTimeTwo(ServerContext* context, const AddLocalTime* request, tsurugidb::udf::LocalTime* reply)
         override {
         std::cout << "[LocalTimeTwo]" << std::endl;
         std::cout << " value : " << request->value() << std::endl;
@@ -79,8 +79,8 @@ class NestedImpl final : public Nested::Service {
     }
     Status LocalDatetimeOne(
         ServerContext* context,
-        const tsurugidb::udf::value::LocalDatetime* request,
-        tsurugidb::udf::value::LocalDatetime* reply
+        const tsurugidb::udf::LocalDatetime* request,
+        tsurugidb::udf::LocalDatetime* reply
     ) override {
         std::cout << "[LocalDatetimeOne]" << std::endl;
         std::cout << " offset_seconds : " << request->offset_seconds() << std::endl;
@@ -92,7 +92,7 @@ class NestedImpl final : public Nested::Service {
     Status LocalDatetimeTwo(
         ServerContext* context,
         const AddLocalDatetime* request,
-        tsurugidb::udf::value::LocalDatetime* reply
+        tsurugidb::udf::LocalDatetime* reply
     ) override {
         std::cout << "[LocalDatetimeTwo]" << std::endl;
         std::cout << " dec->offset_seconds() : " << request->dec().offset_seconds() << std::endl;
@@ -105,8 +105,8 @@ class NestedImpl final : public Nested::Service {
 
     Status OffsetDatetimeOne(
         ServerContext* context,
-        const tsurugidb::udf::value::OffsetDatetime* request,
-        tsurugidb::udf::value::OffsetDatetime* reply
+        const tsurugidb::udf::OffsetDatetime* request,
+        tsurugidb::udf::OffsetDatetime* reply
     ) override {
         std::cout << "[OffsetDatetimeOne]" << std::endl;
         std::cout << " offset_seconds : " << request->offset_seconds() << std::endl;
@@ -119,8 +119,8 @@ class NestedImpl final : public Nested::Service {
     }
     Status BlobReferenceOne(
         ServerContext* context,
-        const tsurugidb::udf::value::BlobReference* request,
-        tsurugidb::udf::value::BlobReference* reply
+        const tsurugidb::udf::BlobReference* request,
+        tsurugidb::udf::BlobReference* reply
     ) override {
         std::cout << "[BlobReferenceOne]" << std::endl;
         std::cout << " storage_id : " << request->storage_id() << std::endl;
@@ -133,8 +133,8 @@ class NestedImpl final : public Nested::Service {
     }
     Status ClobReferenceOne(
         ServerContext* context,
-        const tsurugidb::udf::value::ClobReference* request,
-        tsurugidb::udf::value::ClobReference* reply
+        const tsurugidb::udf::ClobReference* request,
+        tsurugidb::udf::ClobReference* reply
     ) override {
         std::cout << "[ClobReferenceOne]" << std::endl;
         std::cout << " storage_id : " << request->storage_id() << std::endl;

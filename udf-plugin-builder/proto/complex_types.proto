@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tsurugidb.udf.value;
+package tsurugidb.udf;
 
 message Decimal {
     // the signed unscaled value (2's complement, big endian).

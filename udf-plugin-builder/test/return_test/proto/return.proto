@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+import "tsurugi_types.proto";
+
+service Rec {
+  rpc inc_decimal(DecimalMessage) returns (DecimalMessage);
+  rpc inc_date(DateMessage) returns (DateMessage);
+  rpc inc_local_time(LocalTimeMessage) returns (LocalTimeMessage);
+  rpc inc_local_date_time(LocalDatetimeMessage) returns (LocalDatetimeMessage);
+  rpc inc_offset_date_time(OffsetDatetimeMessage) returns (OffsetDatetimeMessage);
+  rpc inc_blob_referece(BlobReferenceMessage) returns (BlobReferenceMessage);
+  rpc inc_clob_referece(ClobReferenceMessage) returns (ClobReferenceMessage);
+}
+message DecimalMessage {
+  tsurugidb.udf.Decimal value = 1;
+}
+message DateMessage {
+  tsurugidb.udf.Date date = 1;
+}
+message LocalTimeMessage {
+  tsurugidb.udf.LocalTime time = 1;
+}
+message LocalDatetimeMessage {
+  tsurugidb.udf.LocalDatetime ldm =1;
+}
+message OffsetDatetimeMessage {
+  tsurugidb.udf.OffsetDatetime od =1;
+}
+message BlobReferenceMessage {
+  tsurugidb.udf.BlobReference br =1;
+}
+message ClobReferenceMessage {
+  tsurugidb.udf.ClobReference cr =1;
+}

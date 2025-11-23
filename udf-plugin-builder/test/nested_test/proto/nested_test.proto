@@ -5,15 +5,15 @@ service Nested {
   rpc NestedHello(SimpleValue) returns (SimpleValue);
   rpc DecimalOne(tsurugidb.udf.Decimal) returns (SimpleValue);
   rpc DecimalTwo(AddDecimal) returns (SimpleValue);
-  rpc DateOne(tsurugidb.udf.Date) returns (tsurugidb.udf.Date);
-  rpc DateTwo(AddDate) returns (tsurugidb.udf.Date);
-  rpc LocalTimeOne(tsurugidb.udf.LocalTime) returns (tsurugidb.udf.LocalTime);
-  rpc LocalTimeTwo(AddLocalTime) returns (tsurugidb.udf.LocalTime);
-  rpc LocalDatetimeOne(tsurugidb.udf.LocalDatetime) returns (tsurugidb.udf.LocalDatetime);
-  rpc LocalDatetimeTwo(AddLocalDatetime) returns (tsurugidb.udf.LocalDatetime);
-  rpc OffsetDatetimeOne(tsurugidb.udf.OffsetDatetime) returns (tsurugidb.udf.OffsetDatetime);
-  rpc BlobReferenceOne(tsurugidb.udf.BlobReference) returns (tsurugidb.udf.BlobReference);
-  rpc ClobReferenceOne(tsurugidb.udf.ClobReference) returns (tsurugidb.udf.ClobReference);
+  rpc DateOne(tsurugidb.udf.Date) returns (WrapDate);
+  rpc DateTwo(AddDate) returns (WrapDate);
+  rpc LocalTimeOne(tsurugidb.udf.LocalTime) returns (WrapLocalTime);
+  rpc LocalTimeTwo(AddLocalTime) returns (WrapLocalTime);
+  rpc LocalDatetimeOne(tsurugidb.udf.LocalDatetime) returns (WrapLocalDatetime);
+  rpc LocalDatetimeTwo(AddLocalDatetime) returns (WrapLocalDatetime);
+  rpc OffsetDatetimeOne(tsurugidb.udf.OffsetDatetime) returns (WrapOffsetDatetime);
+  rpc BlobReferenceOne(tsurugidb.udf.BlobReference) returns (WrapBlobReference);
+  rpc ClobReferenceOne(tsurugidb.udf.ClobReference) returns (WrapClobReference);
 }
 message SimpleValue {
   string value = 1;
@@ -26,7 +26,24 @@ message AddDate {
   string value = 1;
   tsurugidb.udf.Date dec = 2;
 }
-
+message WrapDate {
+  tsurugidb.udf.Date value = 1;
+}
+message WrapLocalTime {
+  tsurugidb.udf.LocalTime lt = 1;
+}
+message WrapLocalDatetime {
+  tsurugidb.udf.LocalDatetime ld = 1;
+}
+message WrapOffsetDatetime {
+  tsurugidb.udf.OffsetDatetime od = 1;
+}
+message WrapBlobReference {
+  tsurugidb.udf.BlobReference br = 1;
+}
+message WrapClobReference {
+  tsurugidb.udf.ClobReference cr = 1;
+}
 message AddLocalTime {
   string value = 1;
   tsurugidb.udf.LocalTime dec = 2;

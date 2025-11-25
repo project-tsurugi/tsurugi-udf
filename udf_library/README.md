@@ -1,12 +1,12 @@
 # UDF Converter
 
-`udf_converter` is a Python library for converting between Python native types and `Tsurugi's` protobuf types (`tsurugidb.udf.*`).
+`udf_library` is a Python library for converting between Python native types and `Tsurugi's` protobuf types (`tsurugidb.udf.*`).
 
 Currently, the following type conversion is supported:
 
 | Protobuf Type              | Python Type       | Protobuf -> Python   | Python -> Protobuf   |
 |----------------------------|-----------------|-------------------|-------------------|
-| tsurugidb.udf.value.Decimal | decimal.Decimal | `from_pb_decimal`  | `to_pb_decimal`    |
+| tsurugidb.udf.Decimal | decimal.Decimal | `from_pb_decimal`  | `to_pb_decimal`    |
 
 ## Requirements
 

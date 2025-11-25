@@ -1,4 +1,4 @@
-# UDF Converter
+# UDF Library
 
 `udf_library` is a Python library for converting between Python native types and `Tsurugi's` protobuf types (`tsurugidb.udf.*`).
 

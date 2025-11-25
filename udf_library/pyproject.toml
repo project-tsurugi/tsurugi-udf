@@ -1,0 +1,18 @@
+[build-system]
+#ruff format pyproject.toml
+requires = ["setuptools>=65.0.0", "wheel", "protobuf>=4.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tsurugi-udf-library"
+version = "0.1.0"
+description = "Tsurugi UDF Python library (models)"
+authors = [{ name = "You" }]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["protobuf>=4.0.0"]
+
+[tool.setuptools]
+packages = ["tsurugi", "tsurugi.udf", "tsurugi.udf.model"]
+include-package-data = true
+zip-safe = false

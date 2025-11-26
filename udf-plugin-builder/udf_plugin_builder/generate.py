@@ -335,6 +335,15 @@ TSURUGI_RESERVED_KEYWORDS = {
     "year",
     "zone",
 }
+TSURUGI_TYPES_KEYWORDS = {
+    "tsurugidb.udf.Decimal",
+    "tsurugidb.udf.Date",
+    "tsurugidb.udf.LocalTime",
+    "tsurugidb.udf.LocalDatetime",
+    "tsurugidb.udf.OffsetDatetime",
+    "tsurugidb.udf.BlobReference",
+    "tsurugidb.udf.ClobReference",
+}
 
 
 def fetch_add_name(type_kind: str) -> str:
@@ -613,12 +622,23 @@ def check_no_oneof(record: RecordDescriptor, fn_name: str):
             handle_value_error(e)
 
 
+def validate_tsurugi_type(record_name: str, position: str):
+    if record_name in TSURUGI_TYPES_KEYWORDS:
+        e = ValueError(
+            f"Unwrapped Tsurugi types ({record_name}) are not allowed for {position}.\n"
+            f"Tsurugi types must be specified by wrapping them in a message type."
+        )
+        handle_value_error(e)
+
+
 def check_forbidden_function_names(packages):
     forbidden = TSURUGI_RESERVED_KEYWORDS
     for pkg in packages:
         for svc in pkg.services:
             for fn in svc.functions:
                 check_no_oneof(fn.output_record, fn.function_name)
+                validate_tsurugi_type(fn.output_record.record_name, "output")
+                validate_tsurugi_type(fn.input_record.record_name, "input")
                 if fn.function_name.lower() in forbidden:
                     e = ValueError(
                         f"Function name '{fn.function_name}' is forbidden because it is a reserved keyword in Tsurugi.\n"

@@ -31,17 +31,17 @@ def main():
         print(f"Usage: {os.path.basename(sys.argv[0])} <path_to_plugin.so>")
         sys.exit(1)
 
-    path = Path(sys.argv[1])
+    path = Path(sys.argv[1]).resolve()
     so_files = []
     if path.is_dir():
         for p in path.iterdir():
             if p.is_file() and p.suffix == ".so":
-                so_files.append(str(p))
+                so_files.append(str(p.resolve()))
         if not so_files:
             print(f"No .so files found in directory: {path}")
             sys.exit(1)
     elif path.is_file():
-        so_files.append(str(path))
+        so_files.append(str(path.resolve()))
     else:
         print(f"Error: {path} is neither file nor directory")
         sys.exit(1)

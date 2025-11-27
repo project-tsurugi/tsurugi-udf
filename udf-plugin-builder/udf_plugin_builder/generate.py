@@ -363,7 +363,7 @@ def find_grpc_cpp_plugin():
     return plugin
 
 
-def run_protoc(proto_files, proto_path, build_dir, descriptor_set_out=None):
+def run_protoc(proto_files, proto_paths, build_dir, descriptor_set_out=None):
     plugin_path = find_grpc_cpp_plugin()
     build_dir = Path(build_dir)
     build_dir.mkdir(parents=True, exist_ok=True)
@@ -371,9 +371,10 @@ def run_protoc(proto_files, proto_path, build_dir, descriptor_set_out=None):
     if descriptor_set_out is None:
         descriptor_set_out = build_dir / "descriptor.pb"
 
+    include_args = [f"-I{p}" for p in proto_paths]
     protoc_cmd = [
         "protoc",
-        f"-I{proto_path}",
+        *include_args,
         f"--cpp_out={build_dir}",
         f"--grpc_out={build_dir}",
         f"--plugin=protoc-gen-grpc={plugin_path}",
@@ -515,7 +516,10 @@ def parse_args():
     )
     parser.add_argument(
         "--proto-path",
-        default="proto",
+        nargs="+",
+        default=[
+            "proto",
+        ],
         help="Directory containing .proto files (default: proto)",
     )
     parser.add_argument(

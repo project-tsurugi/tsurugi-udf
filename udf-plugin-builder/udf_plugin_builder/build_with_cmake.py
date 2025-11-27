@@ -20,6 +20,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         "--proto-path",
+        nargs="+",
         default=None,
         help="Directory containing .proto files (default: automatically inferred from the first .proto file).",
     )
@@ -83,14 +84,20 @@ def run(args=None):
 
     proto_files = [str(Path(p).resolve()) for p in args.proto_file]
     proto_files_str = ";".join(proto_files)
+    proto_paths = []
     if args.proto_path:
-        proto_path = os.path.abspath(args.proto_path)
+        if isinstance(args.proto_path, str):
+            proto_paths = [
+                os.path.abspath(p.strip()) for p in args.proto_path.split(",")
+            ]
+        else:
+            proto_paths = [os.path.abspath(p) for p in args.proto_path]
     else:
-        proto_path = str(Path(proto_files[0]).parent.resolve())
-
+        proto_paths = [str(Path(proto_files[0]).parent.resolve())]
+    proto_paths_str = ";".join(proto_paths)
     print(f"[INFO] Building with CMake in {build_dir_full}")
     print(f"[INFO] Using proto files: {args.proto_file}")
-    print(f"[INFO] Proto path: {proto_path}")
+    print(f"[INFO] Proto path: {proto_paths}")
     print(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
 
     build_type_env = os.environ.get("BUILD_TYPE", "").strip()
@@ -109,7 +116,7 @@ def run(args=None):
         str(build_dir_full),
         "-S",
         str(script_dir / "cmake"),
-        f"-DPROTO_PATH={proto_path}",
+        f"-DPROTO_PATH={proto_paths_str}",
         f"-DPROTO_FILES={proto_files_str}",
         f"-DNAME={name}",
         f"-DBUILD_DIR={build_dir}",

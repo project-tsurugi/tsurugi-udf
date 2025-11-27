@@ -3,20 +3,23 @@ syntax = "proto3";
 import "complex_types.proto";
 service Nested {
   rpc NestedHello(SimpleValue) returns (SimpleValue);
-  rpc DecimalOne(tsurugidb.udf.Decimal) returns (SimpleValue);
+  rpc DecimalOne(DecimalWrap) returns (SimpleValue);
   rpc DecimalTwo(AddDecimal) returns (SimpleValue);
-  rpc DateOne(tsurugidb.udf.Date) returns (WrapDate);
+  rpc DateOne(WrapDate) returns (WrapDate);
   rpc DateTwo(AddDate) returns (WrapDate);
-  rpc LocalTimeOne(tsurugidb.udf.LocalTime) returns (WrapLocalTime);
+  rpc LocalTimeOne(WrapLocalTime) returns (WrapLocalTime);
   rpc LocalTimeTwo(AddLocalTime) returns (WrapLocalTime);
-  rpc LocalDatetimeOne(tsurugidb.udf.LocalDatetime) returns (WrapLocalDatetime);
+  rpc LocalDatetimeOne(WrapLocalDatetime) returns (WrapLocalDatetime);
   rpc LocalDatetimeTwo(AddLocalDatetime) returns (WrapLocalDatetime);
-  rpc OffsetDatetimeOne(tsurugidb.udf.OffsetDatetime) returns (WrapOffsetDatetime);
-  rpc BlobReferenceOne(tsurugidb.udf.BlobReference) returns (WrapBlobReference);
-  rpc ClobReferenceOne(tsurugidb.udf.ClobReference) returns (WrapClobReference);
+  rpc OffsetDatetimeOne(WrapOffsetDatetime) returns (WrapOffsetDatetime);
+  rpc BlobReferenceOne(WrapBlobReference) returns (WrapBlobReference);
+  rpc ClobReferenceOne(WrapClobReference) returns (WrapClobReference);
 }
 message SimpleValue {
   string value = 1;
+}
+message DecimalWrap {
+  tsurugidb.udf.Decimal dec = 1;
 }
 message AddDecimal {
   int32 i32 = 1;

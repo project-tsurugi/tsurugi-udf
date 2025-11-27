@@ -22,10 +22,10 @@ class NestedImpl final : public Nested::Service {
         reply->set_value("hello" + request->value());
         return Status::OK;
     }
-    Status DecimalOne(ServerContext* context, const tsurugidb::udf::Decimal* request, SimpleValue* reply) override {
+    Status DecimalOne(ServerContext* context, const DecimalWrap* request, SimpleValue* reply) override {
         std::cout << "[DecimalOne]" << std::endl;
-        std::cout << " unscaled_value : " << request->unscaled_value() << "\n exponent: " << request->exponent()
-                  << std::endl;
+        std::cout << " unscaled_value : " << request->dec().unscaled_value()
+                  << "\n exponent: " << request->dec().exponent() << std::endl;
 
         reply->set_value("DecimalOne received");
         return Status::OK;
@@ -40,11 +40,11 @@ class NestedImpl final : public Nested::Service {
         reply->set_value("DecimalTwo received");
         return Status::OK;
     }
-    Status DateOne(ServerContext* context, const tsurugidb::udf::Date* request, WrapDate* reply) override {
+    Status DateOne(ServerContext* context, const WrapDate* request, WrapDate* reply) override {
         std::cout << "[DateOne]" << std::endl;
-        std::cout << " days : " << request->days() << std::endl;
+        std::cout << " days : " << request->value().days() << std::endl;
         auto* v = reply->mutable_value();
-        v->set_days(request->days());
+        v->set_days(request->value().days());
         return Status::OK;
     }
     Status DateTwo(ServerContext* context, const AddDate* request, WrapDate* reply) override {
@@ -55,12 +55,11 @@ class NestedImpl final : public Nested::Service {
         v->set_days(request->dec().days());
         return Status::OK;
     }
-    Status
-    LocalTimeOne(ServerContext* context, const tsurugidb::udf::LocalTime* request, WrapLocalTime* reply) override {
+    Status LocalTimeOne(ServerContext* context, const WrapLocalTime* request, WrapLocalTime* reply) override {
         std::cout << "[LocalTimeOne]" << std::endl;
-        std::cout << " nanos : " << request->nanos() << std::endl;
+        std::cout << " nanos : " << request->lt().nanos() << std::endl;
         auto* v = reply->mutable_lt();
-        v->set_nanos(request->nanos());
+        v->set_nanos(request->lt().nanos());
         return Status::OK;
     }
     Status LocalTimeTwo(ServerContext* context, const AddLocalTime* request, WrapLocalTime* reply) override {
@@ -73,14 +72,13 @@ class NestedImpl final : public Nested::Service {
         return Status::OK;
     }
     Status
-    LocalDatetimeOne(ServerContext* context, const tsurugidb::udf::LocalDatetime* request, WrapLocalDatetime* reply)
-        override {
+    LocalDatetimeOne(ServerContext* context, const WrapLocalDatetime* request, WrapLocalDatetime* reply) override {
         std::cout << "[LocalDatetimeOne]" << std::endl;
-        std::cout << " offset_seconds : " << request->offset_seconds() << std::endl;
-        std::cout << " nano_adjustment : " << request->nano_adjustment() << std::endl;
+        std::cout << " offset_seconds : " << request->ld().offset_seconds() << std::endl;
+        std::cout << " nano_adjustment : " << request->ld().nano_adjustment() << std::endl;
         auto* v = reply->mutable_ld();
-        v->set_offset_seconds(request->offset_seconds());
-        v->set_nano_adjustment(request->nano_adjustment());
+        v->set_offset_seconds(request->ld().offset_seconds());
+        v->set_nano_adjustment(request->ld().nano_adjustment());
         return Status::OK;
     }
     Status
@@ -96,42 +94,39 @@ class NestedImpl final : public Nested::Service {
     }
 
     Status
-    OffsetDatetimeOne(ServerContext* context, const tsurugidb::udf::OffsetDatetime* request, WrapOffsetDatetime* reply)
-        override {
+    OffsetDatetimeOne(ServerContext* context, const WrapOffsetDatetime* request, WrapOffsetDatetime* reply) override {
         std::cout << "[OffsetDatetimeOne]" << std::endl;
-        std::cout << " offset_seconds : " << request->offset_seconds() << std::endl;
-        std::cout << " nano_adjustment : " << request->nano_adjustment() << std::endl;
-        std::cout << " time_zone_offset : " << request->time_zone_offset() << std::endl;
+        std::cout << " offset_seconds : " << request->od().offset_seconds() << std::endl;
+        std::cout << " nano_adjustment : " << request->od().nano_adjustment() << std::endl;
+        std::cout << " time_zone_offset : " << request->od().time_zone_offset() << std::endl;
         auto* v = reply->mutable_od();
-        v->set_offset_seconds(request->offset_seconds());
-        v->set_nano_adjustment(request->nano_adjustment());
-        v->set_time_zone_offset(request->time_zone_offset());
+        v->set_offset_seconds(request->od().offset_seconds());
+        v->set_nano_adjustment(request->od().nano_adjustment());
+        v->set_time_zone_offset(request->od().time_zone_offset());
         return Status::OK;
     }
     Status
-    BlobReferenceOne(ServerContext* context, const tsurugidb::udf::BlobReference* request, WrapBlobReference* reply)
-        override {
+    BlobReferenceOne(ServerContext* context, const WrapBlobReference* request, WrapBlobReference* reply) override {
         std::cout << "[BlobReferenceOne]" << std::endl;
-        std::cout << " storage_id : " << request->storage_id() << std::endl;
-        std::cout << " object_id : " << request->object_id() << std::endl;
-        std::cout << " tag : " << request->tag() << std::endl;
+        std::cout << " storage_id : " << request->br().storage_id() << std::endl;
+        std::cout << " object_id : " << request->br().object_id() << std::endl;
+        std::cout << " tag : " << request->br().tag() << std::endl;
         auto* v = reply->mutable_br();
-        v->set_storage_id(request->storage_id());
-        v->set_object_id(request->object_id());
-        v->set_tag(request->tag());
+        v->set_storage_id(request->br().storage_id());
+        v->set_object_id(request->br().object_id());
+        v->set_tag(request->br().tag());
         return Status::OK;
     }
     Status
-    ClobReferenceOne(ServerContext* context, const tsurugidb::udf::ClobReference* request, WrapClobReference* reply)
-        override {
+    ClobReferenceOne(ServerContext* context, const WrapClobReference* request, WrapClobReference* reply) override {
         std::cout << "[ClobReferenceOne]" << std::endl;
-        std::cout << " storage_id : " << request->storage_id() << std::endl;
-        std::cout << " object_id : " << request->object_id() << std::endl;
-        std::cout << " tag : " << request->tag() << std::endl;
+        std::cout << " storage_id : " << request->cr().storage_id() << std::endl;
+        std::cout << " object_id : " << request->cr().object_id() << std::endl;
+        std::cout << " tag : " << request->cr().tag() << std::endl;
         auto* v = reply->mutable_cr();
-        v->set_storage_id(request->storage_id());
-        v->set_object_id(request->object_id());
-        v->set_tag(request->tag());
+        v->set_storage_id(request->cr().storage_id());
+        v->set_object_id(request->cr().object_id());
+        v->set_tag(request->cr().tag());
         return Status::OK;
     }
 };

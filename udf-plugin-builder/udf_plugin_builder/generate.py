@@ -622,9 +622,17 @@ def check_no_oneof(record: RecordDescriptor, fn_name: str):
             handle_value_error(e)
 
 
-def validate_tsurugi_type(record_name: str, position: str):
+def validate_tsurugi_type(
+    file_name: str,
+    service_name: str,
+    function_name: str,
+    record_name: str,
+    position: str,
+):
     if record_name in TSURUGI_TYPES_KEYWORDS:
         e = ValueError(
+            f"RPC function failed.\n"
+            f"Error occurred in {file_name}, service {service_name}, function {function_name}.\n"
             f"Unwrapped Tsurugi types ({record_name}) are not allowed for {position}.\n"
             f"Tsurugi types must be specified by wrapping them in a message type."
         )
@@ -637,8 +645,20 @@ def check_forbidden_function_names(packages):
         for svc in pkg.services:
             for fn in svc.functions:
                 check_no_oneof(fn.output_record, fn.function_name)
-                validate_tsurugi_type(fn.output_record.record_name, "output")
-                validate_tsurugi_type(fn.input_record.record_name, "input")
+                validate_tsurugi_type(
+                    pkg.file_name,
+                    svc.service_name,
+                    fn.function_name,
+                    fn.output_record.record_name,
+                    "returns",
+                )
+                validate_tsurugi_type(
+                    pkg.file_name,
+                    svc.service_name,
+                    fn.function_name,
+                    fn.input_record.record_name,
+                    "argument",
+                )
                 if fn.function_name.lower() in forbidden:
                     e = ValueError(
                         f"Function name '{fn.function_name}' is forbidden because it is a reserved keyword in Tsurugi.\n"

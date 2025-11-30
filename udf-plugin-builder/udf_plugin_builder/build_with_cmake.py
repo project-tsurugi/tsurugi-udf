@@ -33,7 +33,7 @@ def parse_args(args=None):
         help="Base name used for the generated plugin library (.so) and configuration file (.ini).",
     )
     parser.add_argument(
-        "--grpc-endpoint", default="localhost:50051", help="gRPC server endpoint"
+        "--grpc-endpoint", default="dns:///localhost:50051", help="gRPC server endpoint"
     )
     parser.add_argument(
         "--output-dir",

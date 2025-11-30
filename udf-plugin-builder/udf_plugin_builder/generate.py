@@ -539,8 +539,8 @@ def parse_args():
     )
     parser.add_argument(
         "--grpc-endpoint",
-        default="localhost:50051",
-        help="gRPC server URL to write into the ini (default: localhost:50051).",
+        default="dns:///localhost:50051",
+        help="gRPC server URL to write into the ini (default: dns:///localhost:50051).",
     )
     parser.add_argument(
         "--output-dir",

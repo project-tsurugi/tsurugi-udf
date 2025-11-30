@@ -116,7 +116,7 @@ std::vector<load_result> udf_loader::view_load(std::string_view so_path) {
         return results;
     }
 
-    constexpr const char* default_endpoint = "localhost:0";
+    constexpr const char* default_endpoint = "dns:///localhost:50051";
     constexpr const char* default_secure = "false";
 
     auto res = create_api_from_handle(handle, path.string(), default_endpoint, default_secure);

@@ -37,7 +37,7 @@ Requires Python 3.10+ and protobuf library.
 from tsurugi.udf.model import tsurugi_types_pb2
 from decimal import Decimal
 from datetime import date, time, datetime, timezone, timedelta
-from tsurugi.udf.converter.converter import (
+from tsurugi.udf.converter import (
     to_pb_decimal,
     from_pb_decimal,
     to_pb_date,

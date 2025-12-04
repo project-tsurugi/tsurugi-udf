@@ -40,8 +40,3 @@ class BlobRelayClient(ABC):
 
     @abstractmethod
     def upload_blob(self, source: Path) -> tsurugi_types_pb2.BlobReference: pass
-
-
-
-
-

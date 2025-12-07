@@ -22,7 +22,7 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-import blob_reference_pb2 as blob__reference__pb2
+from . import blob_reference_pb2 as blob__reference__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x62lob_relay_local.proto\x12 data_relay_grpc.blob_relay.proto\x1a\x14\x62lob_reference.proto\"\x18\n\x08\x42lobFile\x12\x0c\n\x04path\x18\x01 \x01(\t\"\xa3\x01\n\x0fGetLocalRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x14\n\nsession_id\x18\x02 \x01(\x04H\x00\x12\x18\n\x0etransaction_id\x18\x03 \x01(\x04H\x00\x12=\n\x04\x62lob\x18\x04 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReferenceB\x0c\n\ncontext_id\"L\n\x10GetLocalResponse\x12\x38\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32*.data_relay_grpc.blob_relay.proto.BlobFile\"t\n\x0fPutLocalRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x12\n\nsession_id\x18\x02 \x01(\x04\x12\x38\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32*.data_relay_grpc.blob_relay.proto.BlobFile\"Q\n\x10PutLocalResponse\x12=\n\x04\x62lob\x18\x01 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReference2\xec\x01\n\x0e\x42lobRelayLocal\x12l\n\x03Get\x12\x31.data_relay_grpc.blob_relay.proto.GetLocalRequest\x1a\x32.data_relay_grpc.blob_relay.proto.GetLocalResponse\x12l\n\x03Put\x12\x31.data_relay_grpc.blob_relay.proto.PutLocalRequest\x1a\x32.data_relay_grpc.blob_relay.proto.PutLocalResponseb\x06proto3')

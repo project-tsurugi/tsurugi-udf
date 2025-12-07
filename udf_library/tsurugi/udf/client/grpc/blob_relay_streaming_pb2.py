@@ -22,7 +22,7 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-import blob_reference_pb2 as blob__reference__pb2
+from . import blob_reference_pb2 as blob__reference__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1a\x62lob_relay_streaming.proto\x12 data_relay_grpc.blob_relay.proto\x1a\x14\x62lob_reference.proto\"\xa7\x01\n\x13GetStreamingRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x14\n\nsession_id\x18\x02 \x01(\x04H\x00\x12\x18\n\x0etransaction_id\x18\x03 \x01(\x04H\x00\x12=\n\x04\x62lob\x18\x04 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReferenceB\x0c\n\ncontext_id\"%\n\x14GetStreamingResponse\x12\r\n\x05\x63hunk\x18\x01 \x01(\x0c\"\xba\x01\n\x13PutStreamingRequest\x12R\n\x08metadata\x18\x01 \x01(\x0b\x32>.data_relay_grpc.blob_relay.proto.PutStreamingRequest.MetadataH\x00\x12\x0f\n\x05\x63hunk\x18\x02 \x01(\x0cH\x00\x1a\x33\n\x08Metadata\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x12\n\nsession_id\x18\x02 \x01(\x04\x42\t\n\x07payload\"U\n\x14PutStreamingResponse\x12=\n\x04\x62lob\x18\x01 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReference2\x84\x02\n\x12\x42lobRelayStreaming\x12v\n\x03Get\x12\x35.data_relay_grpc.blob_relay.proto.GetStreamingRequest\x1a\x36.data_relay_grpc.blob_relay.proto.GetStreamingResponse0\x01\x12v\n\x03Put\x12\x35.data_relay_grpc.blob_relay.proto.PutStreamingRequest\x1a\x36.data_relay_grpc.blob_relay.proto.PutStreamingResponse(\x01\x62\x06proto3')

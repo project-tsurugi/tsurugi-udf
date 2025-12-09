@@ -37,18 +37,6 @@ Requires Python 3.10+ and protobuf library.
 from tsurugidb.udf import *
 from decimal import Decimal
 from datetime import date, time, datetime, timezone, timedelta
-from tsurugidb.udf.converter import (
-    to_pb_decimal,
-    from_pb_decimal,
-    to_pb_date,
-    from_pb_date,
-    to_pb_local_time,
-    from_pb_local_time,
-    to_pb_local_datetime,
-    from_pb_local_datetime,
-    to_pb_offset_datetime,
-    from_pb_offset_datetime,
-)
 
 # ----------------------------
 # Protobuf sample values

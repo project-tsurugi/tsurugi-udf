@@ -1,6 +1,6 @@
 from datetime import date, time, datetime, timedelta, timezone
 from decimal import Decimal
-from tsurugi.udf.model.tsurugi_types_pb2 import (
+from tsurugidb.udf.model.tsurugi_types_pb2 import (
     Decimal as PbDecimal,
     Date as PbDate,
     LocalTime as PbLocalTime,

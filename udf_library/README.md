@@ -34,10 +34,10 @@ Requires Python 3.10+ and protobuf library.
 ## Example
 
 ```python
-from tsurugi.udf.model import tsurugi_types_pb2
+from tsurugidb.udf.model import tsurugi_types_pb2
 from decimal import Decimal
 from datetime import date, time, datetime, timezone, timedelta
-from tsurugi.udf.converter import (
+from tsurugidb.udf.converter import (
     to_pb_decimal,
     from_pb_decimal,
     to_pb_date,
@@ -202,10 +202,10 @@ When you have a .proto file that references tsurugi_types.proto and you want to 
 import tsurugi_types_pb2 as tsurugi__types__pb2
 ```
 
-However, if tsurugi_types_pb2.py is part of a Python package (e.g., tsurugi.udf.model), this import will fail at runtime. We need to modify it to include the full package path:
+However, if tsurugi_types_pb2.py is part of a Python package (e.g., tsurugidb.udf.model), this import will fail at runtime. We need to modify it to include the full package path:
 
 ```python
-from tsurugi.udf.model import tsurugi_types_pb2 as tsurugi__types__pb2
+from tsurugidb.udf.model import tsurugi_types_pb2 as tsurugi__types__pb2
 ```
 
 ## Recovery if Module Not Found

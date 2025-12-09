@@ -35,37 +35,37 @@ Requires Python 3.10+ and protobuf library.
 
 ```python
 from tsurugidb.udf import *
-from decimal import Decimal
+from decimal import Decimal as PyDecimal
 from datetime import date, time, datetime, timezone, timedelta
 
 # ----------------------------
 # Protobuf sample values
 # ----------------------------
-decimal = tsurugi_types_pb2.Decimal()
+decimal = Decimal()
 decimal.unscaled_value = b"\x01\x23"
 decimal.exponent = -2
 print("Decimal:")
 print("  unscaled_value:", decimal.unscaled_value)
 print("  exponent:", decimal.exponent)
 
-date_pb = tsurugi_types_pb2.Date()
+date_pb = Date()
 date_pb.days = 19500
 print("\nDate:")
 print("  days:", date_pb.days)
 
-local_time_pb = tsurugi_types_pb2.LocalTime()
+local_time_pb = LocalTime()
 local_time_pb.nanos = 3600 * 10**9
 print("\nLocalTime:")
 print("  nanos:", local_time_pb.nanos)
 
-local_dt_pb = tsurugi_types_pb2.LocalDatetime()
+local_dt_pb = LocalDatetime()
 local_dt_pb.offset_seconds = 1690000000
 local_dt_pb.nano_adjustment = 123456789
 print("\nLocalDatetime:")
 print("  offset_seconds:", local_dt_pb.offset_seconds)
 print("  nano_adjustment:", local_dt_pb.nano_adjustment)
 
-offset_dt_pb = tsurugi_types_pb2.OffsetDatetime()
+offset_dt_pb = OffsetDatetime()
 offset_dt_pb.offset_seconds = 1690000000
 offset_dt_pb.nano_adjustment = 987654321
 offset_dt_pb.time_zone_offset = 540
@@ -74,11 +74,11 @@ print("  offset_seconds:", offset_dt_pb.offset_seconds)
 print("  nano_adjustment:", offset_dt_pb.nano_adjustment)
 print("  time_zone_offset:", offset_dt_pb.time_zone_offset)
 
-blob_ref = tsurugi_types_pb2.BlobReference()
+blob_ref = BlobReference()
 blob_ref.storage_id = 1
 blob_ref.object_id = 42
 blob_ref.tag = 0
-clob_ref = tsurugi_types_pb2.ClobReference()
+clob_ref = ClobReference()
 clob_ref.storage_id = 2
 clob_ref.object_id = 99
 clob_ref.tag = 7
@@ -90,7 +90,7 @@ print("ClobReference:", clob_ref)
 # ----------------------------
 
 # Decimal
-x = Decimal("123.45")
+x = PyDecimal("123.45")
 pb_decimal = to_pb_decimal(x)
 print("\nPython Decimal -> Protobuf Decimal:", pb_decimal)
 y = from_pb_decimal(pb_decimal)

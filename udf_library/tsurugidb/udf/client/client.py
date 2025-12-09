@@ -36,7 +36,11 @@ class BlobRelayClient(ABC):
 
 
     @abstractmethod
-    def download_blob(self, ref: tsurugi_types_pb2.BlobReference, destination: Path): pass
+    def download_blob(self, ref: BlobReference, destination: Path): pass
 
     @abstractmethod
-    def upload_blob(self, source: Path) -> tsurugi_types_pb2.BlobReference: pass
+    def upload_blob(self, source: Path) -> BlobReference: pass
+
+__all__ = [
+    "BlobRelayClient",
+]

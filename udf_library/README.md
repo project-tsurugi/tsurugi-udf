@@ -34,7 +34,7 @@ Requires Python 3.10+ and protobuf library.
 ## Example
 
 ```python
-from tsurugidb.udf.model import tsurugi_types_pb2
+from tsurugidb.udf import *
 from decimal import Decimal
 from datetime import date, time, datetime, timezone, timedelta
 from tsurugidb.udf.converter import (

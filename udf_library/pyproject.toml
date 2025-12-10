@@ -11,9 +11,19 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = ["protobuf>=4.0.0"]
 
+[project.optional-dependencies]
+test = ["pytest>=7.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["tsurugidb*"]
+exclude = ["tests*"]
 
 [tool.setuptools]
 include-package-data = true

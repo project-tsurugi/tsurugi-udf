@@ -2,14 +2,24 @@ import grpc
 from pathlib import Path
 from typing import Optional
 
-from tsurugidb.udf import *
+from tsurugidb.udf import BlobReference as UdfBlobReference
 from . import blob_relay_local_pb2 as pb_local
 from . import blob_relay_local_pb2_grpc as pb_local_grpc
 from . import blob_relay_streaming_pb2 as pb_stream
 from . import blob_relay_streaming_pb2_grpc as pb_stream_grpc
+from . import blob_reference_pb2 as pb_reference
+from . import blob_reference_pb2_grpc as pb_reference_grpc
 
 
 from ..client import BlobRelayClient
+
+
+def to_pb_reference(ref: UdfBlobReference) -> pb_reference.BlobReference:
+    return pb_reference.BlobReference(
+        storage_id=ref.storage_id,
+        object_id=ref.object_id,
+        tag=ref.tag,
+    )
 
 
 class GrpcBlobRelayClient(BlobRelayClient):
@@ -61,13 +71,14 @@ class GrpcBlobRelayClient(BlobRelayClient):
             return None
         return v.lower() == "true"
 
-    def download_blob(self, ref: BlobReference, destination: Path):
+    def download_blob(self, ref: UdfBlobReference, destination: Path):
+        ref_pb = to_pb_reference(ref)
         try:
             if self.transport == "stream":
                 req = self.pb.GetStreamingRequest(
                     api_version=1,
                     session_id=self.session_id,
-                    blob=ref,
+                    blob=ref_pb,
                 )
 
                 with destination.open("wb") as fp:
@@ -78,7 +89,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
                 req = self.pb.GetLocalRequest(
                     api_version=1,
                     session_id=self.session_id,
-                    blob=ref,
+                    blob=ref_pb,
                 )
                 response = self.stub.Get(req)
 
@@ -90,7 +101,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
 
         return destination
 
-    def upload_blob(self, source: Path) -> BlobReference:
+    def upload_blob(self, source: Path) -> UdfBlobReference:
         try:
             if self.transport == "stream":
 
@@ -111,17 +122,18 @@ class GrpcBlobRelayClient(BlobRelayClient):
                             yield self.pb.PutStreamingRequest(chunk=buf)
 
                 resp = self.stub.Put(gen())
-                return resp.blob
-
             else:
                 req = self.pb.PutLocalRequest(
                     api_version=1,
                     session_id=self.session_id,
                     data=self.pb.BlobFile(path=str(source)),
                 )
-
                 resp = self.stub.Put(req)
-                return resp.blob
+            return UdfBlobReference(
+                storage_id=resp.blob.storage_id,
+                object_id=resp.blob.object_id,
+                tag=resp.blob.tag,
+            )
 
         except grpc.RpcError as e:
             raise RuntimeError(f"upload failed: {e}") from e

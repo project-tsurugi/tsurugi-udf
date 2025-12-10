@@ -10,3 +10,4 @@ insert into t_char values ('hello world');
 select sayhello(v) from t_char;
 select intaddint(v) from t_int32;
 select sayworld(v) from t_char;
+select emptyreq() from t_int32;

@@ -30,6 +30,11 @@ class GreeterServiceImpl final : public Greeter::Service {
         reply->set_value(sum);
         return Status::OK;
     }
+    Status EmptyReq(ServerContext* context, const Empty* request, Int32Value* reply) override {
+        std::cerr << "EmptyReq" << std::endl;
+        reply->set_value(111);
+        return Status::OK;
+    }
 };
 
 class ByerServiceImpl final : public Byer::Service {

@@ -3,6 +3,7 @@ syntax = "proto3";
 service Greeter {
   rpc SayHello(StringValue) returns (StringValue);
   rpc IntAddInt(Int32Value) returns (Int32Value);
+  rpc EmptyReq(Empty) returns (Int32Value);
 }
 service Byer {
   rpc SayWorld(StringValue) returns (StringValue);
@@ -13,3 +14,4 @@ message Int32Value {
 message StringValue {
   string value = 1;
 }
+message Empty {}

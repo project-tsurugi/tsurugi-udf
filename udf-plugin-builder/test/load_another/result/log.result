@@ -4,3 +4,6 @@
 {"@#0":124}
 // {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
 {"@#0":"World hello world                   "}
+// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
+{"@#0":111}
+[main] INFO com.tsurugidb.tgsql.core.TgsqlRunner - script execution was successfully completed

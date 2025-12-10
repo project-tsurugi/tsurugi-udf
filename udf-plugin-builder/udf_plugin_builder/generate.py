@@ -704,13 +704,6 @@ def check_forbidden_function_names(packages):
                     fn.output_record,
                     "returns",
                 )
-                validate_non_empty_record_recursive(
-                    pkg.file_name,
-                    svc.service_name,
-                    fn.function_name,
-                    fn.input_record,
-                    "argument",
-                )
 
 
 def main():

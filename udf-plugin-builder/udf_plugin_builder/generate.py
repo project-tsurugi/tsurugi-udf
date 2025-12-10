@@ -643,6 +643,33 @@ def validate_tsurugi_type(
         handle_value_error(e)
 
 
+def validate_non_empty_record_recursive(
+    file_name: str,
+    service_name: str,
+    function_name: str,
+    record: RecordDescriptor,
+    position: str,
+):
+    if len(record.columns) == 0:
+        e = ValueError(
+            f"RPC function failed.\n"
+            f"Error occurred in {file_name}, service {service_name}, function {function_name}.\n"
+            f"{position.capitalize()} record '{record.record_name}' must contain at least one column.\n"
+            f"Empty message types are not allowed for {position}."
+        )
+        handle_value_error(e)
+
+    for col in record.columns:
+        if col.nested_record is not None:
+            validate_non_empty_record_recursive(
+                file_name,
+                service_name,
+                function_name,
+                col.nested_record,
+                position,
+            )
+
+
 def check_forbidden_function_names(packages):
     forbidden = TSURUGI_RESERVED_KEYWORDS
     for pkg in packages:
@@ -670,6 +697,20 @@ def check_forbidden_function_names(packages):
                         f"  Package: {pkg.package_name}"
                     )
                     handle_value_error(e)
+                validate_non_empty_record_recursive(
+                    pkg.file_name,
+                    svc.service_name,
+                    fn.function_name,
+                    fn.output_record,
+                    "returns",
+                )
+                validate_non_empty_record_recursive(
+                    pkg.file_name,
+                    svc.service_name,
+                    fn.function_name,
+                    fn.input_record,
+                    "argument",
+                )
 
 
 def main():

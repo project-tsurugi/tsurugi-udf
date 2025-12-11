@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from tsurugidb.udf import BlobReference as UdfBlobReference
+from tsurugidb.udf import ClobReference as UdfClobReference
 from . import blob_relay_local_pb2 as pb_local
 from . import blob_relay_local_pb2_grpc as pb_local_grpc
 from . import blob_relay_streaming_pb2 as pb_stream
@@ -14,7 +15,7 @@ from . import blob_reference_pb2_grpc as pb_reference_grpc
 from ..client import BlobRelayClient
 
 
-def to_pb_reference(ref: UdfBlobReference) -> pb_reference.BlobReference:
+def to_pb_reference(ref) -> pb_reference.BlobReference:
     return pb_reference.BlobReference(
         storage_id=ref.storage_id,
         object_id=ref.object_id,
@@ -71,7 +72,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
             return None
         return v.lower() == "true"
 
-    def download_blob(self, ref: UdfBlobReference, destination: Path):
+    def download_common(self, ref, destination: Path):
         ref_pb = to_pb_reference(ref)
         try:
             if self.transport == "stream":
@@ -80,11 +81,9 @@ class GrpcBlobRelayClient(BlobRelayClient):
                     session_id=self.session_id,
                     blob=ref_pb,
                 )
-
                 with destination.open("wb") as fp:
                     for chunk in self.stub.Get(req):
                         fp.write(chunk.chunk)
-
             else:
                 req = self.pb.GetLocalRequest(
                     api_version=1,
@@ -92,28 +91,30 @@ class GrpcBlobRelayClient(BlobRelayClient):
                     blob=ref_pb,
                 )
                 response = self.stub.Get(req)
-
                 blob_path = Path(response.data.path)
                 destination.write_bytes(blob_path.read_bytes())
 
         except grpc.RpcError as e:
             raise RuntimeError(f"download failed: {e}") from e
-
         return destination
 
-    def upload_blob(self, source: Path) -> UdfBlobReference:
+    def download_blob(self, ref: UdfBlobReference, destination: Path):
+        return self.download_common(ref, destination)
+
+    def download_clob(self, ref: UdfClobReference, destination: Path):
+        return self.download_common(ref, destination)
+
+    def upload_common(self, source: Path, return_class):
         try:
             if self.transport == "stream":
 
                 def gen():
-
                     yield self.pb.PutStreamingRequest(
                         metadata=self.pb.PutStreamingRequest.Metadata(
                             api_version=1,
                             session_id=self.session_id,
                         )
                     )
-
                     with source.open("rb") as fp:
                         while True:
                             buf = fp.read(self.chunk_size)
@@ -129,11 +130,16 @@ class GrpcBlobRelayClient(BlobRelayClient):
                     data=self.pb.BlobFile(path=str(source)),
                 )
                 resp = self.stub.Put(req)
-            return UdfBlobReference(
+            return return_class(
                 storage_id=resp.blob.storage_id,
                 object_id=resp.blob.object_id,
                 tag=resp.blob.tag,
             )
-
         except grpc.RpcError as e:
             raise RuntimeError(f"upload failed: {e}") from e
+
+    def upload_blob(self, source: Path) -> UdfBlobReference:
+        return self.upload_common(source, UdfBlobReference)
+
+    def upload_clob(self, source: Path) -> UdfClobReference:
+        return self.upload_common(source, UdfClobReference)

@@ -35,7 +35,7 @@ Requires Python 3.10+ and protobuf library.
 
 ```sh
 # install test dependencies before running tests (only needed once)
-pip install .[test]
+pip install -e ".[test]"
 
 pytest
 ```

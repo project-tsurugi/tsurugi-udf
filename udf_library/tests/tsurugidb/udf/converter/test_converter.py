@@ -32,41 +32,41 @@ def test_to_pb_decimal_zero():
     pb_decimal = to_pb_decimal(value)
 
     assert pb_decimal.exponent == 0
-    assert pb_decimal.unscaled_value == int.to_bytes(0, signed=True)
+    assert pb_decimal.unscaled_value == int.to_bytes(0, 1, byteorder='big', signed=True)
 
 def test_to_pb_decimal_positive():
     value = PyDecimal("123")
     pb_decimal = to_pb_decimal(value)
 
     assert pb_decimal.exponent == 0
-    assert pb_decimal.unscaled_value == int.to_bytes(123, signed=True)
+    assert pb_decimal.unscaled_value == int.to_bytes(123, 1, byteorder='big', signed=True)
 
 def test_to_pb_decimal_negative():
     value = PyDecimal("-123.45")
     pb_decimal = to_pb_decimal(value)
 
     assert pb_decimal.exponent == -2
-    assert pb_decimal.unscaled_value == int.to_bytes(-12345, 2, signed=True)
+    assert pb_decimal.unscaled_value == int.to_bytes(-12345, 2, byteorder='big', signed=True)
 
 def test_to_pb_decimal_positive_exponent():
     value = PyDecimal("123.45")
     pb_decimal = to_pb_decimal(value)
 
     assert pb_decimal.exponent == -2
-    assert pb_decimal.unscaled_value == int.to_bytes(12345, 2, signed=True)
+    assert pb_decimal.unscaled_value == int.to_bytes(12345, 2, byteorder='big', signed=True)
 
 def test_to_pb_decimal_negative_exponent():
     value = PyDecimal("12345E+2")
     pb_decimal = to_pb_decimal(value)
 
     assert pb_decimal.exponent == 2
-    assert pb_decimal.unscaled_value == int.to_bytes(12345, 2, signed=True)
+    assert pb_decimal.unscaled_value == int.to_bytes(12345, 2, byteorder='big', signed=True)
 
 
 def test_from_pb_decimal_zero():
     pb_decimal = PbDecimal()
     pb_decimal.exponent = 0
-    pb_decimal.unscaled_value = int.to_bytes(0, signed=True)
+    pb_decimal.unscaled_value = int.to_bytes(0, 1, byteorder='big', signed=True)
 
     value = from_pb_decimal(pb_decimal)
     assert value == PyDecimal("0")
@@ -74,7 +74,7 @@ def test_from_pb_decimal_zero():
 def test_from_pb_decimal_positive():
     pb_decimal = PbDecimal()
     pb_decimal.exponent = 0
-    pb_decimal.unscaled_value = int.to_bytes(123, signed=True)
+    pb_decimal.unscaled_value = int.to_bytes(123, 1, byteorder='big', signed=True)
 
     value = from_pb_decimal(pb_decimal)
     assert value == PyDecimal("123")
@@ -82,7 +82,7 @@ def test_from_pb_decimal_positive():
 def test_from_pb_decimal_negative():
     pb_decimal = PbDecimal()
     pb_decimal.exponent = -2
-    pb_decimal.unscaled_value = int.to_bytes(-12345, 2, signed=True)
+    pb_decimal.unscaled_value = int.to_bytes(-12345, 2, byteorder='big', signed=True)
 
     value = from_pb_decimal(pb_decimal)
     assert value == PyDecimal("-123.45")
@@ -90,7 +90,7 @@ def test_from_pb_decimal_negative():
 def test_from_pb_decimal_positive_exponent():
     pb_decimal = PbDecimal()
     pb_decimal.exponent = -2
-    pb_decimal.unscaled_value = int.to_bytes(12345, 2, signed=True)
+    pb_decimal.unscaled_value = int.to_bytes(12345, 2, byteorder='big', signed=True)
 
     value = from_pb_decimal(pb_decimal)
     assert value == PyDecimal("123.45")
@@ -98,7 +98,7 @@ def test_from_pb_decimal_positive_exponent():
 def test_from_pb_decimal_negative_exponent():
     pb_decimal = PbDecimal()
     pb_decimal.exponent = 2
-    pb_decimal.unscaled_value = int.to_bytes(12345, 2, signed=True)
+    pb_decimal.unscaled_value = int.to_bytes(12345, 2, byteorder='big', signed=True)
 
     value = from_pb_decimal(pb_decimal)
     assert value == PyDecimal("12345E+2")

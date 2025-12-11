@@ -9,9 +9,7 @@ def test_basic_build():
                 "--name",
                 "plugin_api_test",
                 "--proto-file",
-                "proto/sample.proto",
-                "proto/complex_types.proto",
-                "proto/primitive_types.proto",
+                "tests/proto/sample.proto",
             ]
         )
         assert True

@@ -15,6 +15,7 @@ udf-plugin-builder/test/load_another/build
 udf-plugin-builder/test/oneof_test/build
 udf-plugin-builder/test/nested_test/build
 udf-plugin-builder/test/log.*
+udf-plugin-builder/tmp/
 udf-plugin-viewer/build
 udf-plugin-viewer/udf_plugin_viewer/descriptors.py
 udf_converter/build

@@ -1,0 +1,49 @@
+name: Tsurugi-UDF-CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      os:
+        type: string
+        default: 'ubuntu-22.04'
+
+jobs:
+  Test:
+    runs-on: [self-hosted, docker]
+    permissions:
+      contents: read
+      checks: write
+    timeout-minutes: 30
+    container:
+      image: ghcr.io/project-tsurugi/tsurugi-ci:${{ inputs.os || 'ubuntu-22.04' }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test udf-library
+        run: |
+          cd udf_library
+          pip install .[test]
+          pytest -v
+
+      - name: Install common
+        run: |
+          cd common
+          pip install .
+
+      - name: Test udf-plugin-builder
+        run: |
+          cd udf-plugin-builder
+          pip install .[test]
+          pytest -v
+
+      - name: Install udf-plugin-viewer
+        run: |
+          cd udf-plugin-viewer
+          pip install .

@@ -31,6 +31,15 @@ pip install .
 
 Requires Python 3.10+ and protobuf library.
 
+## Testing
+
+```sh
+# install test dependencies before running tests (only needed once)
+pip install -e ".[test]"
+
+pytest
+```
+
 ## Example
 
 ```python

@@ -16,9 +16,9 @@ class BlobRelayClient(ABC):
             BlobRelayError: If there is an error during communication.
             OSError: If there is an error writing to the destination file.
         """
-        return self.download_blob(ref, destination)
+        return self.download_common(ref, destination)
 
-    def upload(self, source: Path):
+    def upload(self, source: Path, return_class):
         """ Upload BLOB data from `source` and return a reference to the uploaded BLOB.
 
         Args:
@@ -32,15 +32,18 @@ class BlobRelayClient(ABC):
             BlobRelayError: If there is an error during communication.
             BlobRelayError: If an error occurs in the BLOB relay service.
         """
-        return self.upload_blob(source)
-
+        return self.upload_common(source, return_class)
 
     @abstractmethod
     def download_blob(self, ref: BlobReference, destination: Path): pass
+    @abstractmethod
+    def download_clob(self, ref: ClobReference, destination: Path): pass
 
     @abstractmethod
     def upload_blob(self, source: Path) -> BlobReference: pass
-
+    @abstractmethod
+    def upload_clob(self, source: Path) -> ClobReference: pass
 __all__ = [
     "BlobRelayClient",
 ]
+

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13tsurugi_types.proto\x12\rtsurugidb.udf\"3\n\x07\x44\x65\x63imal\x12\x16\n\x0eunscaled_value\x18\x01 \x01(\x0c\x12\x10\n\x08\x65xponent\x18\x02 \x01(\x11\"\x14\n\x04\x44\x61te\x12\x0c\n\x04\x64\x61ys\x18\x01 \x01(\x11\"\x1a\n\tLocalTime\x12\r\n\x05nanos\x18\x01 \x01(\x12\"@\n\rLocalDatetime\x12\x16\n\x0eoffset_seconds\x18\x01 \x01(\x12\x12\x17\n\x0fnano_adjustment\x18\x02 \x01(\r\"[\n\x0eOffsetDatetime\x12\x16\n\x0eoffset_seconds\x18\x01 \x01(\x12\x12\x17\n\x0fnano_adjustment\x18\x02 \x01(\r\x12\x18\n\x10time_zone_offset\x18\x03 \x01(\x11\"C\n\rBlobReference\x12\x12\n\nstorage_id\x18\x01 \x01(\x04\x12\x11\n\tobject_id\x18\x02 \x01(\x04\x12\x0b\n\x03tag\x18\x03 \x01(\x04\"C\n\rClobReference\x12\x12\n\nstorage_id\x18\x01 \x01(\x04\x12\x11\n\tobject_id\x18\x02 \x01(\x04\x12\x0b\n\x03tag\x18\x03 \x01(\x04\x42\x13\n\x11\x63om.tsurugidb.udfb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13tsurugi_types.proto\x12\rtsurugidb.udf\"3\n\x07\x44\x65\x63imal\x12\x16\n\x0eunscaled_value\x18\x01 \x01(\x0c\x12\x10\n\x08\x65xponent\x18\x02 \x01(\x11\"\x14\n\x04\x44\x61te\x12\x0c\n\x04\x64\x61ys\x18\x01 \x01(\x11\"\x1a\n\tLocalTime\x12\r\n\x05nanos\x18\x01 \x01(\x12\"@\n\rLocalDatetime\x12\x16\n\x0eoffset_seconds\x18\x01 \x01(\x12\x12\x17\n\x0fnano_adjustment\x18\x02 \x01(\r\"[\n\x0eOffsetDatetime\x12\x16\n\x0eoffset_seconds\x18\x01 \x01(\x12\x12\x17\n\x0fnano_adjustment\x18\x02 \x01(\r\x12\x18\n\x10time_zone_offset\x18\x03 \x01(\x11\"X\n\rBlobReference\x12\x12\n\nstorage_id\x18\x01 \x01(\x04\x12\x11\n\tobject_id\x18\x02 \x01(\x04\x12\x0b\n\x03tag\x18\x03 \x01(\x04\x12\x13\n\x0bprovisioned\x18\x04 \x01(\x08\"X\n\rClobReference\x12\x12\n\nstorage_id\x18\x01 \x01(\x04\x12\x11\n\tobject_id\x18\x02 \x01(\x04\x12\x0b\n\x03tag\x18\x03 \x01(\x04\x12\x13\n\x0bprovisioned\x18\x04 \x01(\x08\x42\x13\n\x11\x63om.tsurugidb.udfb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -43,7 +43,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_OFFSETDATETIME']._serialized_start=207
   _globals['_OFFSETDATETIME']._serialized_end=298
   _globals['_BLOBREFERENCE']._serialized_start=300
-  _globals['_BLOBREFERENCE']._serialized_end=367
-  _globals['_CLOBREFERENCE']._serialized_start=369
-  _globals['_CLOBREFERENCE']._serialized_end=436
+  _globals['_BLOBREFERENCE']._serialized_end=388
+  _globals['_CLOBREFERENCE']._serialized_start=390
+  _globals['_CLOBREFERENCE']._serialized_end=478
 # @@protoc_insertion_point(module_scope)

@@ -111,10 +111,12 @@ class NestedImpl final : public Nested::Service {
         std::cout << " storage_id : " << request->br().storage_id() << std::endl;
         std::cout << " object_id : " << request->br().object_id() << std::endl;
         std::cout << " tag : " << request->br().tag() << std::endl;
+        std::cout << " provisioned : " << request->br().provisioned() << std::endl;
         auto* v = reply->mutable_br();
         v->set_storage_id(request->br().storage_id());
         v->set_object_id(request->br().object_id());
         v->set_tag(request->br().tag());
+        v->set_provisioned(request->br().provisioned());
         return Status::OK;
     }
     Status
@@ -123,10 +125,12 @@ class NestedImpl final : public Nested::Service {
         std::cout << " storage_id : " << request->cr().storage_id() << std::endl;
         std::cout << " object_id : " << request->cr().object_id() << std::endl;
         std::cout << " tag : " << request->cr().tag() << std::endl;
+        std::cout << " provisioned : " << request->cr().provisioned() << std::endl;
         auto* v = reply->mutable_cr();
         v->set_storage_id(request->cr().storage_id());
         v->set_object_id(request->cr().object_id());
         v->set_tag(request->cr().tag());
+        v->set_provisioned(request->cr().provisioned());
         return Status::OK;
     }
 };

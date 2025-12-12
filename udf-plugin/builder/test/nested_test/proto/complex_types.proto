@@ -30,10 +30,12 @@ message BlobReference {
   uint64 storage_id = 1;
   uint64 object_id = 2;
   uint64 tag = 3;
+  bool provisioned = 4;
 }
 
 message ClobReference {
   uint64 storage_id = 1;
   uint64 object_id = 2;
   uint64 tag = 3;
+  bool provisioned = 4;
 }

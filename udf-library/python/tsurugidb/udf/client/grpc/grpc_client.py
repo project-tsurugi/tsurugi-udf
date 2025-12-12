@@ -20,6 +20,7 @@ def to_pb_reference(ref) -> pb_reference.BlobReference:
         storage_id=ref.storage_id,
         object_id=ref.object_id,
         tag=ref.tag,
+        # pb_reference has no provisioned field since relay service does not use it for now
     )
 
 
@@ -134,6 +135,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
                 storage_id=resp.blob.storage_id,
                 object_id=resp.blob.object_id,
                 tag=resp.blob.tag,
+                provisioned=False,  # provisioned field is not relevant for uploaded data to relay service
             )
         except grpc.RpcError as e:
             raise RuntimeError(f"upload failed: {e}") from e

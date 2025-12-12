@@ -1,5 +1,5 @@
 #!/bin/bash
 python3 -m grpc_tools.protoc \
-    -I ../../proto \
+    -I ../../../proto/tsurugidb/udf \
     --python_out=../tsurugidb/udf/model \
-    ../../proto/tsurugi_types.proto
+    tsurugi_types.proto

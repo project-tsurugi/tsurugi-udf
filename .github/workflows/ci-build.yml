@@ -26,24 +26,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test udf-library
+      - name: Test udf-library-python
         run: |
-          cd udf_library
+          cd udf-library/python
           pip install .[test]
           pytest -v
 
-      - name: Install common
+      - name: Install udf-plugin-common
         run: |
-          cd common
+          cd udf-plugin/common
           pip install .
 
       - name: Test udf-plugin-builder
         run: |
-          cd udf-plugin-builder
+          cd udf-plugin/builder
           pip install .[test]
           pytest -v
 
       - name: Install udf-plugin-viewer
         run: |
-          cd udf-plugin-viewer
+          cd udf-plugin/viewer
           pip install .

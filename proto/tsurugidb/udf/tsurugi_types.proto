@@ -42,6 +42,9 @@ message BlobReference {
 
   // a tag for additional access control.
   uint64 tag = 3;
+
+  // whether the object is provisioned
+  bool provisioned = 4;
 }
 message ClobReference {
   // the ID of the storage where the BLOB data is stored.
@@ -52,4 +55,7 @@ message ClobReference {
 
   // a tag for additional access control.
   uint64 tag = 3;
+
+  // whether the object is provisioned
+  bool provisioned = 4;
 }

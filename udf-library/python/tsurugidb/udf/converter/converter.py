@@ -160,6 +160,7 @@ def from_pb_local_datetime(message: PbLocalDatetime) -> datetime:
     """Converts a Protocol Buffer LocalDatetime message to standard library datetime.
 
     The returned datetime will have no timezone information (tzinfo=None).
+    Nanosecond precision is truncated to microsecond precision.
 
     Args:
         message: Protocol Buffer message of the datetime to convert.
@@ -177,32 +178,34 @@ def from_pb_local_datetime(message: PbLocalDatetime) -> datetime:
 def to_pb_offset_datetime(value: datetime) -> PbOffsetDatetime:
     """Converts a standard library datetime to Protocol Buffer OffsetDatetime message.
 
-    If the input datetime has no timezone information (tzinfo is None), it is treated
-    as a naive datetime and the timezone offset will be set to 0 (UTC). However, when
-    converting to UTC using astimezone(), the system's local timezone may be assumed.
-
-    For datetime objects with timezone information, the offset is preserved and the
-    datetime is converted to UTC for storage. Note that Python's datetime has microsecond
-    precision, which is converted to nanosecond precision by multiplying by 1000.
+    If the input datetime has no timezone information (tzinfo is None),
+    it is treated as the system's local timezone.
 
     Args:
         value: The datetime value to convert.
 
     Returns:
         Protocol Buffer message of the datetime.
+
+    Raises:
+        ValueError: If the input datetime has no timezone information and
+        the system's local timezone cannot be determined for it.
     """
 
     if value.tzinfo is None:
-        tz_offset_min = 0
-    else:
-        tz_offset_min = int(value.utcoffset().total_seconds() // 60)
+        try:
+            value = value.astimezone()
+        except Exception as e:
+            raise ValueError(f"Cannot determine system's local timezone for the given datetime: {value}") from e
+
     delta = value.astimezone(timezone.utc) - _EPOCH_DATETIME.replace(tzinfo=timezone.utc)
     offset_seconds = int(delta.total_seconds())
     nano_adjustment = value.microsecond * 1000
+    tz_offset = int(value.utcoffset().total_seconds()) // 60
     return PbOffsetDatetime(
         offset_seconds=offset_seconds,
         nano_adjustment=nano_adjustment,
-        time_zone_offset=tz_offset_min,
+        time_zone_offset=tz_offset,
     )
 
 

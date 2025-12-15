@@ -16,7 +16,8 @@
  */
 #pragma once
 namespace plugin::udf {
-enum class function_kind_type {
+
+enum class function_kind {
     unary,
     client_streaming,
     server_streaming,
@@ -24,7 +25,7 @@ enum class function_kind_type {
 };
 // @see
 // https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243
-enum class type_kind_type {
+enum class type_kind {
     float8,
     float4,
     int8,

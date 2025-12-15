@@ -83,8 +83,13 @@ class GrpcBlobRelayClient(BlobRelayClient):
                     blob=ref_pb,
                 )
                 with destination.open("wb") as fp:
-                    for chunk in self.stub.Get(req):
-                        fp.write(chunk.chunk)
+                    for resp in self.stub.Get(req):
+                        which = resp.WhichOneof("payload")
+                        if which == "metadata":
+                            if resp.metadata.WhichOneof("blob_size_opt") == "blob_size":
+                                blob_size = resp.metadata.blob_size
+                        elif which == "chunk":
+                            fp.write(resp.chunk)
             else:
                 req = self.pb.GetLocalRequest(
                     api_version=1,
@@ -108,12 +113,14 @@ class GrpcBlobRelayClient(BlobRelayClient):
     def upload_common(self, source: Path, return_class):
         try:
             if self.transport == "stream":
+                blob_size = source.stat().st_size
 
                 def gen():
                     yield self.pb.PutStreamingRequest(
                         metadata=self.pb.PutStreamingRequest.Metadata(
                             api_version=1,
                             session_id=self.session_id,
+                            blob_size=blob_size,
                         )
                     )
                     with source.open("rb") as fp:

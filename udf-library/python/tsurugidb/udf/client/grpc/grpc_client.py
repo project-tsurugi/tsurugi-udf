@@ -83,12 +83,10 @@ class GrpcBlobRelayClient(BlobRelayClient):
                     blob=ref_pb,
                 )
                 with destination.open("wb") as fp:
-                    expected_size: Optional[int] = None
                     for resp in self.stub.Get(req):
                         which = resp.WhichOneof("payload")
                         if which == "metadata":
-                            if resp.metadata.WhichOneof("blob_size_opt") == "blob_size":
-                                expected_size = resp.metadata.blob_size
+                            pass
                         elif which == "chunk":
                             fp.write(resp.chunk)
             else:

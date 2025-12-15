@@ -86,6 +86,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
                     for resp in self.stub.Get(req):
                         which = resp.WhichOneof("payload")
                         if which == "metadata":
+                            # Metadata response received but not currently used
                             pass
                         elif which == "chunk":
                             fp.write(resp.chunk)

@@ -12,7 +12,7 @@ from . import blob_reference_pb2 as pb_reference
 from . import blob_reference_pb2_grpc as pb_reference_grpc
 
 
-from ..client import BlobRelayClient
+from ..client import BlobRelayClient, BlobRelayError
 
 
 def to_pb_reference(ref) -> pb_reference.BlobReference:
@@ -102,7 +102,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
                 destination.write_bytes(blob_path.read_bytes())
 
         except grpc.RpcError as e:
-            raise RuntimeError(f"download failed: {e}") from e
+            raise BlobRelayError(f"download failed: {e}") from e
         return destination
 
     def download_blob(self, ref: UdfBlobReference, destination: Path):
@@ -146,7 +146,7 @@ class GrpcBlobRelayClient(BlobRelayClient):
                 provisioned=False,  # provisioned field is not relevant for uploaded data to relay service
             )
         except grpc.RpcError as e:
-            raise RuntimeError(f"upload failed: {e}") from e
+            raise BlobRelayError(f"upload failed: {e}") from e
 
     def upload_blob(self, source: Path) -> UdfBlobReference:
         return self.upload_common(source, UdfBlobReference)

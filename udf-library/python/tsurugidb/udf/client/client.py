@@ -3,6 +3,10 @@ from pathlib import Path
 from tsurugidb.udf import *
 
 
+class BlobRelayError(RuntimeError):
+    """Error raised by BlobRelayClient implementations."""
+
+
 class BlobRelayClient(ABC):
     """A client for BLOB relay service."""
 

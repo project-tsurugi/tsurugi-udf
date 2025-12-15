@@ -123,7 +123,7 @@ class plugin_api_impl : public plugin_api {
                     auto fn_ptr = new function_descriptor_impl(
                         {{ fn.function_index }},
                         "{{ fn.function_name }}",
-                        function_kind_type::{{ fn.function_kind }},
+                        function_kind::{{ fn.function_kind }},
                         input_record,
                         output_record
                     );

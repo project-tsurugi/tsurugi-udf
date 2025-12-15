@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "udf_loader.h"
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -49,6 +48,15 @@ std::string type_kind_to_string(plugin::udf::type_kind_type kind) {
         case plugin::udf::type_kind_type::sfixed8: return "sfixed8";
         case plugin::udf::type_kind_type::sfixed4: return "sfixed4";
         default: return "UNKNOWN";
+    }
+}
+std::string function_kind_to_string(plugin::udf::function_kind kind) {
+    switch(kind) {
+        case plugin::udf::function_kind::unary: return "unary";
+        case plugin::udf::function_kind::client_streaming: return "client_streaming";
+        case plugin::udf::function_kind::server_streaming: return "server_streaming";
+        case plugin::udf::function_kind::bidirectional_streaming: return "bidirectional_streaming";
+        default: return "unknown_function_kind";
     }
 }
 py::dict record_to_dict(const record_descriptor& record);
@@ -92,7 +100,7 @@ py::dict function_to_dict(const function_descriptor* fn) {
     return py::dict(
         "function_index"_a = fn->function_index(),
         "function_name"_a = std::string(fn->function_name()),
-        "function_kind"_a = static_cast<int>(fn->function_kind()),
+        "function_kind"_a = function_kind_to_string(fn->function_kind()),
         "input_record"_a = record_to_dict(fn->input_record()),
         "output_record"_a = record_to_dict(fn->output_record())
     );

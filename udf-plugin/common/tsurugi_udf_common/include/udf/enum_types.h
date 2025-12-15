@@ -16,7 +16,8 @@
  */
 #pragma once
 namespace plugin::udf {
-enum class function_kind_type {
+
+enum class function_kind {
     unary,
     client_streaming,
     server_streaming,

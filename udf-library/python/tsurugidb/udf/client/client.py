@@ -8,10 +8,10 @@ class BlobRelayClient(ABC):
 
     @abstractmethod
     def download_blob(self, ref: BlobReference, destination: Path):
-        """Download BLOB data identified by `blob_ref` and save it to `destination`.
+        """Download BLOB data identified by `ref` and save it to `destination`.
 
         Args:
-            blob_ref (BlobReference): The reference to the BLOB to download.
+            ref (BlobReference): The reference to the BLOB to download.
             destination (Path): The file path where the downloaded BLOB data will be saved.
 
         Raises:
@@ -23,11 +23,11 @@ class BlobRelayClient(ABC):
 
     @abstractmethod
     def download_clob(self, ref: ClobReference, destination: Path):
-        """Download CLOB data identified by `blob_ref` and save it to `destination`.
+        """Download CLOB data identified by `ref` and save it to `destination`.
 
         Args:
-            clob_ref (ClobReference): The reference to the BLOB to download.
-            destination (Path): The file path where the downloaded BLOB data will be saved.
+            ref (ClobReference): The reference to the CLOB to download.
+            destination (Path): The file path where the downloaded CLOB data will be saved.
 
         Raises:
             BlobRelayError: If an error occurs in the BLOB relay service.

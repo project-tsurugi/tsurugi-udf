@@ -1,4 +1,5 @@
 from .grpc.grpc_client import GrpcBlobRelayClient
+from .grpc._constants import KEY_TRANSPORT
 
 """
 from tsurugi.udf.client import create_blob_client

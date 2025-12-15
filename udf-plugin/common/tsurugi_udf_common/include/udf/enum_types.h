@@ -25,7 +25,7 @@ enum class function_kind {
 };
 // @see
 // https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243
-enum class type_kind_type {
+enum class type_kind {
     float8,
     float4,
     int8,

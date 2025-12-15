@@ -26,7 +26,7 @@
 namespace plugin::udf {
 
 [[nodiscard]] std::string to_string(function_kind kind);
-[[nodiscard]] std::string to_string(type_kind_type kind);
+[[nodiscard]] std::string to_string(type_kind kind);
 class package_version final {
 public:
 
@@ -59,7 +59,7 @@ private:
 class record_descriptor;
 class column_descriptor {
 public:
-
+    using type_kind_type = plugin::udf::type_kind;
     using index_type = std::size_t;
     using oneof_index_type = std::size_t;
     virtual ~column_descriptor() = default;
@@ -152,6 +152,6 @@ public:
 void print_columns(std::vector<column_descriptor*> const& cols, int indent);
 void print_plugin_info(std::shared_ptr<plugin_api> const& api);
 extern "C" plugin_api* create_plugin_api();
-std::ostream& operator<<(std::ostream& out, type_kind_type const& kind);
+std::ostream& operator<<(std::ostream& out, type_kind const& kind);
 std::ostream& operator<<(std::ostream& out, function_kind const& kind);
 }  // namespace plugin::udf

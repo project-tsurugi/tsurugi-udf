@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from tsurugidb.udf import *
+from tsurugidb.udf import BlobReference, ClobReference
 
 
 class BlobRelayError(RuntimeError):
@@ -76,5 +76,6 @@ class BlobRelayClient(ABC):
 
 
 __all__ = [
+    "BlobRelayError",
     "BlobRelayClient",
 ]

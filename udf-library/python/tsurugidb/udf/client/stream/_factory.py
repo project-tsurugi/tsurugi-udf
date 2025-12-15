@@ -62,12 +62,12 @@ class ClientConfig:
             X-TSURUGI-BLOB-STREAM-DEADLINE   optional deadline in seconds (integer)
         """
 
-        md = {key.lower(): value for key, value in context.invocation_metadata()}
+        metadata = {key.lower(): value for key, value in context.invocation_metadata()}
 
-        session_id_str = md.get(KEY_SESSION)
-        endpoint = md.get(KEY_ENDPOINT)
-        secure_str = md.get(KEY_SECURE)
-        chunk_size_str = md.get(KEY_STREAM_CHUNK_SIZE)
+        session_id_str = metadata.get(KEY_SESSION)
+        endpoint = metadata.get(KEY_ENDPOINT)
+        secure_str = metadata.get(KEY_SECURE)
+        chunk_size_str = metadata.get(KEY_STREAM_CHUNK_SIZE)
 
         if not session_id_str or not session_id_str.isdigit():
             raise ValueError(f"missing or invalid {KEY_SESSION.upper()}")
@@ -102,8 +102,12 @@ def create_blob_client(context: grpc.ServicerContext) -> ContextManager[StreamBl
 
     Args:
         context: The gRPC ServicerContext to parse metadata from.
+
     Returns:
         A context manager that yields a StreamBlobRelayClient.
+
+    See:
+        ClientConfig.parse() for available metadata keys.
     """
     config = ClientConfig.parse(context) # if error occurs, channel creation is not done
     return create_blob_client_from_config(config)

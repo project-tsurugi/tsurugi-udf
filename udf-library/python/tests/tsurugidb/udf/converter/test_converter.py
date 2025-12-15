@@ -1,3 +1,5 @@
+from pytest import raises, skip
+
 from tsurugidb.udf import (
     Decimal as PbDecimal,
     Date as PbDate,
@@ -62,6 +64,20 @@ def test_to_pb_decimal_negative_exponent():
     assert pb_decimal.exponent == 2
     assert pb_decimal.unscaled_value == int.to_bytes(12345, 2, byteorder='big', signed=True)
 
+def test_to_pb_decimal_positive_infinity():
+    value = PyDecimal("+Infinity")
+    with raises(ValueError):
+        to_pb_decimal(value)
+
+def test_to_pb_decimal_negative_infinity():
+    value = PyDecimal("-Infinity")
+    with raises(ValueError):
+        to_pb_decimal(value)
+
+def test_to_pb_decimal_nan():
+    value = PyDecimal("NaN")
+    with raises(ValueError):
+        to_pb_decimal(value)
 
 def test_from_pb_decimal_zero():
     pb_decimal = PbDecimal()
@@ -153,6 +169,15 @@ def test_to_pb_local_time_nanos():
     )
     assert pb_time.nanos == expected_nanos
 
+def test_to_pb_local_time_discards_timezone():
+    tz = timezone(timedelta(hours=-4))
+    t = PyTime(12, 34, 56, 789_012, tzinfo=tz)
+    pb_time = to_pb_local_time(t)
+    expected_nanos = (
+        (12 * 60 * 60 + 34 * 60 + 56) * 1_000_000_000 + 789_012_000
+    )
+    assert pb_time.nanos == expected_nanos
+
 def test_from_pb_local_time_epoch():
     pb_time = PbTime()
     pb_time.nanos = 0
@@ -187,6 +212,15 @@ def test_to_pb_local_datetime_before_epoch():
     dt = PyDatetime(1960, 1, 1, 12, 34, 56, 789_012)
     pb_dt = to_pb_local_datetime(dt)
     expected_offset_seconds = int((dt - PyDatetime(1970, 1, 1)).total_seconds())
+    expected_nano_adjustment = 789_012 * 1000
+    assert pb_dt.offset_seconds == expected_offset_seconds
+    assert pb_dt.nano_adjustment == expected_nano_adjustment
+
+def test_to_pb_local_datetime_discards_timezone():
+    tz = timezone(timedelta(hours=5))  # UTC+5
+    dt = PyDatetime(2023, 1, 1, 12, 34, 56, 789_012, tzinfo=tz)
+    pb_dt = to_pb_local_datetime(dt)
+    expected_offset_seconds = int((dt.replace(tzinfo=None) - PyDatetime(1970, 1, 1)).total_seconds())
     expected_nano_adjustment = 789_012 * 1000
     assert pb_dt.offset_seconds == expected_offset_seconds
     assert pb_dt.nano_adjustment == expected_nano_adjustment
@@ -245,11 +279,22 @@ def test_to_pb_offset_datetime_without_tz():
     pb_dt = to_pb_offset_datetime(dt)
     expected_offset_seconds = int((dt.astimezone(timezone.utc) - PyDatetime(1970, 1, 1, tzinfo=timezone.utc)).total_seconds())
     expected_nano_adjustment = 789_012_000
-    expected_tz_offset = 0
+    expected_tz_offset = int(dt.astimezone().utcoffset().total_seconds()) // 60
     assert pb_dt.offset_seconds == expected_offset_seconds
     assert pb_dt.nano_adjustment == expected_nano_adjustment
     assert pb_dt.time_zone_offset == expected_tz_offset
 
+def test_to_pb_offset_datetime_without_tz_no_tzinfo():
+    dt = PyDatetime(1, 1, 1, tzinfo=None)
+    try:
+        dt.astimezone()
+        skip("System's local timezone is available; skipping test.")
+    except Exception:
+        # timezone info cannot be determined for A.C. 1
+        pass
+
+    with raises(ValueError):
+        to_pb_offset_datetime(dt)
 
 def test_from_pb_offset_datetime_epoch():
     pb_dt = PbOffsetDatetime()

@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from . import blob_reference_pb2 as blob__reference__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1a\x62lob_relay_streaming.proto\x12 data_relay_grpc.blob_relay.proto\x1a\x14\x62lob_reference.proto\"\xa7\x01\n\x13GetStreamingRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x14\n\nsession_id\x18\x02 \x01(\x04H\x00\x12\x18\n\x0etransaction_id\x18\x03 \x01(\x04H\x00\x12=\n\x04\x62lob\x18\x04 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReferenceB\x0c\n\ncontext_id\"%\n\x14GetStreamingResponse\x12\r\n\x05\x63hunk\x18\x01 \x01(\x0c\"\xba\x01\n\x13PutStreamingRequest\x12R\n\x08metadata\x18\x01 \x01(\x0b\x32>.data_relay_grpc.blob_relay.proto.PutStreamingRequest.MetadataH\x00\x12\x0f\n\x05\x63hunk\x18\x02 \x01(\x0cH\x00\x1a\x33\n\x08Metadata\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x12\n\nsession_id\x18\x02 \x01(\x04\x42\t\n\x07payload\"U\n\x14PutStreamingResponse\x12=\n\x04\x62lob\x18\x01 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReference2\x84\x02\n\x12\x42lobRelayStreaming\x12v\n\x03Get\x12\x35.data_relay_grpc.blob_relay.proto.GetStreamingRequest\x1a\x36.data_relay_grpc.blob_relay.proto.GetStreamingResponse0\x01\x12v\n\x03Put\x12\x35.data_relay_grpc.blob_relay.proto.PutStreamingRequest\x1a\x36.data_relay_grpc.blob_relay.proto.PutStreamingResponse(\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1a\x62lob_relay_streaming.proto\x12 data_relay_grpc.blob_relay.proto\x1a\x14\x62lob_reference.proto\"\xa7\x01\n\x13GetStreamingRequest\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x14\n\nsession_id\x18\x02 \x01(\x04H\x00\x12\x18\n\x0etransaction_id\x18\x03 \x01(\x04H\x00\x12=\n\x04\x62lob\x18\x04 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReferenceB\x0c\n\ncontext_id\"\xb9\x01\n\x14GetStreamingResponse\x12S\n\x08metadata\x18\x01 \x01(\x0b\x32?.data_relay_grpc.blob_relay.proto.GetStreamingResponse.MetadataH\x00\x12\x0f\n\x05\x63hunk\x18\x02 \x01(\x0cH\x00\x1a\x30\n\x08Metadata\x12\x13\n\tblob_size\x18\x01 \x01(\x04H\x00\x42\x0f\n\rblob_size_optB\t\n\x07payload\"\xe0\x01\n\x13PutStreamingRequest\x12R\n\x08metadata\x18\x01 \x01(\x0b\x32>.data_relay_grpc.blob_relay.proto.PutStreamingRequest.MetadataH\x00\x12\x0f\n\x05\x63hunk\x18\x02 \x01(\x0cH\x00\x1aY\n\x08Metadata\x12\x13\n\x0b\x61pi_version\x18\x01 \x01(\x04\x12\x12\n\nsession_id\x18\x02 \x01(\x04\x12\x13\n\tblob_size\x18\x03 \x01(\x04H\x00\x42\x0f\n\rblob_size_optB\t\n\x07payload\"U\n\x14PutStreamingResponse\x12=\n\x04\x62lob\x18\x01 \x01(\x0b\x32/.data_relay_grpc.blob_relay.proto.BlobReference2\x84\x02\n\x12\x42lobRelayStreaming\x12v\n\x03Get\x12\x35.data_relay_grpc.blob_relay.proto.GetStreamingRequest\x1a\x36.data_relay_grpc.blob_relay.proto.GetStreamingResponse0\x01\x12v\n\x03Put\x12\x35.data_relay_grpc.blob_relay.proto.PutStreamingRequest\x1a\x36.data_relay_grpc.blob_relay.proto.PutStreamingResponse(\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,14 +34,16 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_GETSTREAMINGREQUEST']._serialized_start=87
   _globals['_GETSTREAMINGREQUEST']._serialized_end=254
-  _globals['_GETSTREAMINGRESPONSE']._serialized_start=256
-  _globals['_GETSTREAMINGRESPONSE']._serialized_end=293
-  _globals['_PUTSTREAMINGREQUEST']._serialized_start=296
-  _globals['_PUTSTREAMINGREQUEST']._serialized_end=482
-  _globals['_PUTSTREAMINGREQUEST_METADATA']._serialized_start=420
-  _globals['_PUTSTREAMINGREQUEST_METADATA']._serialized_end=471
-  _globals['_PUTSTREAMINGRESPONSE']._serialized_start=484
-  _globals['_PUTSTREAMINGRESPONSE']._serialized_end=569
-  _globals['_BLOBRELAYSTREAMING']._serialized_start=572
-  _globals['_BLOBRELAYSTREAMING']._serialized_end=832
+  _globals['_GETSTREAMINGRESPONSE']._serialized_start=257
+  _globals['_GETSTREAMINGRESPONSE']._serialized_end=442
+  _globals['_GETSTREAMINGRESPONSE_METADATA']._serialized_start=383
+  _globals['_GETSTREAMINGRESPONSE_METADATA']._serialized_end=431
+  _globals['_PUTSTREAMINGREQUEST']._serialized_start=445
+  _globals['_PUTSTREAMINGREQUEST']._serialized_end=669
+  _globals['_PUTSTREAMINGREQUEST_METADATA']._serialized_start=569
+  _globals['_PUTSTREAMINGREQUEST_METADATA']._serialized_end=658
+  _globals['_PUTSTREAMINGRESPONSE']._serialized_start=671
+  _globals['_PUTSTREAMINGRESPONSE']._serialized_end=756
+  _globals['_BLOBRELAYSTREAMING']._serialized_start=759
+  _globals['_BLOBRELAYSTREAMING']._serialized_end=1019
 # @@protoc_insertion_point(module_scope)

@@ -2,7 +2,7 @@
 TSURUGI_DIR=${HOME}/git/tsurugidb
 RELAY=${TSURUGI_DIR}/data-relay-grpc
 PRO=${RELAY}/protos/blob_relay
-OUT=../tsurugi/udf/client/grpc
+OUT=../tsurugidb/udf/client/grpc
 
 python3 -m grpc_tools.protoc \
 	-I ${PRO} \

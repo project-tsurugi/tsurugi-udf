@@ -24,7 +24,7 @@ T = TypeVar("T", bound=UdfBlobReference | UdfClobReference)
 class StreamBlobRelayClient(BlobRelayClient):
     """An implementation of BlobRelayClient that exchanges BLOBs via gRPC streaming."""
 
-    __API_VERSION = 1;
+    __API_VERSION = 1
 
     def __init__(
             self,

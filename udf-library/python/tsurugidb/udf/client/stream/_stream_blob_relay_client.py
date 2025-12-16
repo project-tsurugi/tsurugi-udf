@@ -62,13 +62,13 @@ class StreamBlobRelayClient(BlobRelayClient):
             ref: pb_model.BlobReference,
             destination: Path,
             timeout: float | None = None) -> None:
+        req = pb_message.GetStreamingRequest(
+            api_version=self.api_version(),
+            session_id=self.__session_id,
+            blob=ref,
+        )
         try:
-            req = pb_message.GetStreamingRequest(
-                api_version=self.api_version(),
-                session_id=self.__session_id,
-                blob=ref,
-            )
-            with destination.open("wb") as fp:
+            with destination.open("xb") as fp:
                 expected_size: int | None = None
                 saw_metadata = False
                 actual_size = 0

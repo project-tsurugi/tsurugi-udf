@@ -96,8 +96,6 @@ class StreamBlobRelayClient(BlobRelayClient):
             raise BlobRelayError(f"exception occurred during writing downloaded file: {e}") from e
         except grpc.RpcError as e:
             raise BlobRelayError(f"download failed: {e}") from e
-        return destination
-
     def __upload_internal(
             self,
             source: Path,

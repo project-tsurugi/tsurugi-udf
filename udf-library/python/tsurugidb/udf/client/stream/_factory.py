@@ -132,7 +132,6 @@ def create_blob_client_from_config(config: ClientConfig) -> Iterator[StreamBlobR
             stub,
             config.session_id,
             chunk_size=config.chunk_size,
-            deadline=config.deadline,
         )
         yield client
     finally:

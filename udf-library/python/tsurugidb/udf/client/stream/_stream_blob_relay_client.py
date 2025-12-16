@@ -1,7 +1,8 @@
 # package: tsurugidb.udf.client.stream
 
 import grpc
-import time
+
+from contextlib import suppress
 from datetime import timedelta
 from pathlib import Path
 from typing import Type, TypeVar
@@ -9,6 +10,7 @@ from typing import Type, TypeVar
 from ... import (
     BlobRelayClient,
     BlobRelayError,
+    BlobRelayTimeoutError,
     BlobReference as UdfBlobReference,
     ClobReference as UdfClobReference,
 )
@@ -52,23 +54,23 @@ class StreamBlobRelayClient(BlobRelayClient):
         """
         return cls.__API_VERSION
 
-    def __deadline_timestamp(self, timeout: float | None) -> float | None:
-        if timeout is not None:
-            return time.time() + timeout
-        return None
-
     def __download_internal(
             self,
             ref: pb_model.BlobReference,
             destination: Path,
             timeout: float | None = None) -> None:
+        if destination.exists():
+            raise FileExistsError(f"destination file already exists: {destination}")
+
         req = pb_message.GetStreamingRequest(
             api_version=self.api_version(),
             session_id=self.__session_id,
             blob=ref,
         )
+        file_staging = False
         try:
             with destination.open("xb") as fp:
+                file_staging = True
                 expected_size: int | None = None
                 saw_metadata = False
                 actual_size = 0
@@ -91,15 +93,24 @@ class StreamBlobRelayClient(BlobRelayClient):
 
                 if expected_size is not None and actual_size != expected_size:
                     raise BlobRelayError(f"download size mismatch: expected {expected_size}, got {actual_size}")
-
-        except OSError as e:
-            raise BlobRelayError(f"exception occurred during writing downloaded file: {e}") from e
+            file_staging = False
         except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                raise BlobRelayTimeoutError("download operation timed out") from e
             raise BlobRelayError(f"download failed: {e}") from e
+        finally:
+            if file_staging and destination.exists():
+                with suppress(Exception):
+                    destination.unlink()
+
+
     def __upload_internal(
             self,
             source: Path,
             timeout: float | None = None) -> pb_model.BlobReference:
+        if not source.exists():
+            raise FileNotFoundError(f"source file does not exist: {source}")
+
         try:
             blob_size = source.stat().st_size
 
@@ -123,9 +134,9 @@ class StreamBlobRelayClient(BlobRelayClient):
             resp = self.__stub.Put(gen(), timeout=timeout)
             return resp.blob
 
-        except OSError as e:
-            raise BlobRelayError(f"exception occurred during reading file to upload: {e}") from e
         except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                raise BlobRelayTimeoutError("upload operation timed out") from e
             raise BlobRelayError(f"upload failed: {e}") from e
 
     def __to_pb_reference(self, ref: UdfBlobReference | UdfClobReference) -> pb_model.BlobReference:
@@ -144,20 +155,27 @@ class StreamBlobRelayClient(BlobRelayClient):
             provisioned=False,  # provisioned field is not relevant for relay service
         )
 
-    def download_blob(self, ref: UdfBlobReference, destination: Path) -> None:
-        ref_pb = self.__to_pb_reference(ref)
-        return self.__download_internal(ref_pb, destination)
+    def __to_seconds(self, timeout: timedelta | int | float | None) -> float | None:
+        if timeout is None:
+            return None
+        if isinstance(timeout, timedelta):
+            return timeout.total_seconds()
+        return float(timeout)
 
-    def download_clob(self, ref: UdfClobReference, destination: Path) -> None:
+    def download_blob(self, ref: UdfBlobReference, destination: Path, *, timeout: timedelta | None = None) -> None:
         ref_pb = self.__to_pb_reference(ref)
-        return self.__download_internal(ref_pb, destination)
+        return self.__download_internal(ref_pb, destination, timeout=self.__to_seconds(timeout))
 
-    def upload_blob(self, source: Path) -> UdfBlobReference:
-        ref_pb = self.__upload_internal(source)
+    def download_clob(self, ref: UdfClobReference, destination: Path, *, timeout: timedelta | None = None) -> None:
+        ref_pb = self.__to_pb_reference(ref)
+        return self.__download_internal(ref_pb, destination, timeout=self.__to_seconds(timeout))
+
+    def upload_blob(self, source: Path, *, timeout: timedelta | None = None) -> UdfBlobReference:
+        ref_pb = self.__upload_internal(source, timeout=self.__to_seconds(timeout))
         return self.__from_pb_reference(ref_pb, UdfBlobReference)
 
-    def upload_clob(self, source: Path) -> UdfClobReference:
-        ref_pb = self.__upload_internal(source)
+    def upload_clob(self, source: Path, *, timeout: timedelta | None = None) -> UdfClobReference:
+        ref_pb = self.__upload_internal(source, timeout=self.__to_seconds(timeout))
         return self.__from_pb_reference(ref_pb, UdfClobReference)
 
 __all__ = [

@@ -294,7 +294,15 @@ TSURUGI_TYPES_KEYWORDS = {
     "tsurugidb.udf.BlobReference",
     "tsurugidb.udf.ClobReference",
 }
+TEMPLATE = {
+    "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",
+    "rpc_client.cpp.j2": "rpc_client.cpp",
+    "rpc_client.h.j2": "rpc_client.h",
+    "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
+}
+
 __all__ = [
     "TSURUGI_RESERVED_KEYWORDS",
     "TSURUGI_TYPES_KEYWORDS",
+    "TEMPLATE",
 ]

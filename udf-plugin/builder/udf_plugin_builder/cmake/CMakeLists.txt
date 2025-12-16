@@ -1,345 +1,72 @@
 cmake_minimum_required(VERSION 3.15)
-project(udf_app)
+project(udf_plugin LANGUAGES CXX)
 
 # ============================================================
-# Options
+# Required variables (from build_with_cmake.py)
 # ============================================================
-option(USE_INSTALLED_TSURUGI_UDF_COMMON
-       "Use installed tsurugi-udf-common instead of source" ON)
+if(NOT DEFINED BUILD_DIR)
+  message(FATAL_ERROR "BUILD_DIR must be specified")
+endif()
 
-option(ENABLE_TESTS "Build tests" OFF)
-option(ENABLE_UNARY_TEST "Build unary_test" OFF)
-option(ENABLE_LOAD_ANOTHER_TEST "Build load_another_test" OFF)
-option(ENABLE_ONEOF_TEST "Build oneof_test" OFF)
-option(ENABLE_NESTED_TEST "Build nested_test" OFF)
-option(ENABLE_1113_TEST "Build 1113_test" OFF)
-option(ENABLE_PACKAGE_TEST "Build package_test" OFF)
-option(ENABLE_RETURN_TEST "Build return_test" OFF)
+if(NOT DEFINED NAME)
+  message(FATAL_ERROR "NAME must be specified (plugin name)")
+endif()
+
+if(NOT DEFINED TSURUGI_UDF_COMMON_DIR)
+  message(FATAL_ERROR "TSURUGI_UDF_COMMON_DIR must be specified")
+endif()
+
 if(NOT OUTPUT_DIR OR OUTPUT_DIR STREQUAL "")
   set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
+# ============================================================
+# C++ settings
+# ============================================================
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
-set(TEST_ROOT_DIR ${PROJECT_ROOT_DIR}/test)
-
 # ============================================================
-# Locate tsurugi_udf_common
+# Use cmake modules shipped with tsurugi_udf_common
 # ============================================================
-if(USE_INSTALLED_TSURUGI_UDF_COMMON)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
-  execute_process(
-    COMMAND
-      ${Python3_EXECUTABLE} -c
-      "import tsurugi_udf_common, os, sys; sys.stdout.write(os.path.dirname(tsurugi_udf_common.__file__))"
-    OUTPUT_VARIABLE TSURUGI_UDF_COMMON_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-else()
-  set(TSURUGI_UDF_COMMON_DIR "${PROJECT_ROOT_DIR}/common/tsurugi_udf_common")
-endif()
+list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
 
 message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
 
 # ============================================================
-# Find dependencies
+# Dependencies (Module mode)
 # ============================================================
-list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
-
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
-find_package(Python3 REQUIRED)
-find_program(PROTOC_EXECUTABLE protoc)
-find_package(Boost REQUIRED)
 
-if(NOT PROTOC_EXECUTABLE)
-  message(FATAL_ERROR "protoc not found!")
+# ============================================================
+# Generated sources (from Python codegen)
+# ============================================================
+set(GENERATED_SOURCES_CMAKE "${BUILD_DIR}/generated_sources.cmake")
+
+if(NOT EXISTS "${GENERATED_SOURCES_CMAKE}")
+  message(
+    FATAL_ERROR
+      "generated_sources.cmake not found: ${GENERATED_SOURCES_CMAKE}\n"
+      "Run Python code generation first.")
 endif()
 
-find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
-if(NOT GRPC_CPP_PLUGIN_EXECUTABLE)
-  message(FATAL_ERROR "grpc_cpp_plugin not found!")
-endif()
-
-set(GENERATE_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/../generate.py)
+include("${GENERATED_SOURCES_CMAKE}")
 
 # ============================================================
-# Build type
+# Build shared library (.so)
 # ============================================================
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE Debug)
-endif()
+add_library(${NAME} SHARED ${GENERATED_SRCS} ${GENERATED_HDRS})
 
-# ============================================================
-# Proto files
-# ============================================================
+target_include_directories(
+  ${NAME} PRIVATE ${BUILD_DIR} ${TSURUGI_UDF_COMMON_DIR}/include/udf
+                  ${GRPC_INCLUDE_DIRS})
 
-if(ENABLE_UNARY_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/unary_test/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/unary_test/proto/test_all.proto)
-elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/load_another/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/load_another/proto/sample.proto)
-elseif(ENABLE_ONEOF_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/oneof_test/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/oneof_test/proto/oneof_test.proto)
-elseif(ENABLE_NESTED_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/nested_test/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/nested_test/proto/nested_test.proto
-                  ${TEST_ROOT_DIR}/nested_test/proto/complex_types.proto)
-elseif(ENABLE_1113_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/1113/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/1113/proto/1113.proto)
-elseif(ENABLE_PACKAGE_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/package_test/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/package_test/proto/pac.proto)
-elseif(ENABLE_RETURN_TEST)
-  set(PROTO_PATH ${TEST_ROOT_DIR}/return_test/proto)
-  set(PROTO_FILES ${TEST_ROOT_DIR}/return_test/proto/return.proto
-                  ${TEST_ROOT_DIR}/return_test/proto/tsurugi_types.proto)
-endif()
-message(STATUS "Proto files: ${PROTO_FILES}")
-message(STATUS "Proto path: ${PROTO_PATH}")
-# ============================================================
-# Plugin API name
-# ============================================================
-if(ENABLE_UNARY_TEST)
-  set(NAME unary_test)
-elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(NAME load_another)
-elseif(ENABLE_ONEOF_TEST)
-  set(NAME oneof_test)
-elseif(ENABLE_NESTED_TEST)
-  set(NAME nested_test)
-elseif(ENABLE_1113_TEST)
-  set(NAME 1113)
-elseif(ENABLE_PACKAGE_TEST)
-  set(NAME package_test)
-elseif(ENABLE_RETURN_TEST)
-  set(NAME return_test)
-endif()
-message(STATUS "Plugin API library name: ${NAME}")
+target_link_libraries(${NAME} PRIVATE ${GRPC_LIBRARIES} protobuf::libprotobuf)
 
-# ============================================================
-# Paths
-# ============================================================
-if(NOT DEFINED BUILD_DIR)
-  set(BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/tmp")
-endif()
+set_target_properties(${NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                         "${OUTPUT_DIR}")
 
-# ============================================================
-# gRPC URL (test-specific)
-# ============================================================
-if(ENABLE_UNARY_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50001")
-elseif(ENABLE_LOAD_ANOTHER_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50002")
-elseif(ENABLE_ONEOF_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50003")
-elseif(ENABLE_NESTED_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50004")
-elseif(ENABLE_1113_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50005")
-elseif(ENABLE_PACKAGE_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50006")
-elseif(ENABLE_RETURN_TEST)
-  set(GRPC_ENDPOINT "dns:///localhost:50007")
-endif()
-message(STATUS "gRPC endpoint: ${GRPC_ENDPOINT}")
-# ============================================================
-# Proto/gRPC generation
-# ============================================================
-set(PROTO_GEN_SRCS "")
-set(PROTO_GEN_HDRS "")
-set(GRPC_GEN_SRCS "")
-set(GRPC_GEN_HDRS "")
-
-foreach(proto_file IN LISTS PROTO_FILES)
-  get_filename_component(proto_name ${proto_file} NAME_WE)
-  list(APPEND PROTO_GEN_SRCS ${BUILD_DIR}/${proto_name}.pb.cc)
-  list(APPEND PROTO_GEN_HDRS ${BUILD_DIR}/${proto_name}.pb.h)
-  list(APPEND GRPC_GEN_SRCS ${BUILD_DIR}/${proto_name}.grpc.pb.cc)
-  list(APPEND GRPC_GEN_HDRS ${BUILD_DIR}/${proto_name}.grpc.pb.h)
-endforeach()
-
-set(PLUGIN_GEN_SRCS
-    ${BUILD_DIR}/plugin_api_impl.cpp ${BUILD_DIR}/rpc_client.cpp
-    ${BUILD_DIR}/rpc_client_factory.cpp
-    ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
-set(PLUGIN_GEN_HDRS ${BUILD_DIR}/rpc_client.h)
-
-# ============================================================
-# Code generation command
-# ============================================================
-add_custom_command(
-  OUTPUT ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS} ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS}
-         ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_DIR}
-  COMMAND
-    ${Python3_EXECUTABLE} ${GENERATE_SCRIPT} --proto-file ${PROTO_FILES}
-    --proto-path ${PROTO_PATH} --build-dir ${BUILD_DIR} --name ${NAME}
-    --grpc-endpoint ${GRPC_ENDPOINT} --output-dir ${OUTPUT_DIR}
-  DEPENDS ${GENERATE_SCRIPT} ${PROTO_FILES}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
-  COMMENT "Running generate.py for proto and plugin API generation")
-
-# ============================================================
-# Proto library
-# ============================================================
-add_library(proto_lib STATIC ${PROTO_GEN_SRCS} ${PROTO_GEN_HDRS}
-                             ${GRPC_GEN_SRCS} ${GRPC_GEN_HDRS})
-target_include_directories(proto_lib PUBLIC ${BUILD_DIR} ${GRPC_INCLUDE_DIRS})
-target_link_libraries(proto_lib PUBLIC ${GRPC_LIBRARIES} protobuf::libprotobuf)
-set_target_properties(proto_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-# ============================================================
-# Plugin API library
-# ============================================================
-add_library(${NAME} SHARED ${PLUGIN_GEN_SRCS} ${PLUGIN_GEN_HDRS})
-target_include_directories(${NAME} PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                                           ${BUILD_DIR})
-target_link_libraries(${NAME} PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                      protobuf::libprotobuf)
-if(OUTPUT_DIR)
-  message(STATUS "Setting output directory to ${OUTPUT_DIR}")
-  set_target_properties(${NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                                           ${OUTPUT_DIR})
-endif()
-# ============================================================
-# Clean target
-# ============================================================
-add_custom_target(
-  clean_out
-  COMMAND ${CMAKE_COMMAND} -E rm -rf "${BUILD_DIR}"
-  COMMENT "Removing tmp directory")
-set_property(
-  DIRECTORY
-  APPEND
-  PROPERTY ADDITIONAL_MAKE_CLEAN_FILES "${BUILD_DIR}")
-
-# ============================================================
-# Test executables
-# ============================================================
-if(ENABLE_TESTS)
-
-  if(ENABLE_UNARY_TEST)
-    message(STATUS "Building unary_test")
-    add_executable(rpc_server_unary_test
-                   ${TEST_ROOT_DIR}/unary_test/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_unary_test PRIVATE ${BUILD_DIR}
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
-    target_link_libraries(
-      rpc_server_unary_test PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                    protobuf::libprotobuf)
-
-    add_executable(
-      rpc_client
-      ${TEST_ROOT_DIR}/unary_test/client/client.cpp
-      ${BUILD_DIR}/rpc_client.cpp
-      ${BUILD_DIR}/rpc_client_factory.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp)
-    target_include_directories(
-      rpc_client PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf ${BUILD_DIR})
-    target_link_libraries(rpc_client PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                             protobuf::libprotobuf)
-  endif()
-
-  if(ENABLE_LOAD_ANOTHER_TEST)
-    message(STATUS "Building load_another_test")
-    add_executable(rpc_server_load_another
-                   ${TEST_ROOT_DIR}/load_another/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_load_another
-      PRIVATE ${BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
-    target_link_libraries(
-      rpc_server_load_another PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                      protobuf::libprotobuf)
-  endif()
-
-  if(ENABLE_ONEOF_TEST)
-    message(STATUS "Building oneof_test")
-    add_executable(rpc_server_oneof_test
-                   ${TEST_ROOT_DIR}/oneof_test/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_oneof_test PRIVATE ${BUILD_DIR}
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
-    target_link_libraries(
-      rpc_server_oneof_test PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                    protobuf::libprotobuf)
-
-    add_executable(
-      rpc_client_oneof
-      ${TEST_ROOT_DIR}/oneof_test/client/client.cpp
-      ${BUILD_DIR}/rpc_client.cpp
-      ${BUILD_DIR}/rpc_client_factory.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
-    target_include_directories(
-      rpc_client_oneof PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                               ${BUILD_DIR})
-    target_link_libraries(rpc_client_oneof PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                                   protobuf::libprotobuf)
-  endif()
-
-  if(ENABLE_NESTED_TEST)
-    add_executable(rpc_server_nested_test
-                   ${TEST_ROOT_DIR}/nested_test/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_nested_test PRIVATE ${BUILD_DIR}
-                                     ${CMAKE_CURRENT_SOURCE_DIR}/include/udf)
-    target_link_libraries(
-      rpc_server_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                     protobuf::libprotobuf)
-
-    add_executable(
-      rpc_client_nested_test
-      ${TEST_ROOT_DIR}/nested_test/client/client.cpp
-      ${BUILD_DIR}/rpc_client.cpp
-      ${BUILD_DIR}/rpc_client_factory.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/generic_record_impl.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/descriptor_impl.cpp
-      ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
-    target_include_directories(
-      rpc_client_nested_test PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf
-                                     ${BUILD_DIR})
-    target_link_libraries(
-      rpc_client_nested_test PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                     protobuf::libprotobuf)
-  endif()
-  if(ENABLE_1113_TEST)
-    message(STATUS "Building 1113_test")
-    add_executable(rpc_server_1113 ${TEST_ROOT_DIR}/1113/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_1113 PRIVATE ${BUILD_DIR}
-                              ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
-    target_link_libraries(rpc_server_1113 PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                                  protobuf::libprotobuf)
-  endif()
-  if(ENABLE_PACKAGE_TEST)
-    message(STATUS "Building package_test")
-    add_executable(rpc_server_package_test
-                   ${TEST_ROOT_DIR}/package_test/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_package_test
-      PRIVATE ${BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
-    target_link_libraries(
-      rpc_server_package_test PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                      protobuf::libprotobuf)
-  endif()
-  if(ENABLE_RETURN_TEST)
-    message(STATUS "Building return_test")
-    add_executable(rpc_server_return_test
-                   ${TEST_ROOT_DIR}/return_test/server/rpc_server.cpp)
-    target_include_directories(
-      rpc_server_return_test
-      PRIVATE ${BUILD_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include/udf)
-    target_link_libraries(
-      rpc_server_return_test PRIVATE proto_lib ${GRPC_LIBRARIES}
-                                      protobuf::libprotobuf)
-  endif()
-endif()
+message(STATUS "Plugin name      : ${NAME}")
+message(STATUS "Build dir        : ${BUILD_DIR}")
+message(STATUS "Output directory : ${OUTPUT_DIR}")

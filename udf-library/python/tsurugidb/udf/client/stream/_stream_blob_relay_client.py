@@ -72,7 +72,7 @@ class StreamBlobRelayClient(BlobRelayClient):
                 expected_size: int | None = None
                 saw_metadata = False
                 actual_size = 0
-                for resp in self.__stub.Get(req, deadline=self.__deadline_timestamp(timeout)):
+                for resp in self.__stub.Get(req, timeout=timeout):
                     if not saw_metadata:
                         # first time - receive metadata
                         saw_metadata = True
@@ -120,7 +120,7 @@ class StreamBlobRelayClient(BlobRelayClient):
                             break
                         yield pb_message.PutStreamingRequest(chunk=buf)
 
-            resp = self.__stub.Put(gen(), deadline=self.__deadline_timestamp(timeout))
+            resp = self.__stub.Put(gen(), timeout=timeout)
             return resp.blob
 
         except OSError as e:

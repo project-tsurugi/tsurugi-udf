@@ -79,7 +79,7 @@ class StreamBlobRelayClient(BlobRelayClient):
                         if not resp.HasField("metadata"):
                             raise BlobRelayError("invalid response: missing metadata")
                         metadata = resp.metadata
-                        if metadata.HasField("blob_size") :
+                        if metadata.HasField("blob_size"):
                             expected_size = metadata.blob_size
                     # rest times - receive chunks
                     else:

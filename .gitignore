@@ -5,6 +5,7 @@
 __pycache__/
 .pytest_cache/
 *.egg-info
+.coverage
 *.so
 
 # build artifacts
@@ -22,8 +23,7 @@ udf-plugin/builder/tmp/
 udf-plugin/viewer/build
 udf-plugin/common/build
 udf-plugin/viewer/udf_plugin_viewer/descriptors.py
-udf_converter/build
-udf_library/build
+udf-library/python/build
 
 # tests
 /build/

@@ -276,7 +276,6 @@ def run(args=None):
             proto_paths = [os.path.abspath(p) for p in args.proto_path]
     else:
         proto_paths = [str(Path(proto_files[0]).parent.resolve())]
-    proto_paths_str = ";".join(proto_paths)
     log_always(f"[INFO] Building in {build_dir_full}")
     log_always(f"[INFO] Output directory: {out_dir}")
     log_always(f"[INFO] Plugin name: {name}")

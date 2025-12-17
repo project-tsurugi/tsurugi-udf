@@ -49,6 +49,23 @@ CMAKE_DIR = Path(SCRIPT_DIR) / "cmake"
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, "templates")
 
 
+def log_always(*args, **kwargs):
+    print(*args, **kwargs)
+
+
+def log_info(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)
+
+
+def log_error(*args, **kwargs):
+    print("\033[91m[ERROR]\033[0m", *args, file=sys.stderr, **kwargs)
+
+
+def log_ok(*args, **kwargs):
+    print("\033[32m[OK]\033[0m", *args, **kwargs)
+
+
 def generate_ini_file(plugin_name: str, grpc_endpoint: str, out_dir: str):
     """Generate .ini file for plugin"""
     ini_path = Path(out_dir) / f"lib{plugin_name}.ini"
@@ -60,7 +77,7 @@ def generate_ini_file(plugin_name: str, grpc_endpoint: str, out_dir: str):
         f.write(f"endpoint={grpc_endpoint}\n")
         f.write("secure=false\n")
 
-    print(f"[OK] Generated ini file: {ini_path}")
+    log_ok(f"Generated ini file: {ini_path}")
     return ini_path
 
 
@@ -269,8 +286,13 @@ def run_protoc(proto_files, proto_paths, build_dir):
         *proto_files,
     ]
 
-    print("[CMD]", " ".join(protoc_cmd))
-    subprocess.check_call(protoc_cmd)
+    log_info("[CMD]", " ".join(protoc_cmd))
+    try:
+        subprocess.check_call(protoc_cmd)
+    except subprocess.CalledProcessError as e:
+        log_error(f"protoc failed with return code {e.returncode}")
+        log_error(f"Command: {' '.join(protoc_cmd)}")
+        sys.exit(1)
 
     after = {p.resolve() for p in build_dir.rglob("*") if p.is_file()}
 
@@ -518,12 +540,12 @@ def run(args=None):
     else:
         proto_paths = [str(Path(proto_files[0]).parent.resolve())]
     proto_paths_str = ";".join(proto_paths)
-    print(f"[INFO] Building in {build_dir_full}")
-    print(f"[INFO] Output directory: {out_dir}")
-    print(f"[INFO] Plugin name: {name}")
-    print(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
-    print(f"[INFO] Proto path: {proto_paths}")
-    print(f"[INFO] Using proto files: {args.proto_file}")
+    log_always(f"[INFO] Building in {build_dir_full}")
+    log_always(f"[INFO] Output directory: {out_dir}")
+    log_always(f"[INFO] Plugin name: {name}")
+    log_always(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
+    log_always(f"[INFO] Proto path: {proto_paths}")
+    log_always(f"[INFO] Using proto files: {args.proto_file}")
 
     build_type_env = os.environ.get("BUILD_TYPE", "").strip()
     if not build_type_env:
@@ -536,16 +558,16 @@ def run(args=None):
         )
     result = run_protoc(proto_files, proto_paths, build_dir_full)
     created_files = []
-    print("[FILE]", result["descriptor"])
+    log_info("[FILE]", result["descriptor"])
     for f in result["generated_files"]:
-        print("[FILE]", f)
+        log_info("[FILE]", f)
         created_files.append(f)
     desc_set = load_descriptor(result["descriptor"])
     packages = parse_package_descriptor(desc_set)
     check_forbidden_function_names(packages)
     dump_packages_json(packages, f"{build_dir_full}/service_descriptors.json")
     proto_base_name = Path(args.proto_file[0]).stem
-    print(f"[INFO] Generating C++ files from templates...")
+    log_info(f"[INFO] Generating C++ files from templates...", "")
     for template_file, output_file in TEMPLATE.items():
         output_path = Path(build_dir_full) / output_file
         generated_path = generate_cpp_from_template(
@@ -556,41 +578,53 @@ def run(args=None):
             proto_base_name,
         )
         created_files.append(generated_path)
-        print("[FILE]", generated_path)
+        log_info("[FILE]", generated_path)
 
-    print(f"[INFO] Generating ini file...")
-    generate_ini_file(name, args.grpc_endpoint, out_dir)
     descriptor_impl_cpp = os.path.join(
         tsurugi_udf_common_dir, "src", "udf", "descriptor_impl.cpp"
     )
     created_files.append(descriptor_impl_cpp)
-    sources_cmake = write_sources_cmake(created_files, build_dir_full)
-    print("[INFO] Wrote", sources_cmake)
 
-    subprocess.check_call(
-        [
-            "cmake",
-            "-S",
-            str(CMAKE_DIR),
-            "-B",
-            str(build_dir_full),
-            f"-DBUILD_DIR={build_dir_full}",
-            f"-DNAME={name}",
-            f"-DOUTPUT_DIR={out_dir}",
-            f"-DTSURUGI_UDF_COMMON_DIR={tsurugi_udf_common_dir}",
-        ]
-    )
-    subprocess.check_call(["cmake", "--build", str(build_dir_full), "--", "-j"])
+    sources_cmake = write_sources_cmake(created_files, build_dir_full)
+    log_info("[INFO] Wrote", sources_cmake)
+
+    cmake_cmd = [
+        "cmake",
+        "-S",
+        str(CMAKE_DIR),
+        "-B",
+        str(build_dir_full),
+        f"-DBUILD_DIR={build_dir_full}",
+        f"-DNAME={name}",
+        f"-DOUTPUT_DIR={out_dir}",
+        f"-DTSURUGI_UDF_COMMON_DIR={tsurugi_udf_common_dir}",
+        f"-DCMAKE_BUILD_TYPE={BUILD_TYPE}",
+    ]
+
+    if not DEBUG:
+        cmake_cmd.append("--log-level=WARNING")
+
+    subprocess.check_call(cmake_cmd)
+
+    build_cmd = ["cmake", "--build", str(build_dir_full), "--", "-j"]
+
+    if not DEBUG:
+        build_cmd.append("-s")
+
+    subprocess.check_call(build_cmd)
+
     so_file = out_dir / f"lib{name}.so"
     if not so_file.exists():
         raise FileNotFoundError(f"{so_file} not found!")
-    print("[FILE]", so_file)
+    log_ok(f"Generated so file: {so_file}")
+    log_info(f"[INFO] Generating ini file...")
+    generate_ini_file(name, args.grpc_endpoint, out_dir)
     if build_dir_full.exists():
         try:
             shutil.rmtree(build_dir_full)
-            print(f"[INFO] Deleted build directory: {build_dir_full}")
+            log_info(f"[INFO] Deleted build directory: {build_dir_full}")
         except Exception as e:
-            print(f"[WARN] Failed to delete build directory {build_dir_full}: {e}")
+            log_always(f"[WARN] Failed to delete build directory {build_dir_full}: {e}")
 
 
 def main():

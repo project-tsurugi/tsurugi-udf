@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 project(udf_plugin LANGUAGES CXX)
 
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  function(debug_message)
+    message(STATUS "${ARGV}")
+  endfunction()
+else()
+  function(debug_message)
+    # no-op
+  endfunction()
+endif()
+
 # ============================================================
 # Required variables (from build_with_cmake.py)
 # ============================================================
@@ -74,8 +85,8 @@ set_target_properties(${NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
 # ============================================================
 # Summary
 # ============================================================
-message(STATUS "========================================")
-message(STATUS "Plugin name      : ${NAME}")
-message(STATUS "Build dir        : ${BUILD_DIR}")
-message(STATUS "Output directory : ${OUTPUT_DIR}")
-message(STATUS "========================================")
+debug_message("========================================")
+debug_message("Plugin name      : ${NAME}")
+debug_message("Build dir        : ${BUILD_DIR}")
+debug_message("Output directory : ${OUTPUT_DIR}")
+debug_message("========================================")

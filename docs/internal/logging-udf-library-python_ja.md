@@ -35,7 +35,7 @@ import logging
 # すべての DEBUG ログを有効化
 logging.basicConfig(level=logging.DEBUG)
 
-# ストリーミング BLOB クライアントのログのみをを有効化
+# ストリーミング BLOB クライアントのログのみを有効化
 logging.getLogger("tsurugidb.udf.blob.stream").setLevel(logging.DEBUG)
 ```
 

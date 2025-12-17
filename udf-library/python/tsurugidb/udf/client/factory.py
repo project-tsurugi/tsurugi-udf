@@ -3,35 +3,10 @@ from .grpc._constants import KEY_TRANSPORT
 
 import grpc
 import importlib
+import logging
 import re
 
 from typing import ContextManager
-
-"""
-from tsurugi.udf.client import create_blob_client
-from tsurugi.udf.model import tsurugi_types_pb2
-from pathlib import Path
-
-def run_udf(context):
-    client = create_blob_client(context)
-    blob_ref = tsurugi_types_pb2.BlobReference()
-    blob_ref.storage_id = 1
-    blob_ref.object_id = 42
-    blob_ref.tag = 0
-    dst = Path("/tmp/out.bin")
-    client.download(blob_ref, dst)
-
-    # Upload
-    src = Path("/tmp/in.bin")
-    new_ref = client.upload(src)
-
-    print("download ->", dst)
-    print("upload ref ->", new_ref)
-
-    src = Path("/tmp/in.bin")
-    new_ref = client.upload(src)
-
-"""
 
 PATTERN_TRANSPORT = re.compile(r"[a-z][a-z0-9_]*")
 
@@ -40,6 +15,10 @@ PLUGIN_PACKAGE_PREFIX = "tsurugidb.udf.client."
 PLUGIN_ENTRY_POINT = "create_blob_client"
 
 DEFAULT_TRANSPORT = "stream"
+
+LOGGER_NAME = 'tsurugidb.udf.blob.factory'
+
+logger = logging.getLogger(LOGGER_NAME)
 
 def create_blob_client(context: grpc.ServicerContext) -> ContextManager[BlobRelayClient]:
     """Create a StreamBlobRelayClient from the given gRPC context.
@@ -72,12 +51,15 @@ def create_blob_client(context: grpc.ServicerContext) -> ContextManager[BlobRela
     if not PATTERN_TRANSPORT.match(transport):
         raise ValueError(f"invalid {KEY_TRANSPORT.upper()}={transport}")
 
+    plugin_path = PLUGIN_PACKAGE_PREFIX + transport
     try:
-        plugin = importlib.import_module(PLUGIN_PACKAGE_PREFIX + transport)
+        logger.debug("start loading BLOB relay transport module: %s", plugin_path)
+        plugin = importlib.import_module(plugin_path)
+        logger.debug("finish loading BLOB relay transport module: %s", plugin_path)
     except ImportError as e:
         raise ValueError(f"unsupported BLOB relay transport: {transport}") from e
     if not hasattr(plugin, PLUGIN_ENTRY_POINT):
-        raise ValueError(f"""BLOB relay transport plugin "{transport}" must have entry-point ({PLUGIN_PACKAGE_PREFIX + transport}.{PLUGIN_ENTRY_POINT}) """)
+        raise ValueError(f"""BLOB relay transport plugin "{transport}" must have entry-point ({plugin_path}.{PLUGIN_ENTRY_POINT}) """)
     return getattr(plugin, PLUGIN_ENTRY_POINT)(context)
 
 __all__ = [

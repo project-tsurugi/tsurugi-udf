@@ -8,15 +8,19 @@ from ..grpc._constants import (
     DEFAULT_SECURE,
 )
 
-from contextlib import contextmanager
-from datetime import timedelta
-from typing import Iterator, ContextManager
-
 import grpc
+import logging
+
+from contextlib import contextmanager
+from typing import Iterator, ContextManager
 
 KEY_STREAM_CHUNK_SIZE = KEY_PREFIX + "stream-chunk-size"
 
 DEFAULT_STREAM_CHUNK_SIZE = 1_048_576
+
+LOGGER_NAME = 'tsurugidb.udf.blob.stream.factory'
+
+logger = logging.getLogger(LOGGER_NAME)
 
 class ClientConfig:
     """Represents a configuration for StreamBlobRelayClient."""
@@ -121,11 +125,14 @@ def create_blob_client_from_config(config: ClientConfig) -> Iterator[StreamBlobR
     Returns:
         A context manager that yields a StreamBlobRelayClient.
     """
+    logger.debug("start creating gRPC channel: target=%s, secure=%s", config.endpoint, config.secure)
     if config.secure:
         credentials = grpc.ssl_channel_credentials()
         channel = grpc.secure_channel(config.endpoint, credentials)
     else:
         channel = grpc.insecure_channel(config.endpoint)
+    logger.debug("finish creating gRPC channel: target=%s, secure=%s", config.endpoint, config.secure)
+
     try:
         stub = pb_service.BlobRelayStreamingStub(channel)
         client = StreamBlobRelayClient(
@@ -135,7 +142,9 @@ def create_blob_client_from_config(config: ClientConfig) -> Iterator[StreamBlobR
         )
         yield client
     finally:
+        logger.debug("start closing gRPC channel: target=%s, secure=%s", config.endpoint, config.secure)
         channel.close()
+        logger.debug("finish closing gRPC channel: target=%s, secure=%s", config.endpoint, config.secure)
 
 __all__ = [
     "ClientConfig",

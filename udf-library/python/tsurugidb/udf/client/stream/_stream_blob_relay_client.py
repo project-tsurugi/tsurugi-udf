@@ -160,7 +160,7 @@ class StreamBlobRelayClient(BlobRelayClient):
                             logger.debug("stream uploading BLOB chunk: size=%d", len(buf))
                         yield pb_message.PutStreamingRequest(chunk=buf)
 
-            # NOTE: Server Streaming RPC does not actually start sending data, but keep this logging for symmetry.
+            # NOTE: Client Streaming RPC does not actually start sending data, but keep this logging for symmetry.
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("start uploading BLOB: source=%s, size=%d, timeout=%s", source, blob_size, timeout)
             resp = self.__stub.Put(gen(), timeout=timeout)

@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import blob_relay_local_pb2 as blob__relay__local__pb2
+from . import blob_relay_local_pb2 as data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2
 
 GRPC_GENERATED_VERSION = '1.74.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in blob_relay_local_pb2_grpc.py depends on'
+        + f' but the generated code in data_relay_grpc/proto/blob_relay/blob_relay_local_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,14 +36,14 @@ class BlobRelayLocalStub(object):
             channel: A grpc.Channel.
         """
         self.Get = channel.unary_unary(
-                '/data_relay_grpc.blob_relay.proto.BlobRelayLocal/Get',
-                request_serializer=blob__relay__local__pb2.GetLocalRequest.SerializeToString,
-                response_deserializer=blob__relay__local__pb2.GetLocalResponse.FromString,
+                '/data_relay_grpc.proto.blob_relay.blob_relay_local.BlobRelayLocal/Get',
+                request_serializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.GetLocalRequest.SerializeToString,
+                response_deserializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.GetLocalResponse.FromString,
                 _registered_method=True)
         self.Put = channel.unary_unary(
-                '/data_relay_grpc.blob_relay.proto.BlobRelayLocal/Put',
-                request_serializer=blob__relay__local__pb2.PutLocalRequest.SerializeToString,
-                response_deserializer=blob__relay__local__pb2.PutLocalResponse.FromString,
+                '/data_relay_grpc.proto.blob_relay.blob_relay_local.BlobRelayLocal/Put',
+                request_serializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.PutLocalRequest.SerializeToString,
+                response_deserializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.PutLocalResponse.FromString,
                 _registered_method=True)
 
 
@@ -70,19 +70,19 @@ def add_BlobRelayLocalServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Get': grpc.unary_unary_rpc_method_handler(
                     servicer.Get,
-                    request_deserializer=blob__relay__local__pb2.GetLocalRequest.FromString,
-                    response_serializer=blob__relay__local__pb2.GetLocalResponse.SerializeToString,
+                    request_deserializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.GetLocalRequest.FromString,
+                    response_serializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.GetLocalResponse.SerializeToString,
             ),
             'Put': grpc.unary_unary_rpc_method_handler(
                     servicer.Put,
-                    request_deserializer=blob__relay__local__pb2.PutLocalRequest.FromString,
-                    response_serializer=blob__relay__local__pb2.PutLocalResponse.SerializeToString,
+                    request_deserializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.PutLocalRequest.FromString,
+                    response_serializer=data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.PutLocalResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'data_relay_grpc.blob_relay.proto.BlobRelayLocal', rpc_method_handlers)
+            'data_relay_grpc.proto.blob_relay.blob_relay_local.BlobRelayLocal', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('data_relay_grpc.blob_relay.proto.BlobRelayLocal', rpc_method_handlers)
+    server.add_registered_method_handlers('data_relay_grpc.proto.blob_relay.blob_relay_local.BlobRelayLocal', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -104,9 +104,9 @@ class BlobRelayLocal(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/data_relay_grpc.blob_relay.proto.BlobRelayLocal/Get',
-            blob__relay__local__pb2.GetLocalRequest.SerializeToString,
-            blob__relay__local__pb2.GetLocalResponse.FromString,
+            '/data_relay_grpc.proto.blob_relay.blob_relay_local.BlobRelayLocal/Get',
+            data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.GetLocalRequest.SerializeToString,
+            data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.GetLocalResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -131,9 +131,9 @@ class BlobRelayLocal(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/data_relay_grpc.blob_relay.proto.BlobRelayLocal/Put',
-            blob__relay__local__pb2.PutLocalRequest.SerializeToString,
-            blob__relay__local__pb2.PutLocalResponse.FromString,
+            '/data_relay_grpc.proto.blob_relay.blob_relay_local.BlobRelayLocal/Put',
+            data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.PutLocalRequest.SerializeToString,
+            data__relay__grpc_dot_proto_dot_blob__relay_dot_blob__relay__local__pb2.PutLocalResponse.FromString,
             options,
             channel_credentials,
             insecure,

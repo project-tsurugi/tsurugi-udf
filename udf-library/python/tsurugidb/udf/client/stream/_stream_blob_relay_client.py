@@ -103,7 +103,8 @@ class StreamBlobRelayClient(BlobRelayClient):
                         if not resp.HasField("chunk"):
                             raise BlobRelayError("invalid response: missing chunk")
                         chunk = resp.chunk
-                        logger.debug("stream downloading BLOB chunk: size=%d", len(chunk))
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug("stream downloading BLOB chunk: size=%d", len(chunk))
                         fp.write(chunk)
                         actual_size += len(chunk)
 
@@ -155,10 +156,13 @@ class StreamBlobRelayClient(BlobRelayClient):
                         buf = fp.read(self.__chunk_size)
                         if not buf:
                             break
-                        logger.debug("stream uploading BLOB chunk: size=%d", len(buf))
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug("stream uploading BLOB chunk: size=%d", len(buf))
                         yield pb_message.PutStreamingRequest(chunk=buf)
 
-            logger.debug("start uploading BLOB: source=%s, size=%d, timeout=%s", source, blob_size, timeout)
+            # NOTE: Server Streaming RPC does not actually start sending data, but keep this logging for symmetry.
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("start uploading BLOB: source=%s, size=%d, timeout=%s", source, blob_size, timeout)
             resp = self.__stub.Put(gen(), timeout=timeout)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(

@@ -7,6 +7,7 @@ from typing import List
 from dataclasses import asdict
 from tsurugi_udf_common import descriptors
 from google.protobuf import descriptor_pb2
+from .object_schema import OBJECT_SCHEMA_VERSION
 
 ColumnDescriptor = descriptors.ColumnDescriptor
 RecordDescriptor = descriptors.RecordDescriptor
@@ -16,7 +17,6 @@ PackageDescriptor = descriptors.PackageDescriptor
 DEBUG = os.environ.get("BUILD_TYPE", "").strip().lower() == "debug"
 TYPE_KIND_MAP = descriptors.TYPE_KIND_MAP
 FIELD_TYPE_MAP = descriptors.FIELD_TYPE_MAP
-Version = descriptors.Version
 
 from udf_plugin_builder.tsurugi_keywords import (
     TSURUGI_RESERVED_KEYWORDS,
@@ -263,7 +263,7 @@ def parse_package_descriptor(
                 package_name=pkg,
                 services=services,
                 file_name=file_proto.name,
-                version=Version(1, 0, 0),
+                version=OBJECT_SCHEMA_VERSION,
             )
             packages.append(package)
     return packages

@@ -1,4 +1,4 @@
-# re-export from model
+# re-export protobuf types
 from .tsurugi_types_pb2 import (
     Decimal,
     Date,

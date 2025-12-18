@@ -1,6 +1,6 @@
 from datetime import date, time, datetime, timedelta, timezone
 from decimal import Decimal
-from ..model.tsurugi_types_pb2 import (
+from .. import (
     Decimal as PbDecimal,
     Date as PbDate,
     LocalTime as PbLocalTime,

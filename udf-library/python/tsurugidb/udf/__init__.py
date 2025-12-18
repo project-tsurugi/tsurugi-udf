@@ -1,8 +1,5 @@
-# re-export from converter
-from .converter import *
-
 # re-export from model
-from .model import (
+from .tsurugi_types_pb2 import (
     Decimal,
     Date,
     LocalTime,
@@ -12,10 +9,11 @@ from .model import (
     ClobReference,
 )
 
+# re-export from converter
+from .converter import *
+
 # re-export from client
 from .client import *
-
-from .converter import __all__ as converter_all
 
 model_all = [
     "Decimal",
@@ -27,6 +25,8 @@ model_all = [
     "ClobReference",
 ]
 
+from .converter import __all__ as converter_all
+
 from .client import __all__ as client_all
 
-__all__ = converter_all + model_all + client_all
+__all__ = model_all + converter_all + client_all

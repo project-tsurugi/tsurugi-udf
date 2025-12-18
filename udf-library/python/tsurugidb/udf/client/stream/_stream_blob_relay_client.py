@@ -1,9 +1,11 @@
 # package: tsurugidb.udf.client.stream
 
 import grpc
+import logging
 
 from contextlib import suppress
 from datetime import timedelta
+from google.protobuf.text_format import MessageToString
 from pathlib import Path
 from typing import Type, TypeVar
 
@@ -22,6 +24,10 @@ from ..grpc import (
 )
 
 T = TypeVar("T", bound=UdfBlobReference | UdfClobReference)
+
+LOGGER_NAME = 'tsurugidb.udf.blob.stream.client'
+
+logger = logging.getLogger(LOGGER_NAME)
 
 class StreamBlobRelayClient(BlobRelayClient):
     """An implementation of BlobRelayClient that exchanges BLOBs via gRPC streaming."""
@@ -74,6 +80,11 @@ class StreamBlobRelayClient(BlobRelayClient):
                 expected_size: int | None = None
                 saw_metadata = False
                 actual_size = 0
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "start downloading BLOB: request=%s, timeout=%s",
+                        MessageToString(req, as_one_line=True),
+                        timeout)
                 for resp in self.__stub.Get(req, timeout=timeout):
                     if not saw_metadata:
                         # first time - receive metadata
@@ -81,6 +92,10 @@ class StreamBlobRelayClient(BlobRelayClient):
                         if not resp.HasField("metadata"):
                             raise BlobRelayError("invalid response: missing metadata")
                         metadata = resp.metadata
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(
+                                "stream downloading BLOB metadata: %s",
+                                MessageToString(metadata, as_one_line=True))
                         if metadata.HasField("blob_size"):
                             expected_size = metadata.blob_size
                     # rest times - receive chunks
@@ -88,8 +103,17 @@ class StreamBlobRelayClient(BlobRelayClient):
                         if not resp.HasField("chunk"):
                             raise BlobRelayError("invalid response: missing chunk")
                         chunk = resp.chunk
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug("stream downloading BLOB chunk: size=%d", len(chunk))
                         fp.write(chunk)
                         actual_size += len(chunk)
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "finish downloading BLOB: request=%s, timeout=%s, actual_size=%d",
+                        MessageToString(req, as_one_line=True),
+                        timeout,
+                        actual_size)
 
                 if expected_size is not None and actual_size != expected_size:
                     raise BlobRelayError(f"download size mismatch: expected {expected_size}, got {actual_size}")
@@ -116,22 +140,38 @@ class StreamBlobRelayClient(BlobRelayClient):
 
             def gen():
                 # first time - send metadata
-                yield pb_message.PutStreamingRequest(
-                    metadata=pb_message.PutStreamingRequest.Metadata(
-                        api_version=self.api_version(),
-                        session_id=self.__session_id,
-                        blob_size=blob_size,
-                    )
+                metadata = pb_message.PutStreamingRequest.Metadata(
+                    api_version=self.api_version(),
+                    session_id=self.__session_id,
+                    blob_size=blob_size,
                 )
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "stream uploading BLOB metadata: %s",
+                        MessageToString(metadata, as_one_line=True))
+                yield pb_message.PutStreamingRequest(metadata=metadata)
                 # rest times - send chunks
                 with source.open("rb") as fp:
                     while True:
                         buf = fp.read(self.__chunk_size)
                         if not buf:
                             break
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug("stream uploading BLOB chunk: size=%d", len(buf))
                         yield pb_message.PutStreamingRequest(chunk=buf)
 
+            # NOTE: Client Streaming RPC does not actually start sending data, but keep this logging for symmetry.
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("start uploading BLOB: source=%s, size=%d, timeout=%s", source, blob_size, timeout)
             resp = self.__stub.Put(gen(), timeout=timeout)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "finish uploading BLOB: source=%s, size=%d, timeout=%s, response=%s",
+                    source,
+                    blob_size,
+                    timeout,
+                    MessageToString(resp, as_one_line=True))
+
             return resp.blob
 
         except grpc.RpcError as e:

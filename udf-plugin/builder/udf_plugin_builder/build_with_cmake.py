@@ -165,8 +165,17 @@ def write_sources_cmake(created_files, build_dir):
 
     build_dir = Path(build_dir).resolve()
 
+    EXCLUDE_BASENAMES = {
+        "tsurugi_types.pb.cc",
+    }
+
     for f in created_files:
         f = Path(f).resolve()
+
+
+        if f.name in EXCLUDE_BASENAMES:
+            print(f"[INFO] Excluding {f.name} from sources")
+            continue
 
         if f.suffix in (".cc", ".cpp", ".cxx"):
             srcs.append(f)
@@ -206,7 +215,6 @@ def write_sources_cmake(created_files, build_dir):
         fp.write(")\n")
 
     return sources_cmake
-
 
 def run(args=None):
     args = parse_args(args)

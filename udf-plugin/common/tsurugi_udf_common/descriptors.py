@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 
@@ -64,7 +64,7 @@ class PackageDescriptor:
     package_name: str
     services: List[ServiceDescriptor]
     file_name: Optional[str] = None
-    version: Version = Version()
+    version: Version = field(default_factory=Version)
 
 
 # @see https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L243

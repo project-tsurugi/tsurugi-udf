@@ -52,13 +52,3 @@ find_package(gRPC REQUIRED)
 pybind11_add_module(
   udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
   ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
-
-add_custom_command(
-  TARGET udf_plugin
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E copy $<TARGET_FILE:udf_plugin>
-    ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/$<TARGET_FILE_NAME:udf_plugin>
-  COMMENT "Copying udf_plugin shared library to udf_plugin_viewer/")
-target_link_libraries(udf_plugin PRIVATE ${GRPC_LIBRARIES}
-                                         protobuf::libprotobuf)

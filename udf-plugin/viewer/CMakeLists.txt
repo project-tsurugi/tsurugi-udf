@@ -54,18 +54,6 @@ pybind11_add_module(
   ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  COMMAND ${CMAKE_COMMAND} -E copy ${TSURUGI_UDF_COMMON_DIR}/descriptors.py
-          ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  DEPENDS ${TSURUGI_UDF_COMMON_DIR}/descriptors.py)
-
-add_custom_target(
-  copy_descriptors ALL
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py)
-
-add_dependencies(udf_plugin copy_descriptors)
-
-add_custom_command(
   TARGET udf_plugin
   POST_BUILD
   COMMAND

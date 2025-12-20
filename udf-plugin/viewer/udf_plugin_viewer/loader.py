@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Union
 
-from . import udf_plugin
+from . import _udf_plugin
 
 
 class PluginLoadError(RuntimeError):
@@ -10,7 +10,9 @@ class PluginLoadError(RuntimeError):
 
 def _collect_so_files(path: Path) -> List[Path]:
     if path.is_dir():
-        so_files = sorted(p for p in path.iterdir() if p.is_file() and p.suffix == ".so")
+        so_files = sorted(
+            p for p in path.iterdir() if p.is_file() and p.suffix == ".so"
+        )
         if not so_files:
             raise PluginLoadError(f"No .so files found in directory: {path}")
         return so_files
@@ -33,8 +35,7 @@ def load_plugins(path: Union[str, Path]) -> list:
 
     all_packages = []
     for so in so_files:
-        packages = udf_plugin.load_plugin(str(so))
+        packages = _udf_plugin.load_plugin(str(so))
         all_packages.extend(packages)
 
     return all_packages
-

@@ -12,7 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # udf_plugin_viewer/__init__.py
-from .loader import load_plugins
-
 __all__ = ["load_plugins"]
-

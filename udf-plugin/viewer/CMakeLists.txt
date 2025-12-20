@@ -50,5 +50,10 @@ find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 
 pybind11_add_module(
-  udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
+  _udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
   ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
+
+target_link_libraries(_udf_plugin PRIVATE ${GRPC_LIBRARIES}
+                                          protobuf::libprotobuf)
+
+install(TARGETS _udf_plugin LIBRARY DESTINATION udf_plugin_viewer)

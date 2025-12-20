@@ -154,7 +154,7 @@ py::list package_to_list(const std::vector<plugin_api*>& apis) {
     return result;
 }
 
-PYBIND11_MODULE(udf_plugin, m) {
+PYBIND11_MODULE(_udf_plugin, m) {
     m.doc() = "UDF Plugin Loader (with nested record support)";
     m.def("load_plugin", [](const std::string& path) {
         udf_loader loader;

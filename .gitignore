@@ -9,6 +9,7 @@ __pycache__/
 *.so
 
 # build artifacts
+udf-plugin/build
 udf-plugin/builder/build/
 udf-plugin/builder/out/
 udf-plugin/builder/test/build/

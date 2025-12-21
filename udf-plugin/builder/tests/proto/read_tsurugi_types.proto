@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-import "tsurugidb/udf/tsurugi_types.proto";
-service Rec {
-  rpc inc_decimal(DecimalMessage) returns (DecimalMessage);
-}
-message DecimalMessage {
-  tsurugidb.udf.Decimal value = 1;
-}

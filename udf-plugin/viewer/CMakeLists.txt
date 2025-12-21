@@ -1,76 +1,76 @@
-# Copyright 2018-2025 Project Tsurugi.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not
-# use this file except in compliance with the License. You may obtain a copy of
-# the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations under
-# the License.
 cmake_minimum_required(VERSION 3.15)
-project(udf_plugin_viewer)
+project(udf_plugin_viewer LANGUAGES CXX)
 
-option(USE_INSTALLED_TSURUGI_UDF_COMMON
-       "Use installed tsurugi-udf-common instead of source" ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if(USE_INSTALLED_TSURUGI_UDF_COMMON)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+find_package(pybind11 CONFIG REQUIRED)
+
+if(DEFINED SKBUILD)
+  message(STATUS "Detected pip / scikit-build environment")
+  set(USE_INSTALLED_TSURUGI_UDF_COMMON OFF)
+else()
+  option(USE_INSTALLED_TSURUGI_UDF_COMMON
+         "Use installed tsurugi-udf-common instead of source tree" ON)
+endif()
+
+if(USE_INSTALLED_TSURUGI_UDF_COMMON)
   execute_process(
     COMMAND
       ${Python3_EXECUTABLE} -c
       "import tsurugi_udf_common, os; print(os.path.dirname(tsurugi_udf_common.__file__))"
     OUTPUT_VARIABLE TSURUGI_UDF_COMMON_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE _import_result)
+  if(NOT _import_result EQUAL 0)
+    message(FATAL_ERROR "tsurugi_udf_common not importable")
+  endif()
 else()
   set(TSURUGI_UDF_COMMON_DIR
       "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
 endif()
+
 message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
 
-set(TSURUGI_UDF_COMMON_DIR
-    "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
-
-include_directories(${TSURUGI_UDF_COMMON_DIR}/include/udf)
-
-find_package(pybind11 REQUIRED)
-find_package(
-  Python3
-  COMPONENTS Interpreter Development
-  REQUIRED)
-list(APPEND CMAKE_MODULE_PATH "${TSURUGI_UDF_COMMON_DIR}/cmake")
-find_package(nlohmann_json REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
-find_package(gRPC REQUIRED)
+
+find_package(gRPC CONFIG QUIET)
+
+set(HAVE_GRPC OFF)
+if(gRPC_FOUND)
+  message(STATUS "gRPC found via CMake config")
+  set(HAVE_GRPC ON)
+else()
+  message(STATUS "gRPCConfig.cmake not found, falling back to system libs")
+  find_library(GRPC_LIB grpc)
+  find_library(GRPCPP_LIB grpc++)
+  if(GRPC_LIB AND GRPCPP_LIB)
+    set(HAVE_GRPC ON)
+  endif()
+endif()
 
 pybind11_add_module(
-  udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
+  _udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
   ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  COMMAND ${CMAKE_COMMAND} -E copy ${TSURUGI_UDF_COMMON_DIR}/descriptors.py
-          ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py
-  DEPENDS ${TSURUGI_UDF_COMMON_DIR}/descriptors.py)
+target_include_directories(_udf_plugin
+                           PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
 
-add_custom_target(
-  copy_descriptors ALL
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/descriptors.py)
+target_link_libraries(_udf_plugin PRIVATE protobuf::libprotobuf
+                                          nlohmann_json::nlohmann_json)
 
-add_dependencies(udf_plugin copy_descriptors)
+if(HAVE_GRPC)
+  target_compile_definitions(_udf_plugin PRIVATE TSURUGI_HAVE_GRPC=1)
+  if(gRPC_FOUND)
+    target_link_libraries(_udf_plugin PRIVATE gRPC::grpc++ gRPC::grpc)
+  else()
+    target_link_libraries(_udf_plugin PRIVATE ${GRPCPP_LIB} ${GRPC_LIB})
+  endif()
+else()
+  message(WARNING "Building without gRPC support")
+endif()
 
-add_custom_command(
-  TARGET udf_plugin
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E copy $<TARGET_FILE:udf_plugin>
-    ${CMAKE_CURRENT_SOURCE_DIR}/udf_plugin_viewer/$<TARGET_FILE_NAME:udf_plugin>
-  COMMENT "Copying udf_plugin shared library to udf_plugin_viewer/")
-target_link_libraries(udf_plugin PRIVATE ${GRPC_LIBRARIES}
-                                         protobuf::libprotobuf)
+install(TARGETS _udf_plugin LIBRARY DESTINATION udf_plugin_viewer)

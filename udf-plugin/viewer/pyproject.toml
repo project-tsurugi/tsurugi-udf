@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-udf-plugin-viewer = "udf_plugin_viewer.__main__:main"
+udf-plugin-viewer = "udf_plugin_viewer.cli:main"
 
 [tool.scikit-build]
 build-dir = "build"

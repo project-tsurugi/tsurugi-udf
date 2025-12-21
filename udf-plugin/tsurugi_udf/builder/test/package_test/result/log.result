@@ -1,6 +1,0 @@
-// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
-{"@#0":"Hello hello world                   "}
-// {"columns":[{"name":null,"label":"@#0","type":"INT4","dimension":0}]}
-{"@#0":124}
-// {"columns":[{"name":null,"label":"@#0","type":"CHARACTER","dimension":0}]}
-{"@#0":"World hello world                   "}

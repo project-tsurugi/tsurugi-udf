@@ -20,6 +20,11 @@ dependencies = [
   "protobuf>=4.0"
 ]
 
+[project.optional-dependencies]
+test = [
+  "pytest>=7.0"
+]
+
 [project.scripts]
 udf-plugin-builder = "tsurugi_udf.builder.cli:main"
 udf-plugin-viewer = "tsurugi_udf.viewer.cli:main"

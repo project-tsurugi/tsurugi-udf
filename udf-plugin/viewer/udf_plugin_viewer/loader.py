@@ -31,6 +31,8 @@ def _collect_so_files(path: Path) -> List[Path]:
         return so_files
 
     if path.is_file():
+        if path.suffix != ".so":
+            raise PluginLoadError(f"File is not a .so file: {path}")
         return [path]
 
     raise PluginLoadError(f"Path is neither file nor directory: {path}")
@@ -40,8 +42,18 @@ def load_plugins(path: Union[str, Path]) -> list:
     """
     Load UDF plugin shared libraries and return package descriptors.
 
-    :param path: path to .so file or directory containing .so files
-    :return: list of package dictionaries
+    This function supports loading a single .so file or all .so files
+    in a directory. The returned list contains package dictionaries
+    describing the loaded plugins.
+
+    :param path: Path to a .so file or a directory containing .so files.
+    :return: List of package dictionaries.
+    :raises PluginLoadError: If
+        - the path does not exist,
+        - the path is neither a file nor a directory,
+        - the file is not a .so file,
+        - a directory contains no .so files,
+        - or the C++ binding fails to load the plugin.
     """
     base = Path(path).expanduser().resolve()
     so_files = _collect_so_files(base)

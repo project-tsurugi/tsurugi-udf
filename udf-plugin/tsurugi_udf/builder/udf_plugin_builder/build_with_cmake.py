@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import List
 from jinja2 import Environment, FileSystemLoader
 from dataclasses import asdict
-import tsurugi_udf_common
-from tsurugi_udf_common import descriptors
+from tsurugi_udf.common import tsurugi_udf_common
+from tsurugi_udf.common.tsurugi_udf_common import descriptors
 from .ini_writer import generate_ini_file
 from .utils import (
     log_always,
@@ -27,7 +27,7 @@ from .utils import (
 tsurugi_udf_common_dir = os.path.dirname(tsurugi_udf_common.__file__)
 
 PackageDescriptor = descriptors.PackageDescriptor
-from udf_plugin_builder.tsurugi_keywords import (
+from .tsurugi_keywords import (
     TEMPLATE,
 )
 

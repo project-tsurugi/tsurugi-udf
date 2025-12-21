@@ -47,8 +47,8 @@ message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
 # ============================================================
 # Dependencies
 # ============================================================
-find_package(Protobuf REQUIRED)
-find_package(gRPC REQUIRED)
+find_package(Protobuf REQUIRED MODULE)
+find_package(gRPC REQUIRED MODULE)
 
 # ============================================================
 # Generated sources (from Python codegen)

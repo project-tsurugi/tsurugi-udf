@@ -1,0 +1,54 @@
+# toml-sort -i pyproject.toml
+
+[build-system]
+requires = [
+  "scikit-build-core>=0.5",
+  "setuptools>=68",
+  "wheel",
+  "pybind11>=2.10"
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "tsurugi-udf"
+version = "0.1.0"
+description = "Tsurugi UDF plugin toolchain (builder + viewer + common)"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
+dependencies = [
+  "jinja2>=3.0",
+  "protobuf>=4.0"
+]
+
+[project.scripts]
+udf-plugin-builder = "tsurugi_udf.builder.cli:main"
+udf-plugin-viewer = "tsurugi_udf.viewer.cli:main"
+
+[tool.scikit-build]
+build-dir = "build/{wheel_tag}"
+cmake.verbose = true
+wheel.packages = [
+  "tsurugi_udf",
+  "tsurugi_udf.builder",
+  "tsurugi_udf.builder.udf_plugin_builder",
+  "tsurugi_udf.viewer",
+  "tsurugi_udf.viewer.udf_plugin_viewer",
+  "tsurugi_udf.common",
+  "tsurugi_udf.common.tsurugi_udf_common"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"tsurugi_udf.builder.udf_plugin_builder" = [
+  "templates/*.j2",
+  "cmake/**"
+]
+"tsurugi_udf.common.tsurugi_udf_common" = [
+  "include/**/*",
+  "src/**/*"
+]
+"tsurugi_udf.common.tsurugi_udf_common.cmake" = [
+  "*.cmake"
+]

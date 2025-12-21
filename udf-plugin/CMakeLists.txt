@@ -5,15 +5,23 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# ------------------------------------------------------------
+# Python / pybind11
+# ------------------------------------------------------------
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 
+# ------------------------------------------------------------
+# tsurugi_udf_common location
+# ------------------------------------------------------------
 if(DEFINED SKBUILD)
   message(STATUS "Detected pip / scikit-build environment")
   set(USE_INSTALLED_TSURUGI_UDF_COMMON OFF)
 else()
-  option(USE_INSTALLED_TSURUGI_UDF_COMMON
-         "Use installed tsurugi-udf-common instead of source tree" ON)
+  option(
+    USE_INSTALLED_TSURUGI_UDF_COMMON
+    "Use installed tsurugi-udf-common instead of source tree"
+    ON)
 endif()
 
 if(USE_INSTALLED_TSURUGI_UDF_COMMON)
@@ -29,11 +37,14 @@ if(USE_INSTALLED_TSURUGI_UDF_COMMON)
   endif()
 else()
   set(TSURUGI_UDF_COMMON_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/../common/tsurugi_udf_common")
+      "${CMAKE_CURRENT_SOURCE_DIR}/../../common/tsurugi_udf_common")
 endif()
 
 message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
 
+# ------------------------------------------------------------
+# Dependencies
+# ------------------------------------------------------------
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
 
@@ -52,15 +63,28 @@ else()
   endif()
 endif()
 
+# ------------------------------------------------------------
+# Python module (_udf_plugin)
+# ------------------------------------------------------------
 pybind11_add_module(
-  _udf_plugin bindings.cpp ${TSURUGI_UDF_COMMON_DIR}/src/udf/udf_loader.cpp
-  ${TSURUGI_UDF_COMMON_DIR}/src/udf/error_info.cpp)
+  _udf_plugin
+  ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/viewer/udf_plugin_viewer/bindings.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/udf_loader.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/error_info.cpp
+)
 
-target_include_directories(_udf_plugin
-                           PRIVATE ${TSURUGI_UDF_COMMON_DIR}/include/udf)
+target_include_directories(
+  _udf_plugin
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/include/udf
+)
 
-target_link_libraries(_udf_plugin PRIVATE protobuf::libprotobuf
-                                          nlohmann_json::nlohmann_json)
+target_link_libraries(
+  _udf_plugin
+  PRIVATE
+    protobuf::libprotobuf
+    nlohmann_json::nlohmann_json
+)
 
 if(HAVE_GRPC)
   target_compile_definitions(_udf_plugin PRIVATE TSURUGI_HAVE_GRPC=1)
@@ -73,4 +97,10 @@ else()
   message(WARNING "Building without gRPC support")
 endif()
 
-install(TARGETS _udf_plugin LIBRARY DESTINATION udf_plugin_viewer)
+# ------------------------------------------------------------
+# install (Python package layout)
+# ------------------------------------------------------------
+install(
+  TARGETS _udf_plugin
+  LIBRARY DESTINATION tsurugi_udf/viewer/udf_plugin_viewer
+)

@@ -5,7 +5,7 @@ import shutil
 import json
 from typing import List
 from dataclasses import asdict
-from tsurugi_udf_common import descriptors
+from tsurugi_udf.common.tsurugi_udf_common import descriptors
 from google.protobuf import descriptor_pb2
 from .object_schema import OBJECT_SCHEMA_VERSION
 
@@ -18,7 +18,7 @@ DEBUG = os.environ.get("BUILD_TYPE", "").strip().lower() == "debug"
 TYPE_KIND_MAP = descriptors.TYPE_KIND_MAP
 FIELD_TYPE_MAP = descriptors.FIELD_TYPE_MAP
 
-from udf_plugin_builder.tsurugi_keywords import (
+from .tsurugi_keywords import  (
     TSURUGI_RESERVED_KEYWORDS,
     TSURUGI_TYPES_KEYWORDS,
 )

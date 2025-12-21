@@ -215,13 +215,16 @@ def run(args=None):
     build_dir = Path.cwd() / args.build_dir
     out_dir = Path(args.output_dir) if args.output_dir else Path.cwd()
     if args.output_dir:
+        out_dir = Path(args.output_dir)
         if not out_dir.exists():
             raise FileNotFoundError(f"--output-dir '{out_dir}' does not exist.")
         if not out_dir.is_dir():
             raise NotADirectoryError(f"--output-dir '{out_dir}' is not a directory.")
-    build_dir_base = build_dir.resolve()
-    out_dir_resolved = out_dir.resolve() if args.output_dir else None
+    else:
+        out_dir = Path.cwd()
 
+    build_dir_base = build_dir.resolve()
+    out_dir_resolved = out_dir.resolve()
     counter = 0
     while True:
         if counter == 0:
@@ -332,7 +335,7 @@ def run(args=None):
         str(build_dir_full),
         f"-DBUILD_DIR={build_dir_full}",
         f"-DNAME={name}",
-        f"-DOUTPUT_DIR={out_dir}",
+        f"-DOUTPUT_DIR={out_dir_resolved}",
         f"-DTSURUGI_UDF_COMMON_DIR={tsurugi_udf_common_dir}",
         f"-DCMAKE_BUILD_TYPE={BUILD_TYPE}",
     ]

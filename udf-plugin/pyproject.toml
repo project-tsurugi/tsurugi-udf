@@ -11,10 +11,16 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "tsurugi-udf"
+# Note:
+# When you update the version here, make sure to also update:
+# 1. `tsurugi_udf/builder/udf_plugin_builder/object_schema.py`
+#    (OBJECT_SCHEMA_VERSION should match this version)
+# 2. `SUPPORTED_MAJOR` and `SUPPORTED_MINOR` in
+#    `tsurugidb/jogasaki/src/jogasaki/executor/function/udf_functions.cpp`
 version = "0.1.0"
 description = "Tsurugi UDF plugin toolchain (builder + viewer + common)"
 license = {text = "Apache-2.0"}
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
   "jinja2>=3.0",
   "protobuf>=4.0"

@@ -32,21 +32,11 @@ jobs:
           pip install .[test]
           pytest -v
 
-      - name: Install udf-plugin-common
+      - name: Test udf-plugin
         run: |
-          cd udf-plugin/common
-          pip install .
-
-      - name: Test udf-plugin-builder
-        run: |
-          cd udf-plugin/builder
+          cd udf-plugin
           pip install .[test]
           pytest -v
-
-      - name: Install udf-plugin-viewer
-        run: |
-          cd udf-plugin/viewer
-          pip install .
 
       - name: Create_GitHub_Release
         if: github.repository_owner == 'project-tsurugi' && contains(github.ref, '/tags/')

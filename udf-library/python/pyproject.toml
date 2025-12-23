@@ -1,6 +1,6 @@
 #ruff format pyproject.toml
 [build-system]
-requires = ["setuptools>=65.0.0", "wheel", "protobuf>=4.0.0"]
+requires = ["setuptools>=80.9.0", "wheel>=0.45.1", "protobuf>=4.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,6 +8,7 @@ name = "tsurugi-udf-library"
 version = "0.1.0"
 description = "Tsurugi UDF Python library"
 readme = "README.md"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 dependencies = ["protobuf>=6.31.1"]
 

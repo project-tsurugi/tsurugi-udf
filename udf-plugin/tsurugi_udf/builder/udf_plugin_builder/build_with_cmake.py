@@ -22,6 +22,8 @@ from .utils import (
     load_descriptor,
     parse_package_descriptor,
     dump_packages_json,
+    get_build_type,
+    is_debug_build,
 )
 
 tsurugi_udf_common_dir = os.path.dirname(tsurugi_udf_common.__file__)
@@ -31,20 +33,8 @@ from .tsurugi_keywords import (
     TEMPLATE,
 )
 
-
-def get_build_type() -> str:
-    """Return normalized build type: 'Debug' or 'Release'. Default is 'Release'."""
-    val = os.environ.get("BUILD_TYPE", "").strip().lower()
-    if val == "debug":
-        return "Debug"
-    else:
-        # empty or anything else -> Release
-        return "Release"
-
-
 BUILD_TYPE = get_build_type()
-
-DEBUG = BUILD_TYPE == "Debug"
+DEBUG = is_debug_build()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CMAKE_DIR = Path(SCRIPT_DIR) / "cmake"
@@ -279,22 +269,13 @@ def run(args=None):
             proto_paths = [os.path.abspath(p) for p in args.proto_path]
     else:
         proto_paths = [str(Path(proto_files[0]).parent.resolve())]
+    log_always(f"[INFO] build type: {BUILD_TYPE}")
     log_always(f"[INFO] Building in {build_dir_full}")
     log_always(f"[INFO] Output directory: {out_dir}")
     log_always(f"[INFO] Plugin name: {name}")
     log_always(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
     log_always(f"[INFO] Proto path: {proto_paths}")
     log_always(f"[INFO] Using proto files: {args.proto_file}")
-
-    build_type_env = os.environ.get("BUILD_TYPE", "").strip()
-    if not build_type_env:
-        build_type = "Release"
-    else:
-        build_type = build_type_env.capitalize()
-    if build_type not in ("Debug", "Release"):
-        raise RuntimeError(
-            f"Invalid build type: {build_type}. Must be Debug or Release."
-        )
     result = run_protoc(proto_files, proto_paths, build_dir_full)
     created_files = []
     log_info("[FILE]", result["descriptor"])

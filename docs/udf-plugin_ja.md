@@ -15,7 +15,7 @@
 
 | コンポーネント | バージョン | 備考 |
 | -------------- | --------- | ---- |
-| **Python** | ≥ 3.10 | Python 3.9 未満は利用不可 |
+| **Python** | ≥ 3.10 | Python 3.9 以前のバージョンは利用不可 |
 | **pip** | ≥ 24.0 | Ubuntu 22 環境で `python3-pip` パッケージで導入した場合はアップグレードが必要 |
 
 その他、実行環境に必要なコンポーネントについての詳細は [tsurugi-udf/README.md](https://github.com/project-tsurugi/tsurugi-udf/blob/master/README.md) を参照してください。

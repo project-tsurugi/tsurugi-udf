@@ -14,28 +14,29 @@ RecordDescriptor = descriptors.RecordDescriptor
 FunctionDescriptor = descriptors.FunctionDescriptor
 ServiceDescriptor = descriptors.ServiceDescriptor
 PackageDescriptor = descriptors.PackageDescriptor
-DEBUG = os.environ.get("BUILD_TYPE", "").strip().lower() == "debug"
+
+CMAKE_BUILD_TYPES = {
+    "debug": "Debug",
+    "release": "Release",
+    "relwithdebinfo": "RelWithDebInfo",
+    "minsizerel": "MinSizeRel",
+}
+
+DEFAULT_BUILD_TYPE = "RelWithDebInfo"
+
+DEBUG_BUILD_TYPES = {"Debug"}
+
 TYPE_KIND_MAP = descriptors.TYPE_KIND_MAP
 FIELD_TYPE_MAP = descriptors.FIELD_TYPE_MAP
 
-from .tsurugi_keywords import  (
+from .tsurugi_keywords import (
     TSURUGI_RESERVED_KEYWORDS,
     TSURUGI_TYPES_KEYWORDS,
 )
 
 
-def set_debug(value: bool):
-    global DEBUG
-    DEBUG = value
-
-
 def log_always(*args, **kwargs):
     print(*args, **kwargs)
-
-
-def log_info(*args, **kwargs):
-    if DEBUG:
-        print(*args, **kwargs)
 
 
 def log_error(*args, **kwargs):
@@ -277,3 +278,17 @@ def field_type_to_kind(field) -> str:
 def dump_packages_json(packages: List[PackageDescriptor], build_path: str):
     with open(build_path, "w") as f:
         json.dump([asdict(pkg) for pkg in packages], f, indent=2)
+
+
+def get_build_type() -> str:
+    val = os.environ.get("BUILD_TYPE", "").strip().lower()
+    return CMAKE_BUILD_TYPES.get(val, DEFAULT_BUILD_TYPE)
+
+
+def is_debug_build() -> bool:
+    return get_build_type() in DEBUG_BUILD_TYPES
+
+
+def log_info(*args, **kwargs):
+    if is_debug_build():
+        print(*args, **kwargs)

@@ -2,15 +2,33 @@
 
 `udf_library` is a Python library for converting between Python native types and `Tsurugi's` protobuf types (`tsurugidb.udf.*`).
 
-Currently, the following type conversion is supported:
+## Data Type Conversion
 
-| Protobuf Type | Python Type | Protobuf -> Python | Python -> Protobuf |
-|----------------------------|-----------------|-------------------|-------------------|
-| tsurugidb.udf.Decimal | decimal.Decimal | `from_pb_decimal` | `to_pb_decimal` |
-| tsurugidb.udf.Date | datetime.date | `from_pb_date` |`to_pb_date`|
-| tsurugidb.udf.LocalTime | datetime.time | `from_pb_local_time` | `to_pb_local_time`|
-| tsurugidb.udf.LocalDatetime | datetime.datetime | `from_pb_local_datetime` | `to_pb_local_datetime`|
-| tsurugidb.udf.OffsetDatetime | datetime.datetime | `from_pb_offset_datetime` | `to_pb_offset_datetime`|
+The library provides utility functions to convert between tsurugidb.udf message types and corresponding Python standard types.
+
+### Supported Conversions
+
+| UDF Message Type | Python Type | UDF → Python | Python → UDF |
+| ---------------- | ------------------- | ------------------------- | ----------------------- |
+| `Decimal` | `decimal.Decimal` | `from_pb_decimal` | `to_pb_decimal` |
+| `Date` | `datetime.date` | `from_pb_date` | `to_pb_date` |
+| `LocalTime` | `datetime.time` | `from_pb_local_time` | `to_pb_local_time` |
+| `LocalDatetime` | `datetime.datetime` | `from_pb_local_datetime` | `to_pb_local_datetime` |
+| `OffsetDatetime` | `datetime.datetime` | `from_pb_offset_datetime` | `to_pb_offset_datetime` |
+
+## BLOB Client
+
+BlobReference and ClobReference do not contain the actual BLOB/CLOB data.
+The BlobRelayClient API is used to upload and download large BLOB/CLOB data.
+
+### BlobRelayClient API
+
+| Method | Description |
+| --------------------------------- | --------------------------------------------------- |
+| `download_blob(ref, destination)` | Download BLOB data to a local file |
+| `download_clob(ref, destination)` | Download CLOB data to a local file |
+| `upload_blob(source)` | Upload a local BLOB file and return `BlobReference` |
+| `upload_clob(source)` | Upload a local CLOB file and return `ClobReference` |
 
 ## User's guide(ja)
 

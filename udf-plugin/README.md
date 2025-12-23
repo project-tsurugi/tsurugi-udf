@@ -14,36 +14,6 @@ This toolchain integrates two main modules:
 
 - **[udf-plugin](../docs/udf-plugin_ja.md)**
 
-## Requirements
-
-### C++ Side
-
-| Component | Version | Description |
-|----------------------|---------|----------------------------------------------|
-| **CMake** | ≥ 3.15 | Build system configuration |
-| **C++ Compiler** | C++17+ | Required for modern C++ features |
-| **protoc** | Latest | Protocol Buffers compiler |
-| **grpc_cpp_plugin** | Latest | gRPC C++ code generation plugin |
-| **Protobuf** | 6.31.1 | Protocol Buffers runtime |
-| **gRPC** | Latest | gRPC C++ library |
-| **ninja** | Recommended | Fast build backend for CMake |
-
-### Python Side
-
-| Component | Version | Description |
-|---------------------|----------|----------------------------------------------|
-| **Python** | ≥ 3.10 | |
-| **python3-dev** | Corresponding version | Python C API / headers for pybind11 |
-| **pip** | ≥ 24.0 | Python package manager |
-| **jinja2** | 3.1.6 | Template engine for code generation |
-| **pybind11** | 3.0.0 | C++/Python binding library |
-| **scikit-build-core** | 0.11.6 | CMake-based Python build tool |
-| **setuptools** | 80.9.0 | Python packaging library |
-| **wheel** | 0.45.1 | Python wheel package support |
-| **pytest** | 8.4.2 | Testing framework |
-| **pytest-xdist** | 3.8.0 | Parallel test execution |
-| **nlohmann_json** | Latest | JSON support |
-
 ## Installation
 
 You can install the toolchain using `pip`:

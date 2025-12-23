@@ -12,6 +12,10 @@ Currently, the following type conversion is supported:
 | tsurugidb.udf.LocalDatetime | datetime.datetime | `from_pb_local_datetime` | `to_pb_local_datetime`|
 | tsurugidb.udf.OffsetDatetime | datetime.datetime | `from_pb_offset_datetime` | `to_pb_offset_datetime`|
 
+## User's guide(ja)
+
+- **[udf-library (for Python)](../../docs/udf-library_ja.md)**
+
 ## Requirements
 
 | Component | Version | Description |
@@ -28,8 +32,6 @@ Currently, the following type conversion is supported:
 ```bash
 pip install .
 ```
-
-Requires Python 3.10+ and protobuf library.
 
 ## Testing
 
@@ -136,6 +138,8 @@ print("Protobuf OffsetDatetime -> Python datetime with tz:", dt2_tz)
 
 ```
 
+This example does not include the BlobRelayClient feature. Refer to [udf-library (for Python)](../../docs/udf-library_ja.md) for details on BlobRelayClient.
+
 ### Result
 
 ```bash
@@ -190,25 +194,6 @@ time_zone_offset: 540
 
 Protobuf OffsetDatetime -> Python datetime with tz: 2023-05-15 14:30:15.123456+09:00
 ```
-
-## Using tsurugi_types.proto in Python via protoc
-
-When you have a .proto file that references tsurugi_types.proto and you want to compile it for Python, you may encounter import issues. By default, the generated Python code uses:
-
-```python
-import tsurugi_types_pb2 as tsurugi__types__pb2
-```
-
-However, if tsurugi_types_pb2.py is part of a Python package (e.g., tsurugidb.udf.model), this import will fail at runtime. We need to modify it to include the full package path:
-
-```python
-from tsurugidb.udf.model import tsurugi_types_pb2 as tsurugi__types__pb2
-```
-
-## Recovery if Module Not Found
-
-- Ensure you installed the package for the correct Python version
-- Make sure the Python user site is on your `PYTHONPATH`.
 
 ## License
 

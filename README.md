@@ -4,17 +4,13 @@
 
 This repository consists of two modules:
 
-- **[Tsurugi UDF plugin toolchain](udf-plugin/README.md)**\
+- **[Tsurugi UDF plugin toolchain](udf-plugin/README.md)**
 
-- **[Tsurugi UDF Python library](udf-library/python/README.md)**\
+- **[Tsurugi UDF Python library](udf-library/python/README.md)**
 
-
-## User's guide
+## Tsurugi UDF User's guide(ja)
 
 - **[tsurugi-udf guide(ja)](docs/udf-guide_ja.md)**
-  - **[udf-plugin-common](common/README.md)**
-  - **[udf-plugin-builder guide (ja)](docs/udf-plugin-builder_ja.md)**
-  - **[udf-plugin-viewer guide (ja)](docs/udf-plugin-viewer_ja.md)**
 
 ## Requirements
 

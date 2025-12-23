@@ -34,6 +34,19 @@ from .tsurugi_keywords import (
     TSURUGI_TYPES_KEYWORDS,
 )
 
+def get_build_type() -> str:
+    val = os.environ.get("BUILD_TYPE", "").strip().lower()
+    return CMAKE_BUILD_TYPES.get(val, DEFAULT_BUILD_TYPE)
+
+
+def is_debug_build() -> bool:
+    return get_build_type() in DEBUG_BUILD_TYPES
+
+
+def log_info(*args, **kwargs):
+    if is_debug_build():
+        print(*args, **kwargs)
+
 
 def log_always(*args, **kwargs):
     print(*args, **kwargs)
@@ -46,14 +59,12 @@ def log_error(*args, **kwargs):
 def log_ok(*args, **kwargs):
     print("\033[32m[OK]\033[0m", *args, **kwargs)
 
-
 def handle_value_error(e: ValueError):
-    if DEBUG:
+    if is_debug_build():
         raise e
     else:
         print(f"\033[91m[ERROR]\033[0m {e}", file=sys.stderr)
         sys.exit(1)
-
 
 def check_no_oneof(record: RecordDescriptor, fn_name: str):
     for col in record.columns:
@@ -278,17 +289,3 @@ def field_type_to_kind(field) -> str:
 def dump_packages_json(packages: List[PackageDescriptor], build_path: str):
     with open(build_path, "w") as f:
         json.dump([asdict(pkg) for pkg in packages], f, indent=2)
-
-
-def get_build_type() -> str:
-    val = os.environ.get("BUILD_TYPE", "").strip().lower()
-    return CMAKE_BUILD_TYPES.get(val, DEFAULT_BUILD_TYPE)
-
-
-def is_debug_build() -> bool:
-    return get_build_type() in DEBUG_BUILD_TYPES
-
-
-def log_info(*args, **kwargs):
-    if is_debug_build():
-        print(*args, **kwargs)

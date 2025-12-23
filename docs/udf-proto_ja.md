@@ -4,13 +4,13 @@
 
 ## 概要
 
-Tsurugi UDF では、UDF の関数定義を Protocol Buffers の [proto3](https://protobuf.dev/programming-guides/proto3/) の仕様に従って `.proto` ファイルで定義します。
+Tsurugi UDF では、UDF 関数の定義を Protocol Buffers の [proto3](https://protobuf.dev/programming-guides/proto3/) の仕様に従って `.proto` ファイルで定義します。
 
 UDF 関数の定義と `.proto` のサービス定義との対応はおおよそ以下の通りです。
 
-- UDF の関数名 : RPCメソッド名 ( `rpc` )
-- UDF の引数: RPCのリクエストメッセージ ( `message` )
-- UDF の戻り値: RPCのレスポンスメッセージ ( `message` )
+- UDF 関数の関数名 : RPCメソッド名 ( `rpc` )
+- UDF 関数の引数: RPCのリクエストメッセージ ( `message` )
+- UDF 関数の戻り値: RPCのレスポンスメッセージ ( `message` )
 
 作成した `.proto` ファイルは、[udf-plugin-builder](./udf-plugin_ja.md) を用いて gRPC クライアントとなる UDF プラグインを生成する際に利用します。また、gRPC サーバ実装においても [gRPC - Python Quick start](https://grpc.io/docs/languages/python/quickstart/) などの手順に従って、同じ `.proto` ファイルを用いて gRPC サーバ用のコードを生成します。
 
@@ -18,7 +18,7 @@ UDF 関数の定義と `.proto` のサービス定義との対応はおおよそ
 
 UDF 関数と `.proto` ファイルの定義との対応について、以下に詳細を示します。また Tsurugi UDF で利用するにあたっては 通常の Protocol Buffers の定義に対していくつか追加の制約がありますので、これについても説明します。
 
-説明中には以下 `.proto` ファイルの例を用います。
+説明のために下記 `helloworld.proto` を例として用います。
 
 `helloworld.proto`
 
@@ -55,7 +55,7 @@ message HelloReply {
 - サービスに含む、すべての RPC メソッドが UDF 関数として扱われる
 - RPC メソッド名 ( 例では `rpc` に続く `SayHello` や `SayHelloAgain` ) が UDF 関数名として扱われる
   - サービス名 ( 例では `service` に続く `Greeter` ) は無視される
-- **RPC メソッド名は Tsurugi に登録する全ての UDF 全体で一意**でなければならない。
+- **RPC メソッド名は Tsurugi に登録する全ての UDF 関数全体で一意**でなければならない。
   - 通常 Protocol Buffers では `package` , `service` が異なる同名のRPCメソッドを定義できるが、Tsurugiではそれらは同名の関数として扱われるため関数名が衝突する。
 - `rpc` メソッドは **Unary RPC** のみ対応（Streaming RPC は非対応）
 - RPC メソッド名に Tsurugi の予約語 (Reserved words) を指定することはできない
@@ -63,11 +63,11 @@ message HelloReply {
 
 ### 引数の定義
 
-- RPC のリクエストメッセージ が UDF の引数として扱われる
+- RPC のリクエストメッセージ が UDF 関数の引数として扱われる
   - 例では `rpc SayHello (HelloRequest)` の `HelloRequest` が引数型として扱われる
-- `message` に定義したメッセージ型の各フィールドが、UDFの引数として扱われる
+- `message` に定義したメッセージ型の各フィールドが、UDF関数の引数として扱われる
   - データ型の対応付けは次項で紹介する ([データ型の対応付け](#データ型の対応付け))
-- リクエストメッセージのフィールドの定義順 が UDF の引数順 に対応する
+- リクエストメッセージのフィールドの定義順 が UDF 関数の引数順 に対応する
   - フィールド順と個数は、UDF 関数の引数順と一致する
   - フィールド番号ではなく、テキストの位置で決定する
 - `message` のネストは不可
@@ -81,10 +81,10 @@ message HelloReply {
 
 ### 戻り値の定義
 
-- RPC のレスポンスメッセージ がUDFの戻り値として扱われる
+- RPC のレスポンスメッセージ がUDF 関数の戻り値として扱われる
   - 例では `rpc SayHello (HelloRequest) returns (HelloReply)` の `HelloReply` が戻り値型として扱われる
 - レスポンスメッセージのフィールドは1つでなければならない
-  - 指定したフィールドのデータ型が UDF の戻り値型となる
+  - 指定したフィールドのデータ型が UDF 関数の戻り値型となる
   - データ型の対応付けは次項で紹介する ([データ型の対応付け](#データ型の対応付け))
 - `message` のネストは不可
 - `oneof` は指定不可
@@ -125,7 +125,7 @@ Tsurugi の型（SQL型）と Protocol Buffers の型の対応付けについて
 
 `tsurugidb.udf` メッセージ型を利用する場合は、`.proto` ファイル内で `import "tsurugidb/udf/tsurugi_types.proto";` を指定し、当該ファイルをインポートしてください。
 
-以下は `DECIMAL` 型を引数と戻り値に指定したUDFの定義例です。
+以下は `DECIMAL` 型を引数と戻り値に指定したUDF 関数の定義例です。
 
 `decimal_use.proto`
 

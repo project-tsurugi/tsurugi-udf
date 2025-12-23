@@ -16,17 +16,6 @@ Currently, the following type conversion is supported:
 
 - **[udf-library (for Python)](../../docs/udf-library_ja.md)**
 
-## Requirements
-
-| Component | Version | Description |
-| ---------------- | ------- | -------------------------------------------------- |
-| **Python** | ≥ 3.10 | Required Python version for running the library |
-| **pip** | ≥ 24.0 | Python package manager for installing dependencies |
-| **setuptools** | ≥ 80.9.0 | Build system backend for packaging the library |
-| **wheel** | ≥ 0.38 | Required to build wheel distributions |
-| **grpcio-tools** | ≥ 1.56 | gRPC & protobuf code generation tools |
-| **protobuf** | ≥ 4.24 | Required for working with protobuf message types |
-
 ## Installation
 
 ```bash

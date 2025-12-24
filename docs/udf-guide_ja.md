@@ -70,7 +70,7 @@ message HelloReply {
 }
 ```
 
->[!ATTENTION]
+> [!IMPORTANT]
 > Tsurugi の UDF 向けの `.proto` ファイル記述の制約として、**`.proto` ファイルの先頭には必ず `syntax = "proto3";` を指定する** 必要があります。
 > [gRPC - Python Quickstart][python-quickstart] で作成した `.proto` ファイルにこれが含まれていない場合は、この定義を追加してください。
 

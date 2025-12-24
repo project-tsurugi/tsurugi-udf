@@ -17,7 +17,7 @@ name = "tsurugi-udf"
 # (OBJECT_SCHEMA_VERSION should match this version)
 # 2. `SUPPORTED_MAJOR` and `SUPPORTED_MINOR` in
 # `tsurugidb/jogasaki/src/jogasaki/executor/function/udf_functions.cpp`
-version = "0.1.0"
+version = "0.1.1"
 description = "Tsurugi UDF plugin toolchain"
 readme = "README.md"
 license = {text = "Apache-2.0"}

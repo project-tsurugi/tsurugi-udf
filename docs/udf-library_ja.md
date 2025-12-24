@@ -36,7 +36,7 @@ $ tar xf ${TSURUGI_UDF_VERSION}.tar.gz
 $ cd tsurugi-udf-${TSURUGI_UDF_VERSION}
 
 # udf-library のインストール
-$ cd udf-library
+$ cd udf-library/python
 $ pip install .
 ```
 

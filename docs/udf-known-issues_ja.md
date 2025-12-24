@@ -59,6 +59,19 @@ service Types {
 VALUE_EVALUATION_EXCEPTION (SQL-02011: an error (undefined) occurred:[diagnostic(code=undefined, message='unexpected error occurred during expression evaluation:Multiple fields selected in oneof group 0')])
 ```
 
+### `NULL` 値に未対応
+
+現時点の Tsurugi UDF では、引数および戻り値に `NULL` 値を指定することはできません。
+
+UDF の引数値が `NULL` の場合、関数呼び出しは gRPC サービス呼び出し前にバリデーションエラーで例外が発生します。
+エラーを回避するには `COALESCE` 関数などを利用して `NULL` 値を変換する、もしくは UDF に `NULL` 値が渡されないように呼び出し側で制御してください。
+
+UDF の戻り値については、 Tsurugi UDF では gRPC サービスから `NULL` 値を返却する機能は提供していません。また現時点の Tsurugi UDF は `.proto` の  `optional` フィールドに未対応であるため、レスポンスメッセージのフィールド値を未設定することもできません。
+
+なお、`NULL` 値に関するこれらの制約は、今後のリリースで `.proto` の `optional` フィールドのサポートとともに緩和することを計画しています。
+
+現状の UDF 関数の引数、および戻り値の定義に関する制約の詳細については、 [UDF 関数インターフェースの定義](./udf-proto_ja.md) を参照してください。
+
 ### Secure gRPC 通信に未対応
 
 **問題:**

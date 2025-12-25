@@ -106,6 +106,7 @@ udf-plugin-builder: error: the following arguments are required: --proto-file
 
 `--proto-file` に指定した `.proto` ファイルが以下の制約に該当する場合、`udf-plugin-builder` はエラーを出力して終了します。
 - rpc メソッド名が Tsurugi の予約語と一致した場合
+- rpc メソッドのリクエストメッセージ、レスポンスメッセージに Protocol Buffers のスカラー型や `udf-library` が提供する `tsurugidb.udf` メッセージ型を直接指定した場合
 - rpc メソッドのレスポンスメッセージにフィールドを1つも持たないメッセージ型が指定された場合
 - rpc メソッドのレスポンスメッセージに `oneof` フィールドを持つメッセージ型が指定された場合
 

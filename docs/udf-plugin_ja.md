@@ -15,7 +15,7 @@
 
 | コンポーネント | バージョン | 備考 |
 | -------------- | --------- | ---- |
-| **Python** | ≥ 3.10 | Python 3.9 以前のバージョンは利用不可 |
+| **Python** - 開発用パッケージ | ≥ 3.10 | Python 3.9 以前のバージョンは利用不可 |
 | **pip** | ≥ 24.0 | Ubuntu 22 環境で `python3-pip` パッケージで導入した場合はアップグレードが必要 |
 
 その他、実行環境に必要なコンポーネントについての詳細は [tsurugi-udf/README.md](https://github.com/project-tsurugi/tsurugi-udf/blob/master/README.md) を参照してください。
@@ -25,7 +25,7 @@
 ```dockerfile
 FROM ubuntu:22.04
 
-RUN apt update -y && apt install -y build-essential cmake libboost-serialization-dev libgrpc-dev libgrpc++-dev libprotobuf-dev ninja-build protobuf-compiler protobuf-compiler-grpc python3 python3-pip
+RUN apt update -y && apt install -y build-essential cmake libboost-serialization-dev libgrpc-dev libgrpc++-dev libprotobuf-dev ninja-build protobuf-compiler protobuf-compiler-grpc python3-dev python3-pip
 RUN pip3 install --upgrade pip
 ```
 

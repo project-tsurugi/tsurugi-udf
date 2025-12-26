@@ -8,7 +8,7 @@ Tsurugi UDF が提供する各ツールは 以下の Python 実行環境が必�
 
 | コンポーネント | バージョン | 備考 |
 | -------------- | --------- | ---- |
-| **Python** | ≥ 3.10 | Python 3.9 以前のバージョンは利用不可 |
+| **Python** - 開発用パッケージ | ≥ 3.10 | Python 3.9 以前のバージョンは利用不可 |
 | **pip** | ≥ 24.0 | Ubuntu 22 環境で `python3-pip` パッケージで導入した場合はアップグレードが必要 |
 
 その他、実行環境に必要なコンポーネントについての詳細は [tsurugi-udf/README.md](https://github.com/project-tsurugi/tsurugi-udf/blob/master/README.md) を参照してください。
@@ -70,7 +70,7 @@ message HelloReply {
 }
 ```
 
->[!ATTENTION]
+> [!IMPORTANT]
 > Tsurugi の UDF 向けの `.proto` ファイル記述の制約として、**`.proto` ファイルの先頭には必ず `syntax = "proto3";` を指定する** 必要があります。
 > [gRPC - Python Quickstart][python-quickstart] で作成した `.proto` ファイルにこれが含まれていない場合は、この定義を追加してください。
 

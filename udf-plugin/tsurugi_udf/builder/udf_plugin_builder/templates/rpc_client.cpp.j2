@@ -175,3 +175,11 @@ void rpc_client::call(ClientContext& context,
             throw std::runtime_error("Unsupported function_index");
     }
 }
+std::unique_ptr<generic_record_stream>
+rpc_client::call_server_streaming_async(
+    grpc::ClientContext const& context,
+    function_index_type function_index,
+    generic_record& request
+) const {
+    throw std::logic_error("call_server_streaming_async not implemented");
+}

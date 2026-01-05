@@ -139,6 +139,7 @@ void rpc_client::call(ClientContext& context,
             {{ emit_setters("req", fn.input_record, "", False) }}
 
             // Call
+            {% if fn.function_kind == "unary" %}
             Status status = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
 
             if (status.ok()) {
@@ -150,6 +151,21 @@ void rpc_client::call(ClientContext& context,
                     std::string(status.error_message())
                 ));
             }
+            {% elif fn.function_kind == "server_streaming" %}
+            auto reader = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req);
+            while (reader->Read(&rep)) {
+                {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
+            }
+            Status status = reader->Finish();
+            if (!status.ok()) {
+                response.set_error(error_info(
+                    static_cast<error_info::error_code_type>(status.error_code()),
+                    std::string(status.error_message())
+                ));
+            }
+            {% else %}
+                throw std::logic_error("Unsupported RPC function_kind");
+            {% endif %}
             break;
         }
     {% endfor %}

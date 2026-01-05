@@ -14,6 +14,11 @@ class rpc_client : public generic_client {
     void call(grpc::ClientContext& context, function_index_type function_index,
         generic_record& request, generic_record& response) const override;
 
+    std::unique_ptr<plugin::udf::generic_record_stream> call_server_streaming_async(
+        grpc::ClientContext const& context,
+        function_index_type function_index,
+        generic_record& request
+    ) const override;
   private:
 {% set stubs = [] %}
 {% for pkg in packages %}

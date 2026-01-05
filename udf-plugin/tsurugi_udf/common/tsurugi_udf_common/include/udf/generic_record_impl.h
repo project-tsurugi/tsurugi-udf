@@ -80,4 +80,33 @@ private:
 };
 template<class>
 struct always_false : std::false_type {};
+
+class generic_record_stream_impl final : public generic_record_stream {
+public:
+
+    generic_record_stream_impl();
+    ~generic_record_stream_impl() override;
+
+    generic_record_stream_impl(generic_record_stream_impl const&) = delete;
+    generic_record_stream_impl& operator=(generic_record_stream_impl const&) = delete;
+    generic_record_stream_impl(generic_record_stream_impl&&) noexcept;
+    generic_record_stream_impl& operator=(generic_record_stream_impl&&) noexcept;
+
+    [[nodiscard]] generic_record_stream::status_type try_next(generic_record& record) override;
+
+    [[nodiscard]] generic_record_stream::status_type
+    next(generic_record& record, std::optional<std::chrono::milliseconds> timeout = std::nullopt) override;
+
+    void close() override;
+    void push(generic_record_impl record);
+    void end_of_stream();
+
+private:
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    std::queue<generic_record_impl> queue_;
+    bool closed_ = false;
+    bool eos_ = false;
+};
+
 }  // namespace plugin::udf

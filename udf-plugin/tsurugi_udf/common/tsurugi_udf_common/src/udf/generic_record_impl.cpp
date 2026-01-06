@@ -166,6 +166,8 @@ generic_record_stream::status_type generic_record_stream_impl::try_next(generic_
         return impl.error() ? status_type::error : status_type::ok;
     }
 
+    if(closed_ && !eos_) { return status_type::error; }
+    
     if(eos_) { return status_type::end_of_stream; }
 
     return status_type::not_ready;
@@ -196,7 +198,7 @@ generic_record_stream_impl::next(generic_record& record, std::optional<std::chro
 
     // If the stream was closed prematurely (before natural end_of_stream), return error status
     // to distinguish from a natural end of stream condition
-    if(closed_) {
+    if(closed_ && !eos_) {
         return status_type::error;
     }
 
@@ -224,7 +226,6 @@ void generic_record_stream_impl::close() {
     {
         std::lock_guard lk(mutex_);
         closed_ = true;
-        eos_ = true;
         std::queue<generic_record_impl> empty;
         queue_.swap(empty);
     }

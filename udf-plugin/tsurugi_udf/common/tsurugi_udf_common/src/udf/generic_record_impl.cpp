@@ -157,10 +157,6 @@ generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record
     {
         std::scoped_lock lk(mutex_, other.mutex_);
         
-        // Clear current object's state
-        std::queue<generic_record_impl> empty;
-        queue_.swap(empty);
-        
         // Move from other object
         queue_ = std::move(other.queue_);
         closed_ = other.closed_;

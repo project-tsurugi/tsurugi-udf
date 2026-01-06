@@ -22,6 +22,9 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <chrono>
+#include <queue>
+
 
 #include "error_info.h"
 namespace plugin::udf {
@@ -129,6 +132,97 @@ std::optional<std::string> generic_record_cursor_impl::fetch_string() {
     auto value = fetch_value_as<std::string>(values_[index_]);
     if(value) { ++index_; }
     return value;
+}
+
+generic_record_stream_impl::generic_record_stream_impl() = default;
+generic_record_stream_impl::~generic_record_stream_impl() { close(); }
+
+generic_record_stream_impl::generic_record_stream_impl(generic_record_stream_impl&& other) noexcept {
+    std::lock_guard lk(other.mutex_);
+    queue_ = std::move(other.queue_);
+    closed_ = other.closed_;
+    eos_ = other.eos_;
+}
+
+generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record_stream_impl&& other) noexcept {
+    if(this == &other) return *this;
+    std::scoped_lock lk(mutex_, other.mutex_);
+    queue_ = std::move(other.queue_);
+    closed_ = other.closed_;
+    eos_ = other.eos_;
+    return *this;
+}
+
+generic_record_stream::status_type generic_record_stream_impl::try_next(generic_record& record) {
+    std::lock_guard lk(mutex_);
+
+    if(! queue_.empty()) {
+        auto rec = std::move(queue_.front());
+        queue_.pop();
+
+        auto& impl = static_cast<generic_record_impl&>(record);
+        impl = std::move(rec);
+
+        return impl.error() ? status_type::error : status_type::ok;
+    }
+
+    if(eos_) { return status_type::end_of_stream; }
+
+    return status_type::not_ready;
+}
+
+generic_record_stream::status_type
+generic_record_stream_impl::next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) {
+
+    std::unique_lock lk(mutex_);
+
+    auto pred = [&] { return ! queue_.empty() || eos_ || closed_; };
+
+    if(timeout) {
+        if(! cv_.wait_for(lk, *timeout, pred)) { return status_type::not_ready; }
+    } else {
+        cv_.wait(lk, pred);
+    }
+
+    if(! queue_.empty()) {
+        auto rec = std::move(queue_.front());
+        queue_.pop();
+
+        auto& impl = static_cast<generic_record_impl&>(record);
+        impl = std::move(rec);
+
+        return impl.error() ? status_type::error : status_type::ok;
+    }
+
+    return status_type::end_of_stream;
+}
+
+void generic_record_stream_impl::push(generic_record_impl record) {
+    {
+        std::lock_guard lk(mutex_);
+        if(closed_ || eos_) return;
+        queue_.push(std::move(record));
+    }
+    cv_.notify_one();
+}
+
+void generic_record_stream_impl::end_of_stream() {
+    {
+        std::lock_guard lk(mutex_);
+        eos_ = true;
+    }
+    cv_.notify_all();
+}
+
+void generic_record_stream_impl::close() {
+    {
+        std::lock_guard lk(mutex_);
+        closed_ = true;
+        eos_ = true;
+        std::queue<generic_record_impl> empty;
+        queue_.swap(empty);
+    }
+    cv_.notify_all();
 }
 
 }  // namespace plugin::udf

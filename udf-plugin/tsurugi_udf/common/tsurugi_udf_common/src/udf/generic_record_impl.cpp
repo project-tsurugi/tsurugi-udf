@@ -134,6 +134,7 @@ std::optional<std::string> generic_record_cursor_impl::fetch_string() {
 }
 
 generic_record_stream_impl::generic_record_stream_impl() = default;
+
 generic_record_stream_impl::~generic_record_stream_impl() { close(); }
 
 generic_record_stream_impl::generic_record_stream_impl(generic_record_stream_impl&& other) noexcept {
@@ -142,37 +143,30 @@ generic_record_stream_impl::generic_record_stream_impl(generic_record_stream_imp
         queue_ = std::move(other.queue_);
         closed_ = other.closed_;
         eos_ = other.eos_;
-        
-        // Leave moved-from object in a well-defined closed state
         other.closed_ = true;
         other.eos_ = true;
     }
-    // Notify any threads waiting on the moved-from object
     other.cv_.notify_all();
 }
 
 generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record_stream_impl&& other) noexcept {
-    if(this == &other) return *this;
+    if(this == &other) {
+        return *this;
+    }
+
     {
         std::scoped_lock lk(mutex_, other.mutex_);
-        
-        // Move from other object
         queue_ = std::move(other.queue_);
         closed_ = other.closed_;
         eos_ = other.eos_;
-        
-        // Leave moved-from object in a well-defined closed state
+
         other.closed_ = true;
         other.eos_ = true;
     }
-    // Notify any threads waiting on either object
-    cv_.notify_all();
     other.cv_.notify_all();
-    
     return *this;
 }
 
-// Precondition: mutex_ must be held by the caller
 generic_record_stream::status_type generic_record_stream_impl::extract_record_from_queue(generic_record& record) {
     auto rec = std::move(queue_.front());
     queue_.pop();
@@ -186,9 +180,7 @@ generic_record_stream::status_type generic_record_stream_impl::extract_record_fr
 generic_record_stream::status_type generic_record_stream_impl::try_next(generic_record& record) {
     std::lock_guard lk(mutex_);
 
-    if(! queue_.empty()) {
-        return extract_record_from_queue(record);
-    }
+    if(! queue_.empty()) { return extract_record_from_queue(record); }
 
     if(eos_) { return status_type::end_of_stream; }
 
@@ -208,9 +200,7 @@ generic_record_stream_impl::next(generic_record& record, std::optional<std::chro
         cv_.wait(lk, pred);
     }
 
-    if(! queue_.empty()) {
-        return extract_record_from_queue(record);
-    }
+    if(! queue_.empty()) { return extract_record_from_queue(record); }
 
     return status_type::end_of_stream;
 }
@@ -218,7 +208,7 @@ generic_record_stream_impl::next(generic_record& record, std::optional<std::chro
 void generic_record_stream_impl::push(generic_record_impl record) {
     {
         std::lock_guard lk(mutex_);
-        if(closed_ || eos_) return;
+        if(closed_ || eos_) { return; }
         queue_.push(std::move(record));
     }
     cv_.notify_one();
@@ -242,5 +232,4 @@ void generic_record_stream_impl::close() {
     }
     cv_.notify_all();
 }
-
 }  // namespace plugin::udf

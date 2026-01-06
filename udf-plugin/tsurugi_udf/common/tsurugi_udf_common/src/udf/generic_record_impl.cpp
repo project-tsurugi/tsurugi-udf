@@ -153,17 +153,21 @@ generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record
     return *this;
 }
 
+generic_record_stream::status_type generic_record_stream_impl::extract_record_from_queue(generic_record& record) {
+    auto rec = std::move(queue_.front());
+    queue_.pop();
+
+    auto& impl = static_cast<generic_record_impl&>(record);
+    impl = std::move(rec);
+
+    return impl.error() ? status_type::error : status_type::ok;
+}
+
 generic_record_stream::status_type generic_record_stream_impl::try_next(generic_record& record) {
     std::lock_guard lk(mutex_);
 
     if(! queue_.empty()) {
-        auto rec = std::move(queue_.front());
-        queue_.pop();
-
-        auto& impl = static_cast<generic_record_impl&>(record);
-        impl = std::move(rec);
-
-        return impl.error() ? status_type::error : status_type::ok;
+        return extract_record_from_queue(record);
     }
 
     if(eos_) { return status_type::end_of_stream; }
@@ -185,13 +189,7 @@ generic_record_stream_impl::next(generic_record& record, std::optional<std::chro
     }
 
     if(! queue_.empty()) {
-        auto rec = std::move(queue_.front());
-        queue_.pop();
-
-        auto& impl = static_cast<generic_record_impl&>(record);
-        impl = std::move(rec);
-
-        return impl.error() ? status_type::error : status_type::ok;
+        return extract_record_from_queue(record);
     }
 
     return status_type::end_of_stream;

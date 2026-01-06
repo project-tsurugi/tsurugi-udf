@@ -153,6 +153,7 @@ generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record
     return *this;
 }
 
+// Precondition: mutex_ must be held by the caller
 generic_record_stream::status_type generic_record_stream_impl::extract_record_from_queue(generic_record& record) {
     auto rec = std::move(queue_.front());
     queue_.pop();

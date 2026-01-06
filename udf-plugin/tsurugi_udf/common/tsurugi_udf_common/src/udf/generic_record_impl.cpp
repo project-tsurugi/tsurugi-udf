@@ -25,7 +25,6 @@
 #include <chrono>
 #include <queue>
 
-
 #include "error_info.h"
 namespace plugin::udf {
 std::optional<error_info>& generic_record_impl::error() noexcept { return err_; }

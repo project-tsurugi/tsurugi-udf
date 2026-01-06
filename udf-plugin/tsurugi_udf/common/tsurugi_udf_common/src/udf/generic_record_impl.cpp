@@ -138,18 +138,38 @@ generic_record_stream_impl::generic_record_stream_impl() = default;
 generic_record_stream_impl::~generic_record_stream_impl() { close(); }
 
 generic_record_stream_impl::generic_record_stream_impl(generic_record_stream_impl&& other) noexcept {
-    std::lock_guard lk(other.mutex_);
-    queue_ = std::move(other.queue_);
-    closed_ = other.closed_;
-    eos_ = other.eos_;
+    {
+        std::lock_guard lk(other.mutex_);
+        queue_ = std::move(other.queue_);
+        closed_ = other.closed_;
+        eos_ = other.eos_;
+        
+        // Leave moved-from object in a well-defined closed state
+        other.closed_ = true;
+        other.eos_ = true;
+    }
+    // Notify any threads waiting on the moved-from object
+    other.cv_.notify_all();
 }
 
 generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record_stream_impl&& other) noexcept {
     if(this == &other) return *this;
-    std::scoped_lock lk(mutex_, other.mutex_);
-    queue_ = std::move(other.queue_);
-    closed_ = other.closed_;
-    eos_ = other.eos_;
+    {
+        std::scoped_lock lk(mutex_, other.mutex_);
+        
+        // Move from other object
+        queue_ = std::move(other.queue_);
+        closed_ = other.closed_;
+        eos_ = other.eos_;
+        
+        // Leave moved-from object in a well-defined closed state
+        other.closed_ = true;
+        other.eos_ = true;
+    }
+    // Notify any threads waiting on either object
+    cv_.notify_all();
+    other.cv_.notify_all();
+    
     return *this;
 }
 

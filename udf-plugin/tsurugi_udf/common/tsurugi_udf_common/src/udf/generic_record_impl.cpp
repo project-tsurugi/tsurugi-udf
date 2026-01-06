@@ -166,7 +166,8 @@ generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record
         other.closed_ = true;
         other.eos_ = true;
     }
-    // Notify any threads waiting on the moved-from object
+    // Notify any threads waiting on either object
+    cv_.notify_all();
     other.cv_.notify_all();
     
     return *this;

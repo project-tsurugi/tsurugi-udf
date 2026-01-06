@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message BigintValue {
+  int64 value = 1;
+}
+
+message AA {
+  int64 value = 1;
+}
+service StreamTestService {
+  rpc stream_test_one(AA) returns (stream BigintValue);
+}

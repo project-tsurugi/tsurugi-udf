@@ -3,7 +3,7 @@ syntax = "proto3";
 package test;
 
 service TestService {
-  rpc Ping (PingRequest) returns (PingResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
 }
 
 message PingRequest {
@@ -13,4 +13,3 @@ message PingRequest {
 message PingResponse {
   int32 value = 1;
 }
-

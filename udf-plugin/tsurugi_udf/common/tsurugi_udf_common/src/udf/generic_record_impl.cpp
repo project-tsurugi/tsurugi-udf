@@ -153,6 +153,20 @@ generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record
     return *this;
 }
 
+generic_record_stream::status_type generic_record_stream_impl::check_stream_state() const {
+    // If the stream was closed prematurely (before natural end_of_stream), return error status
+    // to distinguish from a natural end of stream condition
+    if(closed_ && !eos_) {
+        return status_type::error;
+    }
+    
+    if(eos_) {
+        return status_type::end_of_stream;
+    }
+    
+    return status_type::not_ready;
+}
+
 generic_record_stream::status_type generic_record_stream_impl::try_next(generic_record& record) {
     std::lock_guard lk(mutex_);
 
@@ -166,11 +180,7 @@ generic_record_stream::status_type generic_record_stream_impl::try_next(generic_
         return impl.error() ? status_type::error : status_type::ok;
     }
 
-    if(closed_ && !eos_) { return status_type::error; }
-    
-    if(eos_) { return status_type::end_of_stream; }
-
-    return status_type::not_ready;
+    return check_stream_state();
 }
 
 generic_record_stream::status_type
@@ -196,13 +206,7 @@ generic_record_stream_impl::next(generic_record& record, std::optional<std::chro
         return impl.error() ? status_type::error : status_type::ok;
     }
 
-    // If the stream was closed prematurely (before natural end_of_stream), return error status
-    // to distinguish from a natural end of stream condition
-    if(closed_ && !eos_) {
-        return status_type::error;
-    }
-
-    return status_type::end_of_stream;
+    return check_stream_state();
 }
 
 void generic_record_stream_impl::push(generic_record_impl record) {

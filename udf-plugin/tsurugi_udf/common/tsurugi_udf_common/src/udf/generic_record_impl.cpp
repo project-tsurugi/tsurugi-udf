@@ -194,6 +194,12 @@ generic_record_stream_impl::next(generic_record& record, std::optional<std::chro
         return impl.error() ? status_type::error : status_type::ok;
     }
 
+    // If the stream was closed prematurely (before natural end_of_stream), return error status
+    // to distinguish from a natural end of stream condition
+    if(closed_) {
+        return status_type::error;
+    }
+
     return status_type::end_of_stream;
 }
 

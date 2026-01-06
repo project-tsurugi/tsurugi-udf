@@ -102,6 +102,8 @@ public:
     void end_of_stream();
 
 private:
+    [[nodiscard]] generic_record_stream::status_type extract_record_from_queue(generic_record& record);
+
     std::mutex mutex_;
     std::condition_variable cv_;
     std::queue<generic_record_impl> queue_;

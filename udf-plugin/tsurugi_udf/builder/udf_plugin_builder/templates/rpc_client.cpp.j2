@@ -259,7 +259,21 @@ rpc_client::call_server_streaming_async(
         using response_type = {{ fn.output_record.record_name | replace('.', '::') }};
 
         request_type req;
-        {{ async_emit_setters("req", fn.input_record, "", False) }}
+        try {
+            {{ async_emit_setters("req", fn.input_record, "", False) }}
+        } catch (const std::exception& e) {
+            auto err = std::make_unique<generic_record_impl>();
+            err->set_error(error_info(grpc::StatusCode::INTERNAL, e.what()));
+            stream->push(std::move(err));
+            stream->end_of_stream();
+            return stream;
+        } catch (...) {
+            auto err = std::make_unique<generic_record_impl>();
+            err->set_error(error_info(grpc::StatusCode::UNKNOWN, "Unknown error while building async request"));
+            stream->push(std::move(err));
+            stream->end_of_stream();
+            return stream;
+        }
 
         auto ctx = std::make_shared<grpc::ClientContext>();
         ctx->set_deadline(context.deadline());
@@ -269,9 +283,17 @@ rpc_client::call_server_streaming_async(
 
         std::thread([ctx, stub, req = std::move(req), out_stream]() mutable {
             try {
-                response_type rep;
                 auto reader = stub->{{ fn.function_name }}(ctx.get(), req);
+                if (!reader) {
+                    auto err = std::make_unique<generic_record_impl>();
+                    err->set_error(error_info(grpc::StatusCode::INTERNAL,
+                                              "Failed to create server streaming reader"));
+                    out_stream->push(std::move(err));
+                    out_stream->end_of_stream();
+                    return;
+                }
 
+                response_type rep;
                 while (reader->Read(&rep)) {
                     auto record = std::make_unique<generic_record_impl>();
                     {{ emit_response_add_streaming(

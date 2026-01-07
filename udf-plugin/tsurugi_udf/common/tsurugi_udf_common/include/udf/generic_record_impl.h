@@ -86,6 +86,11 @@ public:
     generic_record_stream_impl();
     ~generic_record_stream_impl() override;
 
+    // Copying is explicitly disabled because this class manages a mutex and condition_variable
+    generic_record_stream_impl(const generic_record_stream_impl&) = delete;
+    generic_record_stream_impl& operator=(const generic_record_stream_impl&) = delete;
+
+    // Move constructor and move assignment are allowed
     generic_record_stream_impl(generic_record_stream_impl&& other) noexcept;
     generic_record_stream_impl& operator=(generic_record_stream_impl&& other) noexcept;
 

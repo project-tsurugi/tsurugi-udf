@@ -303,8 +303,14 @@ def run(args=None):
     descriptor_impl_cpp = os.path.join(
         tsurugi_udf_common_dir, "src", "udf", "descriptor_impl.cpp"
     )
-    created_files.append(descriptor_impl_cpp)
-
+    common_udf_cpp_files = [
+        "descriptor_impl.cpp",
+        "generic_record_impl.cpp",
+        "error_info.cpp",
+    ]
+    for fname in common_udf_cpp_files:
+        cpp = os.path.join(tsurugi_udf_common_dir, "src", "udf", fname)
+        created_files.append(cpp)
     sources_cmake = write_sources_cmake(created_files, build_dir_full)
     log_info("[INFO] Wrote", sources_cmake)
 

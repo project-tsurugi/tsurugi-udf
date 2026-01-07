@@ -98,12 +98,12 @@ public:
     next(generic_record& record, std::optional<std::chrono::milliseconds> timeout = std::nullopt) override;
 
     void close() override;
-    void push(generic_record_impl record);
+    void push(std::unique_ptr<generic_record_impl> record);
     void end_of_stream();
 
 private:
     [[nodiscard]] generic_record_stream::status_type extract_record_from_queue(generic_record& record);
-
+    [[nodiscard]] generic_record_stream::status_type extract_record_from_queue_unlocked(generic_record& record);
     std::mutex mutex_;
     std::condition_variable cv_;
     std::queue<generic_record_impl> queue_;

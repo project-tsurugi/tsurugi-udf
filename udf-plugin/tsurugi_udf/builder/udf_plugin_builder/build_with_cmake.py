@@ -162,7 +162,7 @@ def write_sources_cmake(created_files, build_dir):
             srcs.append(f)
         elif f.suffix in (".h", ".hpp"):
             hdrs.append(f)
-
+            include_dirs.add(str(f.parent))
         try:
             rel = f.relative_to(build_dir)
         except ValueError:

@@ -38,7 +38,6 @@ UDF を作成して Tsurugi 上で利用可能にするには、以下の手順�
 - UDF プラグインのデプロイ
   - UDF プラグインを Tsurugi にデプロイする
 
-
 ### UDF のインターフェース定義
 
 UDF のインターフェース（関数名や関数の引数、戻り値の型など）を gRPC サービスとして定義するための サービス定義ファイル（`.proto` ファイル）を作成します。
@@ -70,22 +69,23 @@ message HelloReply {
 }
 ```
 
+`.proto` ファイル内の RPC メソッド名（`rpc` に続くメソッド名、上記例では `SayHello` や `SayHelloAgain`）が、Tsurugi の UDF 関数名として利用されます。
+また、`.proto` ファイル内で定義されるメッセージ型（`message` に続く型名、上記例では `HelloRequest` や `HelloReply`）は、UDF の引数型および戻り値型として利用されます。
+
 > [!IMPORTANT]
 > Tsurugi の UDF 向けの `.proto` ファイル記述の制約として、**`.proto` ファイルの先頭には必ず `syntax = "proto3";` を指定する** 必要があります。
 > [gRPC - Python Quickstart][python-quickstart] で作成した `.proto` ファイルにこれが含まれていない場合は、この定義を追加してください。
 
-`.proto` ファイル内の RPC メソッド名（`rpc` に続くメソッド名、上記例では `SayHello` や `SayHelloAgain`）が、Tsurugi の UDF 関数名として利用されます。
-また、`.proto` ファイル内で定義されるメッセージ型（`message` に続く型名、上記例では `HelloRequest` や `HelloReply`）は、UDF の引数型および戻り値型として利用されます。
-
-その他、Tsurugi 固有の `.proto` ファイルの記述ルールや制約については [udf-proto_ja.md](./udf-proto_ja.md) を参照してください。
+> [!NOTE]
+> その他、Tsurugi 固有の `.proto` ファイルの記述ルールや制約については [UDF 関数インターフェースの定義](./udf-proto_ja.md) を参照してください。
 
 ### UDF のサービス実装と実行
 
-[UDF のインターフェース定義](#udf-のインターフェース定義) で作成した gRPCサービスの定義に従って gRPC サービスを実装し、 gRPC サーバ上で実行します。
+「UDF のインターフェース定義」で作成した gRPCサービスの定義に従って gRPC サービスを実装し、 gRPC サーバ上で実行します。
 
 [gRPC - Python Quickstart][python-quickstart] では [gRPC tools](https://pypi.org/project/grpcio-tools/) を使って Python の gRPC 関連のソースコード生成を行い、gRPC サーバを実行する手順が説明されています。ここではその手順に従って gRPC サーバを構築する方法を説明します。
 
-以降の手順では、[UDF のインターフェース定義](#udf-のインターフェース定義) で作成した `helloworld.proto` が現在のディレクトリにあるものとします。
+以降の手順では「UDF のインターフェース定義」で作成した `helloworld.proto` が現在のディレクトリにあるものとします。
 まず、`grpc_tools.protoc` Python モジュールを使って `.proto` ファイルから gRPC 関連の Python ソースコードを生成します。[gRPC - Python Quickstart][python-quickstart] の例からは、ディレクトリパスのみを変更しています。
 
 ```sh
@@ -142,11 +142,16 @@ $ python greeter_server.py
 
 gRPC サーバの動作確認などのために Python の gRPC クライアントを実装して実行したい場合は、[gRPC - Python Quickstart][python-quickstart] の手順に従ってください。
 
+> [!NOTE]
+> UDF のサービス実装において、Protocol Buffers の基本的なデータ型で表現できないデータ型（`DECIMAL` 型や `DATE` , `TIMESTAMP` などの日付時刻型、`BLOB`/`CLOB` 型など）を扱う場合は、Tsurugi UDF 用の Python ライブラリである [udf-library (for Python)](./udf-library_ja.md) を利用してこれらのデータ型を扱います。
+>
+> 詳しくは [udf-library (for Python)](./udf-library_ja.md) を参照してください。
+
 ### UDF プラグインの生成
 
 Tsurugi UDF において、UDF に対応した gRPC サービスを呼び出す gRPC クライアントの機能を担う Tsurugi の拡張機能が UDF プラグインです。UDF プラグインは `udf-plugin-builder` を利用して生成します。
 
-`udf-plugin-builder` は [UDF のインターフェース定義](#udf-のインターフェース定義) で作成した `.proto` ファイルを指定して実行することで、UDF プラグインを構成するプラグインライブラリファイルやプラグイン設定ファイルを生成します。
+`udf-plugin-builder` は「UDF のインターフェース定義」で作成した `.proto` ファイルを指定して実行することで、UDF プラグインを構成するプラグインライブラリファイルやプラグイン設定ファイルを生成します。
 
 #### `udf-plugin` のセットアップ
 
@@ -178,6 +183,9 @@ $ udf-plugin-builder --proto-file helloworld.proto
 
 - `libhelloworld.so` : プラグインライブラリファイル
 - `libhelloworld.ini` : プラグイン設定ファイル
+
+> [!NOTE]
+> `udf-plugin-builder` の詳細な利用方法や、その他のUDFプラグイン用のツールについては [udf-plugin](./udf-plugin_ja.md) を参照してください。
 
 ### UDF プラグインのデプロイ
 

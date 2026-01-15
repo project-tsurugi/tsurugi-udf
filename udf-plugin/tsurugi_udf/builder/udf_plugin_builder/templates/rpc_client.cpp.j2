@@ -231,7 +231,7 @@ void rpc_client::call(ClientContext& context,
 
 std::unique_ptr<generic_record_stream>
 rpc_client::call_server_streaming_async(
-    grpc::ClientContext const& context,
+    std::unique_ptr<grpc::ClientContext> context,
     function_index_type function_index,
     generic_record& request
 ) const {
@@ -244,6 +244,17 @@ rpc_client::call_server_streaming_async(
         err->set_error(error_info(
             grpc::StatusCode::INTERNAL,
             "request cursor is null"
+        ));
+        stream->push(std::move(err));
+        stream->end_of_stream();
+        return stream;
+    }
+
+    if (!context) {
+        auto err = std::make_unique<generic_record_impl>();
+        err->set_error(error_info(
+            grpc::StatusCode::INTERNAL,
+            "ClientContext is null"
         ));
         stream->push(std::move(err));
         stream->end_of_stream();
@@ -275,15 +286,11 @@ rpc_client::call_server_streaming_async(
             return stream;
         }
 
-        auto ctx = std::make_shared<grpc::ClientContext>();
-        ctx->set_deadline(context.deadline());
-
         auto* stub = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_.get();
         auto* out_stream = stream.get();
-
-        std::thread([ctx, stub, req = std::move(req), out_stream]() mutable {
+        std::thread([context = std::move(context), stub, req = std::move(req), out_stream]() mutable {
             try {
-                auto reader = stub->{{ fn.function_name }}(ctx.get(), req);
+                auto reader = stub->{{ fn.function_name }}(context.get(), req);
                 if (!reader) {
                     auto err = std::make_unique<generic_record_impl>();
                     err->set_error(error_info(grpc::StatusCode::INTERNAL,

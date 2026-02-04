@@ -10,7 +10,7 @@ from typing import ContextManager
 
 PATTERN_TRANSPORT = re.compile(r"[a-z][a-z0-9_]*")
 
-PLUGIN_PACKAGE_PREFIX = "tsurugidb.udf.client."
+PLUGIN_PACKAGE_PREFIX = "tsurugidb.plugin.udf."
 
 PLUGIN_ENTRY_POINT = "create_blob_client"
 
@@ -42,7 +42,7 @@ def create_blob_client(context: grpc.ServicerContext) -> ContextManager[BlobRela
     Note:
         This function dynamically loads a transport plugin based on the
         'X-TSURUGI-BLOB-TRANSPORT' metadata value.
-        This searches for a module named "tsurugidb.udf.client.<transport>".
+        This searches for a module named "tsurugidb.plugin.udf.<transport>".
         The plugin module must define a 'create_blob_client' function that takes a
         gRPC context (grpc.ServicerContext) and returns a context manager yielding a BlobRelayClient.
     """

@@ -70,6 +70,9 @@ def parse_args(args=None):
         "--grpc-endpoint", default="dns:///localhost:50051", help="gRPC server endpoint"
     )
     parser.add_argument(
+        "--grpc-transport", default="stream", help="gRPC server transport"
+    )
+    parser.add_argument(
         "--output-dir",
         default=None,
         help="Path to write the generated ini file.",
@@ -274,6 +277,7 @@ def run(args=None):
     log_always(f"[INFO] Output directory: {out_dir}")
     log_always(f"[INFO] Plugin name: {name}")
     log_always(f"[INFO] gRPC endpoint: {args.grpc_endpoint}")
+    log_always(f"[INFO] gRPC transport: {args.grpc_transport}")
     log_always(f"[INFO] Proto path: {proto_paths}")
     log_always(f"[INFO] Using proto files: {args.proto_file}")
     result = run_protoc(proto_files, proto_paths, build_dir_full)
@@ -344,7 +348,7 @@ def run(args=None):
         raise FileNotFoundError(f"{so_file} not found!")
     log_ok(f"Generated so file: {so_file}")
     log_info(f"[INFO] Generating ini file...")
-    generate_ini_file(name, args.grpc_endpoint, out_dir)
+    generate_ini_file(name, args.grpc_endpoint, args.grpc_transport, out_dir)
     if build_dir_full.exists():
         try:
             shutil.rmtree(build_dir_full)

@@ -1,0 +1,32 @@
+#pragma once
+
+#include "{{ proto_base_name }}.grpc.pb.h"
+#include "generic_client.h"
+#include <grpcpp/grpcpp.h>
+#include <memory>
+#include <string>
+
+using namespace plugin::udf;
+class rpc_client : public generic_client {
+  public:
+    explicit rpc_client(std::shared_ptr<grpc::Channel> channel);
+
+    void call(grpc::ClientContext& context, function_index_type function_index,
+        generic_record& request, generic_record& response) const override;
+
+    std::unique_ptr<plugin::udf::generic_record_stream> call_server_streaming_async(
+        std::unique_ptr<grpc::ClientContext> context,
+        function_index_type function_index,
+        generic_record& request
+    ) const override;
+  private:
+{% set stubs = [] %}
+{% for pkg in packages %}
+    {% for svc in pkg.services %}
+        {% set _ = stubs.append((pkg.package_name, svc.service_name)) %}
+    {% endfor %}
+{% endfor %}
+{% for pkg_name, svc_name in stubs %}
+    std::unique_ptr<{{ pkg_name | replace('.', '::') }}::{{ svc_name }}::Stub> {{ pkg_name | replace('.', '_') }}_{{ svc_name }}_stub_;
+{% endfor %}
+};

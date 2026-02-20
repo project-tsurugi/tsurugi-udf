@@ -1,0 +1,360 @@
+#include "rpc_client.h"
+#include "{{ proto_base_name }}.grpc.pb.h"
+#include "{{ proto_base_name }}.pb.h"
+
+#include <iostream>
+#include <stdexcept>
+#include <thread>
+
+#include "generic_record_impl.h"
+using grpc::ClientContext;
+using grpc::Status;
+using namespace plugin::udf;
+
+// =======================
+// Jinja2 filter for CamelCase
+// =======================
+{% macro camelcase(s) -%}
+    {{- s.split('_') | map('capitalize') | join('') -}}
+{%- endmacro %}
+
+// =======================
+// Macros (recursive code)
+// =======================
+
+{# 入力: request(generic_record)→req(Proto) に詰める #}
+{% macro emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
+    {% set oneof_groups = [] %}
+    {% for col in record.columns %}
+        {% if col.oneof_index is not none and col.oneof_index not in oneof_groups %}
+            {% set _ = oneof_groups.append(col.oneof_index) %}
+        {% endif %}
+    {% endfor %}
+
+    {# oneofグループのフラグ #}
+    {% for g in oneof_groups %}
+bool oneof_group{{ g }}_selected = false;
+int oneof_group{{ g }}_count = 0;
+    {% endfor %}
+
+    {% for col in record.columns %}
+        {% if col.nested_record %}
+            {
+                auto* nested = {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
+                {{ emit_setters("nested", col.nested_record, cursor_prefix ~ col.index ~ "_", True) }}
+            }
+        {% else %}
+            auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
+            {% if col.oneof_index is not none %}
+                if (arg{{ cursor_prefix }}{{ col.index }}) {
+                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                    oneof_group{{ col.oneof_index }}_selected = true;
+                    oneof_group{{ col.oneof_index }}_count++;
+                }
+            {% else %}
+                if (!arg{{ cursor_prefix }}{{ col.index }}) {
+                    throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
+                }
+                {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {# oneofグループチェック #}
+    {% for g in oneof_groups %}
+if (!oneof_group{{ g }}_selected) {
+    throw std::runtime_error("No field selected in oneof group {{ g }}");
+}
+if (oneof_group{{ g }}_count > 1) {
+    throw std::runtime_error("Multiple fields selected in oneof group {{ g }}");
+}
+    {% endfor %}
+{%- endmacro %}
+
+{# 出力: rep(Proto)→response(generic_record) にフラットに積む #}
+{% macro emit_response_add(parent, record, parent_type, is_pointer=False) -%}
+    {% for col in record.columns %}
+        {% if col.nested_record %}
+            {
+                const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
+                {{ emit_response_add("nested", col.nested_record, parent_type, False) }}
+            }
+        {% else %}
+            {% if col.oneof_index is not none %}
+                if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
+                    response.add_{{ fetch_add_name(col.type_kind) }}(
+                        {{ parent }}.{{ col.column_name }}()
+                    );
+                }
+            {% else %}
+                response.add_{{ fetch_add_name(col.type_kind) }}(
+                    {{ parent }}.{{ col.column_name }}()
+                );
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{# =========================================================
+   async emit_setters
+   ========================================================= #}
+{% macro async_emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
+    {% for col in record.columns %}
+        {% if col.nested_record %}
+            {
+                auto* nested =
+                    {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
+                {{ async_emit_setters("nested", col.nested_record, cursor_prefix ~ col.index ~ "_", True) }}
+            }
+        {% else %}
+            auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
+            if (arg{{ cursor_prefix }}{{ col.index }}) {
+                {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+            }
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+
+{# =========================================================
+   async : rep(Proto) → generic_record_impl
+   ========================================================= #}
+{% macro emit_response_add_streaming(parent, out_ptr, record, parent_type) -%}
+{% for col in record.columns %}
+    {% if col.nested_record %}
+    {
+        const auto& nested = {{ parent }}.{{ col.column_name }}();
+        {{ emit_response_add_streaming("nested", out_ptr, col.nested_record, parent_type) }}
+    }
+    {% else %}
+        {% if col.oneof_index is not none %}
+        if ({{ parent }}.{{ col.oneof_name }}_case()
+            == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
+            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
+                {{ parent }}.{{ col.column_name }}()
+            );
+        }
+        {% else %}
+        {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
+            {{ parent }}.{{ col.column_name }}()
+        );
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{%- endmacro %}
+
+// =======================
+// Constructor: build stubs
+// =======================
+
+rpc_client::rpc_client(std::shared_ptr<grpc::Channel> channel)
+{% set stubs = [] %}
+{% for pkg in packages %}
+    {% for svc in pkg.services %}
+        {% set _ = stubs.append((pkg.package_name, svc.service_name)) %}
+    {% endfor %}
+{% endfor %}
+    :
+{% for pkg_name, svc_name in stubs %}
+    {{ pkg_name | replace('.', '_') }}_{{ svc_name }}_stub_(
+        {{ pkg_name | replace('.', '::') }}::{{ svc_name }}::NewStub(channel)
+    ){% if not loop.last %},{% endif %}
+{% endfor %}
+{}
+
+// =======================
+// Call dispatcher
+// =======================
+
+void rpc_client::call(ClientContext& context,
+                      function_index_type function_index,
+                      generic_record& request,
+                      generic_record& response) const {
+    auto cursor = request.cursor();
+    if (!cursor) { throw std::runtime_error("request cursor is null"); }
+
+    response.reset();
+    auto fail = [&response]() { response.add_string("RPC failed"); };
+
+    switch (function_index.second) {
+{% for pkg in packages %}
+  {% for svc in pkg.services %}
+    {% for fn in svc.functions %}
+        case {{ fn.function_index }}: {
+            {{ fn.input_record.record_name  | replace('.', '::') }}  req;
+            {% set parent_type = fn.output_record.record_name | replace('.', '::') %}
+            {{ fn.output_record.record_name | replace('.', '::') }}  rep;
+
+            // Build request from generic_record (flatten -> nested)
+            {{ emit_setters("req", fn.input_record, "", False) }}
+
+            // Call
+            {% if fn.function_kind == "unary" %}
+            Status status = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
+
+            if (status.ok()) {
+                // Write response into generic_record (nested -> flatten)
+                {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
+            } else {
+                response.set_error(error_info(
+                    static_cast<error_info::error_code_type>(status.error_code()),
+                    std::string(status.error_message())
+                ));
+            }
+            {% elif fn.function_kind == "server_streaming" %}
+            auto reader = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req);
+            while (reader->Read(&rep)) {
+                {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
+            }
+            Status status = reader->Finish();
+            if (!status.ok()) {
+                response.set_error(error_info(
+                    static_cast<error_info::error_code_type>(status.error_code()),
+                    std::string(status.error_message())
+                ));
+            }
+            {% else %}
+                throw std::logic_error("Unsupported RPC function_kind");
+            {% endif %}
+            break;
+        }
+    {% endfor %}
+  {% endfor %}
+{% endfor %}
+        default:
+            throw std::runtime_error("Unsupported function_index");
+    }
+}
+// =======================
+// Async server streaming
+// =======================
+
+std::unique_ptr<generic_record_stream>
+rpc_client::call_server_streaming_async(
+    std::unique_ptr<grpc::ClientContext> context,
+    function_index_type function_index,
+    generic_record& request
+) const {
+
+    auto stream = std::make_unique<generic_record_stream_impl>();
+    auto cursor = request.cursor();
+
+    if (!cursor) {
+        auto err = std::make_unique<generic_record_impl>();
+        err->set_error(error_info(
+            grpc::StatusCode::INTERNAL,
+            "request cursor is null"
+        ));
+        stream->push(std::move(err));
+        stream->end_of_stream();
+        return stream;
+    }
+
+    if (!context) {
+        auto err = std::make_unique<generic_record_impl>();
+        err->set_error(error_info(
+            grpc::StatusCode::INTERNAL,
+            "ClientContext is null"
+        ));
+        stream->push(std::move(err));
+        stream->end_of_stream();
+        return stream;
+    }
+
+    switch (function_index.second) {
+{% for pkg in packages %}
+{% for svc in pkg.services %}
+{% for fn in svc.functions if fn.function_kind == "server_streaming" %}
+    case {{ fn.function_index }}: {
+        using request_type  = {{ fn.input_record.record_name | replace('.', '::') }};
+        using response_type = {{ fn.output_record.record_name | replace('.', '::') }};
+
+        request_type req;
+        try {
+            {{ async_emit_setters("req", fn.input_record, "", False) }}
+        } catch (const std::exception& e) {
+            auto err = std::make_unique<generic_record_impl>();
+            err->set_error(error_info(grpc::StatusCode::INTERNAL, e.what()));
+            stream->push(std::move(err));
+            stream->end_of_stream();
+            return stream;
+        } catch (...) {
+            auto err = std::make_unique<generic_record_impl>();
+            err->set_error(error_info(grpc::StatusCode::UNKNOWN, "Unknown error while building async request"));
+            stream->push(std::move(err));
+            stream->end_of_stream();
+            return stream;
+        }
+
+        auto* stub = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_.get();
+        auto* out_stream = stream.get();
+        std::thread([context = std::move(context), stub, req = std::move(req), out_stream]() mutable {
+            try {
+                auto reader = stub->{{ fn.function_name }}(context.get(), req);
+                if (!reader) {
+                    auto err = std::make_unique<generic_record_impl>();
+                    err->set_error(error_info(grpc::StatusCode::INTERNAL,
+                                              "Failed to create server streaming reader"));
+                    out_stream->push(std::move(err));
+                    out_stream->end_of_stream();
+                    return;
+                }
+
+                response_type rep;
+                while (reader->Read(&rep)) {
+                    auto record = std::make_unique<generic_record_impl>();
+                    {{ emit_response_add_streaming(
+                        "rep",
+                        "record",
+                        fn.output_record,
+                        "response_type"
+                    ) }}
+                    out_stream->push(std::move(record));
+                }
+
+                Status status = reader->Finish();
+                if (!status.ok()) {
+                    auto err = std::make_unique<generic_record_impl>();
+                    err->set_error(error_info(
+                        status.error_code(),
+                        status.error_message()
+                    ));
+                    out_stream->push(std::move(err));
+                }
+            } catch (const std::exception& e) {
+                auto err = std::make_unique<generic_record_impl>();
+                err->set_error(error_info(
+                    grpc::StatusCode::INTERNAL,
+                    e.what()
+                ));
+                out_stream->push(std::move(err));
+            } catch (...) {
+                auto err = std::make_unique<generic_record_impl>();
+                err->set_error(error_info(
+                    grpc::StatusCode::UNKNOWN,
+                    "Unknown error in async RPC handling"
+                ));
+                out_stream->push(std::move(err));
+            }
+
+            out_stream->end_of_stream();
+        }).detach();
+
+        return stream;
+    }
+{% endfor %}
+{% endfor %}
+{% endfor %}
+    default:
+        break;
+    }
+
+    auto err = std::make_unique<generic_record_impl>();
+    err->set_error(error_info(
+        grpc::StatusCode::INVALID_ARGUMENT,
+        "Unsupported function_index"
+    ));
+    stream->push(std::move(err));
+    stream->end_of_stream();
+    return stream;
+}

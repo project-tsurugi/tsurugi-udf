@@ -1,0 +1,158 @@
+/*
+ * Copyright 2018-2025 Project Tsurugi.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "descriptor_impl.h"
+#include <vector>
+#include <string_view>
+using namespace plugin::udf;
+
+class plugin_api_impl : public plugin_api {
+  public:
+    plugin_api_impl() {
+{% for pkg in packages %}
+        {
+            std::vector<service_descriptor*> services;
+
+{% for svc in pkg.services %}
+            {
+                std::vector<function_descriptor*> functions;
+
+{% for fn in svc.functions %}
+                {
+                    // --- 入力レコード ---
+                    std::vector<column_descriptor*> input_columns;
+{% for col in fn.input_record.columns %}
+{% if col.nested_record %}
+                    {
+                        std::vector<column_descriptor*> nested_columns;
+{% for ncol in col.nested_record.columns %}
+                        nested_columns.push_back(
+                            new column_descriptor_impl(
+                                {{ ncol.index }},
+                                "{{ ncol.column_name }}",
+                                type_kind::{{ ncol.type_kind }},
+                                nullptr,
+                                {% if ncol.oneof_index is not none %} {{ ncol.oneof_index }} {% else %} std::nullopt {% endif %},
+                                {% if ncol.oneof_name is not none %} "{{ ncol.oneof_name }}" {% else %} std::nullopt {% endif %}
+                            )
+                        );
+{% endfor %}
+                        input_columns.push_back(
+                            new column_descriptor_impl(
+                                {{ col.index }},
+                                "{{ col.column_name }}",
+                                type_kind::{{ col.type_kind }},
+                                new record_descriptor_impl("{{ col.nested_record.record_name }}", std::move(nested_columns)),
+                                {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
+                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                            )
+                        );
+                    }
+{% else %}
+                    input_columns.push_back(
+                        new column_descriptor_impl(
+                            {{ col.index }},
+                            "{{ col.column_name }}",
+                            type_kind::{{ col.type_kind }},
+                            nullptr,
+                            {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
+                            {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                        )
+                    );
+{% endif %}
+{% endfor %}
+                    auto input_record = new record_descriptor_impl("{{ fn.input_record.record_name }}", std::move(input_columns));
+
+                    // --- 出力レコード ---
+                    std::vector<column_descriptor*> output_columns;
+{% for col in fn.output_record.columns %}
+{% if col.nested_record %}
+                    {
+                        std::vector<column_descriptor*> nested_columns;
+{% for ncol in col.nested_record.columns %}
+                        nested_columns.push_back(
+                            new column_descriptor_impl(
+                                {{ ncol.index }},
+                                "{{ ncol.column_name }}",
+                                type_kind::{{ ncol.type_kind }},
+                                nullptr,
+                                {% if ncol.oneof_index is not none %} {{ ncol.oneof_index }} {% else %} std::nullopt {% endif %},
+                                {% if ncol.oneof_name is not none %} "{{ ncol.oneof_name }}" {% else %} std::nullopt {% endif %}
+                            )
+                        );
+{% endfor %}
+                        output_columns.push_back(
+                            new column_descriptor_impl(
+                                {{ col.index }},
+                                "{{ col.column_name }}",
+                                type_kind::{{ col.type_kind }},
+                                new record_descriptor_impl("{{ col.nested_record.record_name }}", std::move(nested_columns)),
+                                {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
+                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                            )
+                        );
+                    }
+{% else %}
+                    output_columns.push_back(
+                        new column_descriptor_impl(
+                            {{ col.index }},
+                            "{{ col.column_name }}",
+                            type_kind::{{ col.type_kind }},
+                            nullptr,
+                            {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
+                            {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                        )
+                    );
+{% endif %}
+{% endfor %}
+                    auto output_record = new record_descriptor_impl("{{ fn.output_record.record_name }}", std::move(output_columns));
+
+                    // --- 関数 ---
+                    auto fn_ptr = new function_descriptor_impl(
+                        {{ fn.function_index }},
+                        "{{ fn.function_name }}",
+                        function_kind::{{ fn.function_kind }},
+                        input_record,
+                        output_record
+                    );
+                    functions.push_back(fn_ptr);
+                }
+{% endfor %}
+
+                auto svc_ptr = new service_descriptor_impl({{ svc.service_index }}, "{{ svc.service_name }}", std::move(functions));
+                services.push_back(svc_ptr);
+            }
+{% endfor %}
+
+            auto pkg_ptr = new package_descriptor_impl(
+                "{{ pkg.package_name }}",
+                "{{ pkg.file_name if pkg.file_name else pkg.package_name + '.proto' }}",
+                package_version({{ pkg.version.major }}, {{ pkg.version.minor }}, {{ pkg.version.patch }}),
+                std::move(services)
+            );
+            packages_.push_back(pkg_ptr);
+        }
+{% endfor %}
+    }
+
+    const std::vector<package_descriptor*>& packages() const noexcept override { return packages_; }
+
+  private:
+    std::vector<package_descriptor*> packages_;
+};
+
+extern "C" plugin_api* create_plugin_api() {
+    return new plugin_api_impl();
+}

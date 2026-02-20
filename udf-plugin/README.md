@@ -39,9 +39,8 @@ pip install -e tsurugi-udf
 
 ```bash
 udf-plugin-builder \
-  --proto-path proto \
-  --proto-file proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
-  --name plugin_api \
+  --I proto \
+  --proto proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
   --grpc-endpoint dns:///localhost:50051
 ```
 
@@ -49,12 +48,17 @@ udf-plugin-builder \
 
 | Option | Description | Default | Required |
 | ----------------- | --------------------------------------------------------- | ------------------------ | -------- |
-| `--proto-file` | Path(s) to `.proto` file(s). Multiple files supported. | None | **Yes** |
-| `--proto-path` | Directory containing `.proto` files. | First `.proto` file | No |
-| `--name` | Base name for the generated plugin (.so) and `.ini` file. | None | No |
+| `--proto` | Path(s) to `.proto` file(s). Multiple files supported. | None | **Yes** |
+| `-I`, `--include` | Directory containing `.proto` files. | First `.proto` file | No |
 | `--grpc-endpoint` | gRPC server endpoint for communication. | `dns:///localhost:50051` | No |
 | `--build-dir` | Temporary directory for CMake build process. | `tmp/` | No |
 | `--output-dir` | Directory for the generated `.so` and `.ini` files. | Current directory (`.`) | No |
+| `--grpc-transport` | gRPC transport type. | `stream` | No |
+| `--output-dir` | Output directory for `.so` and `.ini`. | `.` | No |
+| `--debug` | Enable debug output. | `false` | No |
+| `--clean` | Remove build directory before building. | `false` | No |
+| `--secure` | Enable secure gRPC connection. | `false` | No |
+| `--disable` | Generate disabled UDF (`enabled=false`). | `false` | No |
 
 ### udf-plugin-viewer
 

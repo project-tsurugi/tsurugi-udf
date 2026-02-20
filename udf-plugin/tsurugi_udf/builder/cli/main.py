@@ -30,15 +30,12 @@ def main(argv: list[str] | None = None) -> None:
     args = CliArgs.from_cli(argv)
     for line in args.to_info_lines():
         info(line)
-    script_dir = Path(__file__).resolve().parent
-    templates_dir = script_dir / "templates"
     spec = importlib.util.find_spec("tsurugi_udf")
     if spec is None or not spec.submodule_search_locations:
         raise RuntimeError("Cannot locate tsurugi_udf package directory")
 
     pkg_dir = Path(next(iter(spec.submodule_search_locations))).resolve()
     tsurugi_udf_common_dir = pkg_dir / "common" / "tsurugi_udf_common"
-    templates_dir = pkg_dir / "builder" / "templates"
     includes = validate_includes(list(args.include))
     proto_files = validate_proto_files([Path(p) for p in args.proto_files])
 
@@ -48,11 +45,11 @@ def main(argv: list[str] | None = None) -> None:
         if args.clean:
             info(f"--clean specified, removing build dir: {build_dir}")
             shutil.rmtree(build_dir)
-            info(f"creating: {build_dir}")
+            info(f"recreating build dir: {build_dir}")
         else:
-            info(f"--clean not specified, overwriting build dir: {build_dir}")
+            info(f"reusing existing build dir: {build_dir}")
     else:
-        info(f"build dir does not exist, creating: {build_dir}")
+        info(f"creating build dir: {build_dir}")
     paths = BuildPaths.from_build_dir(build_dir)
     ensure_dirs(paths)
     desc_pb = paths.OUT / "all.desc.pb"
@@ -154,14 +151,11 @@ def main(argv: list[str] | None = None) -> None:
         target_protos = set(graph.keys())
         exclude_protos: set[str] = set()
 
-        lib_dir = paths.LIB if hasattr(paths, "LIB") else (build_dir / "lib")
-        lib_dir.mkdir(parents=True, exist_ok=True)
-
         outputs = build_shared_libs_layered_parallel(
             import_graph=graph,
             target_protos=target_protos,
             obj_dir=paths.OBJ / "gen",
-            lib_dir=lib_dir,
+            lib_dir=paths.LIB,
             exclude_protos=exclude_protos,
             jobs=None,
             tpl_objs_by_stem=tpl_objs_by_stem,
@@ -181,25 +175,22 @@ def main(argv: list[str] | None = None) -> None:
 
         dump_rpc_so_report(fds)
 
-        ini_dir = paths.INI if hasattr(paths, "INI") else (build_dir / "ini")
-        ini_dir.mkdir(parents=True, exist_ok=True)
-
         ini_outputs = write_ini_files_for_rpc_libs(
             fds,
-            lib_dir=lib_dir,
-            ini_dir=ini_dir,
+            lib_dir=paths.LIB,
+            ini_dir=paths.INI,
             endpoint=args.grpc_endpoint,
             transport=args.grpc_transport,
             secure=args.secure,
             enabled=not args.disable,
         )
-        info(f"wrote ini files: {len(ini_outputs)} -> {ini_dir}")
+        info(f"wrote ini files: {len(ini_outputs)} -> {paths.INI}")
         for so, ini in sorted(ini_outputs.items()):
             info(f"  - {so} -> {ini.name}")
         output_dir = Path(args.output_dir).resolve()
         move_outputs(
-            src_lib_dir=lib_dir,
-            src_ini_dir=ini_dir,
+            src_lib_dir=paths.LIB,
+            src_ini_dir=paths.INI,
             dst_root=output_dir,
         )
         info(f"moved output files to: {output_dir}")

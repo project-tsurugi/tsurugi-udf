@@ -85,8 +85,8 @@ udf-plugin-builder: error: the following arguments are required: --proto
 
 | オプション | 必須 | デフォルト | 説明 |
 | ---------- | ---- | ---------- | ---- |
-| `--proto` | **Yes** | なし | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：`--proto proto/sample.proto proto/tsurugi_types.proto` |
-| `-I`, `--include` | No | `.proto` の import 解決に使用する include パスを指定します。 | `.proto` ファイルを含むディレクトリを指定します。 `protoc` が依存ファイルを解決する際に使用されます。 |
+| `--proto` | **Yes** | なし |ビルド対象の `.proto` ファイルを指定します。**1つの オプションに対して、複数ファイルをスペース区切りで指定可能です。** <br>例:<br> --proto proto/sample.proto proto/tsurugi_types.proto
+| `-I`, `--include` | No |なし | `.proto` の `import` 解決に使用する include パスを指定します。**オプション自体を複数回指定可能です（1回につき1ディレクトリ）。** <br>例:<br> -I /path/to/dir_a -I /path/to/dir_b |
 | `--build-dir` | No | `tmp/` | ビルドで使用する一時ディレクトリを指定します。 |
 | `--output-dir` | No | `.` | 生成される `.so` と `.ini` ファイルを配置するディレクトリを指定します。 |
 | `--grpc-endpoint` | No | `dns:///localhost:50051` | gRPC サーバのエンドポイントを指定します（`.ini` に反映されます）。 |
@@ -94,7 +94,7 @@ udf-plugin-builder: error: the following arguments are required: --proto
 | `--secure` | No | `false` | セキュアな gRPC 接続を有効にします（`.ini` に反映されます）。 |
 | `--disable` | No | `false` | 生成される UDF を無効状態で出力します（`.ini` に反映されます）。 |
 | `--debug` | No | `false` | デバッグログを有効にします。 |
-| `--clean` | No | `false` | ビルド前に `build-dir` を削除します。 |
+| `--clean` | No | `false` | ビルド前に`--build_dir`で指定した一時ディレクトリを削除します。 |
 
 ### `.proto` の制約とバリデーションエラー
 

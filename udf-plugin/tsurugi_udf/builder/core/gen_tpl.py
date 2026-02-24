@@ -37,8 +37,8 @@ def _default_fetch_add_name(type_kind: str) -> str:
         "sint8": "int8",
         "uint8": "uint8",
         "fixed8": "uint8",
-        "float": "float",
-        "double": "double",
+        "float4": "float",
+        "float8": "double",
         "boolean": "bool",
         "string": "string",
         "bytes": "string",
@@ -62,10 +62,10 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
     for fd in fds.file:
         for msg in fd.message_type:
             register_message(fd.package, msg)
-
+# https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L246
     FIELD_TYPE = {
-        1: "double",
-        2: "float",
+        1: "float8",
+        2: "float4",
         3: "int8",
         4: "uint8",
         5: "int4",

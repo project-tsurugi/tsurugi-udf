@@ -157,7 +157,7 @@ Tsurugi UDF において、UDF に対応した gRPC サービスを呼び出す 
 
 `udf-plugin-builder` を利用するには、[tsurugi-udf](https://github.com/project-tsurugi/tsurugi-udf) リポジトリのソースコードを取得し、これに含まれるPythonパッケージ `udf-plugin` をインストールします。
 
-以下は  `udf-plugin` のインストール手順例です。
+以下は `udf-plugin` のインストール手順例です。
 
 ```sh
 # tsurugi-udf のソースアーカイブのダウンロードと展開
@@ -176,7 +176,7 @@ $ pip install .
 `udf-plugin-builder` を実行して UDF プラグインを生成します。以下は `helloworld.proto` をもとに UDF プラグインを生成する例です。
 
 ```sh
-$ udf-plugin-builder --proto-file helloworld.proto
+$ udf-plugin-builder --proto helloworld.proto
 ```
 
 これにより、現在のディレクトリに以下のファイルが生成されます。
@@ -233,5 +233,5 @@ tgsql> SELECT SayHelloAgain(c0) FROM t;
 
 なお、SQL内でのUDF関数の記述は大文字/小文字を区別しません。
 
-[python-quickstart]: https://grpc.io/docs/languages/python/quickstart/
 [proto-3]: https://protobuf.dev/programming-guides/proto3/
+[python-quickstart]: https://grpc.io/docs/languages/python/quickstart/

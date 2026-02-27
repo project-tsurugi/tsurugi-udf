@@ -62,7 +62,7 @@ $ pip install .
 最もシンプルな利用例は以下の通りです。
 
 ```bash
-$ udf-plugin-builder --proto-file helloworld.proto
+$ udf-plugin-builder --proto helloworld.proto
 ```
 
 これにより、現在のディレクトリに UDF プラグインを構成する以下のファイルが生成されます。
@@ -76,35 +76,30 @@ $ udf-plugin-builder --proto-file helloworld.proto
 
 ```bash
 $ udf-plugin-builder
-usage: udf-plugin-builder [-h] --proto-file PROTO_FILE [PROTO_FILE ...]
-                          [--proto-path PROTO_PATH [PROTO_PATH ...]]
-                          [--build-dir BUILD_DIR]
-                          [--name NAME]
-                          [--grpc-endpoint GRPC_ENDPOINT]
-                          [--output-dir OUTPUT_DIR]
-udf-plugin-builder: error: the following arguments are required: --proto-file
+usage: udf-plugin-builder [-h] --proto PROTO_FILES [PROTO_FILES ...] [--build-dir BUILD_DIR]
+                          [--grpc-plugin GRPC_PLUGIN] [-I INCLUDE] [--grpc-endpoint GRPC_ENDPOINT]
+                          [--grpc-transport GRPC_TRANSPORT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
+                          [--secure] [--disable]
+udf-plugin-builder: error: the following arguments are required: --proto
 ```
 
 | オプション | 必須 | デフォルト | 説明 |
 | ---------- | ---- | ---------- | ---- |
-| `--proto-file` | **Yes** | なし | ビルド対象の `.proto` ファイルを指定します。複数ファイルをスペース区切りで指定可能です。<br>例：`--proto-file proto/sample.proto proto/tsurugi_types.proto` |
-| `--proto-path` | No | `--proto-file` で最初に指定したファイルのディレクトリパス | `.proto` ファイルを含むディレクトリを指定します。 `protoc` が依存ファイルを解決する際に使用されます。 |
-| `--build-dir` | No | `tmp/` | CMake ビルドで使用する一時ディレクトリを指定します。ビルド後は自動的に削除されます。 |
-| `--name` | No | 最初に指定した `proto` ファイル名 (拡張子を除く) | 生成されるプラグインライブラリファイル名（`.so`）およびプラグイン設定ファイル（`.ini`）のベース名を指定します。 <br>例：`--name my_udf` → 出力ファイルは `libmy_udf.so` / `libmy_udf.ini` になります。 |
-| `--grpc-endpoint` | No | `dns:///localhost:50051` | gRPC サーバのエンドポイントを指定します（`.ini` に反映されます）。 |
+| `--proto` | **Yes** | なし |ビルド対象の `.proto` ファイルを指定します。**1つの オプションに対して、複数ファイルをスペース区切りで指定可能です。** <br>例:<br> --proto proto/sample.proto proto/tsurugi_types.proto
+| `-I`, `--include` | No |なし | `.proto` の `import` 解決に使用する include パスを指定します。**オプション自体を複数回指定可能です（1回につき1ディレクトリ）。** <br>例:<br> -I /path/to/dir_a -I /path/to/dir_b |
+| `--build-dir` | No | `tmp/` | ビルドで使用する一時ディレクトリを指定します。 |
 | `--output-dir` | No | `.` | 生成される `.so` と `.ini` ファイルを配置するディレクトリを指定します。 |
-
-### `udf-plugin-builder` の環境変数
-
-`udf-plugin-builder` はその内部で実行する CMake ビルドの挙動を制御するために以下の環境変数をサポートしています。
-
-- `BUILD_TYPE`
-  - CMake ビルドタイプを指定します。`Release` , `RelWithDebInfo` , `Debug` を指定可能です。デフォルトは `RelWithDebInfo` です。
-  - `Debug` を指定した場合、コマンド実行時に CMakeのログが出力されます。エラー時の解析に有用です。
+| `--grpc-endpoint` | No | `dns:///localhost:50051` | gRPC サーバのエンドポイントを指定します（`.ini` に反映されます）。 |
+| `--grpc-transport` | No | `stream` | gRPC 通信方式を指定します（`.ini` に反映されます）。 |
+| `--secure` | No | `false` | セキュアな gRPC 接続を有効にします（`.ini` に反映されます）。 |
+| `--disable` | No | `false` | 生成される UDF を無効状態で出力します（`.ini` に反映されます）。 |
+| `--debug` | No | `false` | デバッグログを有効にします。 |
+| `--clean` | No | `false` | ビルド前に`--build_dir`で指定した一時ディレクトリを削除します。 |
 
 ### `.proto` の制約とバリデーションエラー
 
-`--proto-file` に指定した `.proto` ファイルが以下の制約に該当する場合、`udf-plugin-builder` はエラーを出力して終了します。
+`--proto` に指定した `.proto` ファイルが以下の制約に該当する場合、`udf-plugin-builder` はエラーを出力して終了します。
+
 - rpc メソッド名が Tsurugi の予約語と一致した場合
 - rpc メソッドのリクエストメッセージ、レスポンスメッセージに Protocol Buffers のスカラー型や `udf-library` が提供する `tsurugidb.udf` メッセージ型を直接指定した場合
 - rpc メソッドのレスポンスメッセージにフィールドを1つも持たないメッセージ型が指定された場合
@@ -116,12 +111,19 @@ udf-plugin-builder: error: the following arguments are required: --proto-file
 
 [UDF 関数インターフェースの定義](./udf-proto_ja.md) で説明した `tsurugidb.udf` メッセージ型を利用する場合、以下の通りにオプションを指定します。
 
-- `--proto-path` に以下の2つのディレクトリを指定する
+- -I / --include オプションを 2回指定して、以下のディレクトリを include パスとして追加する
   - UDF関数インターフェース を定義した `.proto` ファイルのディレクトリ
   - `tsurugi-udf/proto` ディレクトリ
-- `--proto-file` に以下の2つのファイルパスを指定する
+- `--proto` に以下の2つのファイルパスを指定する(ただしtsurugi_types.protoは省略可)
   - UDF関数インターフェース を定義した `.proto` ファイルのファイルパス
-  - `tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパス
+  - `tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパス(省略可)
+
+注:
+
+- `tsurugi_types.proto` は `message` 定義のみを含み、
+  `service (rpc)` 定義を持たない proto ファイルです。
+- 本 builder では、rpc 定義を含まない proto ファイルについては、
+  import されている場合に限り、明示的な `--proto` 指定を省略できます。
 
 例:
 
@@ -129,7 +131,13 @@ udf-plugin-builder: error: the following arguments are required: --proto-file
 - `${TSURUGI_UDF_DIR}` に `tsurugi-udf` リポジトリを配置
 
 ```sh
-$ udf-plugin-builder --proto-path . ${TSURUGI_UDF_DIR}/proto --proto-file my.proto ${TSURUGI_UDF_DIR}/proto/tsurugidb/udf/tsurugi_types.proto
+$ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto ${TSURUGI_UDF_DIR}/proto/tsurugidb/udf/tsurugi_types.proto
+```
+
+もしくは`tsurugi_types.proto`のようにファイル内にmessageのみが指定されてrpc定義がないprotoファイルは`特別にファイル指定を省略`できます
+
+```sh
+$ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto
 ```
 
 ## UDF プラグインの構成
@@ -165,6 +173,7 @@ secure=false
 | `enabled` | Boolean (true/false) | UDF プラグインの有効/無効を指定。デフォルト値は `true` | `false` に指定した場合、UDF プラグインが Tsurugi にデプロイされていても UDF は無効化されます。 |
 | `endpoint` | String | この UDF プラグインに対応する宛先 gRPC サーバのエンドポイント。デフォルト値は `udf-plugin-builder` の `--grpc-endpoint` オプションで指定した値。 | この項目を未指定にした場合、Tsurugi 構成ファイル（`tsurugi.ini`）- `[udf]` セクションの `endpoint` パラメータの値が使用されます。 |
 | `secure` | Boolean (true/false) | gRPC との通信にセキュアな通信路を利用するかどうか。現時点では `false` のみサポート。 | この項目を未指定にした場合、Tsurugi 構成ファイル (`tsurugi.ini`) - `[udf]` セクションの `secure` パラメータの値が使用されます。 |
+| `transport` | string | gRPCストリーミング通信の方式。デフォルト値は `stream` | |
 
 ## UDF プラグインのデプロイ
 

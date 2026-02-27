@@ -114,16 +114,9 @@ udf-plugin-builder: error: the following arguments are required: --proto
 - -I / --include オプションを 2回指定して、以下のディレクトリを include パスとして追加する
   - UDF関数インターフェース を定義した `.proto` ファイルのディレクトリ
   - `tsurugi-udf/proto` ディレクトリ
-- `--proto` に以下の2つのファイルパスを指定する(ただしtsurugi_types.protoは省略可)
+- `--proto` に以下の2つのファイルパスを指定する
   - UDF関数インターフェース を定義した `.proto` ファイルのファイルパス
-  - `tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパス(省略可)
-
-注:
-
-- `tsurugi_types.proto` は `message` 定義のみを含み、
-  `service (rpc)` 定義を持たない proto ファイルです。
-- 本 builder では、rpc 定義を含まない proto ファイルについては、
-  import されている場合に限り、明示的な `--proto` 指定を省略できます。
+  - `tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパス
 
 例:
 
@@ -132,12 +125,6 @@ udf-plugin-builder: error: the following arguments are required: --proto
 
 ```sh
 $ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto ${TSURUGI_UDF_DIR}/proto/tsurugidb/udf/tsurugi_types.proto
-```
-
-もしくは`tsurugi_types.proto`のようにファイル内にmessageのみが指定されてrpc定義がないprotoファイルは`特別にファイル指定を省略`できます
-
-```sh
-$ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto
 ```
 
 ## UDF プラグインの構成

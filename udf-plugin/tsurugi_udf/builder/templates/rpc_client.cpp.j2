@@ -12,13 +12,6 @@ using grpc::Status;
 using namespace plugin::udf;
 
 // =======================
-// Jinja2 filter for CamelCase
-// =======================
-{% macro camelcase(s) -%}
-    {{- s.split('_') | map('capitalize') | join('') -}}
-{%- endmacro %}
-
-// =======================
 // Macros (recursive code)
 // =======================
 

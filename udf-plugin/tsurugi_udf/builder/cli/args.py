@@ -16,6 +16,7 @@ class CliArgs:
     output_dir: str | None = None
     debug: bool = False
     clean: bool = False
+    auto_deps: bool = False
     secure: bool = False
     disable: bool = False
 
@@ -73,6 +74,11 @@ class CliArgs:
             help="Remove build directory before building",
         )
         p.add_argument(
+            "--auto-deps",
+            action="store_true",
+            help="Automatically include imported .proto files for code generation",
+        )
+        p.add_argument(
             "--secure",
             action="store_true",
             help="Enable secure gRPC connection",
@@ -97,6 +103,7 @@ class CliArgs:
             output_dir=ns.output_dir,
             debug=bool(ns.debug),
             clean=bool(ns.clean),
+            auto_deps=bool(ns.auto_deps),
             secure=ns.secure,
             disable=ns.disable,
         )
@@ -120,6 +127,7 @@ class CliArgs:
             f"grpc_transport   : {self.grpc_transport}",
             f"output_dir       : {self.output_dir}",
             f"debug            : {self.debug}",
+            f"auto_deps        : {self.auto_deps}",
             f"secure           : {self.secure}",
             f"disable          : {self.disable}",
         ]
@@ -135,6 +143,7 @@ class CliArgs:
             f"grpc transport  : {self.grpc_transport}",
             f"output dir      : {self.output_dir}",
             f"debug           : {self.debug}",
+            f"auto deps       : {self.auto_deps}",
             f"secure          : {self.secure}",
             f"disable         : {self.disable}",
         ]

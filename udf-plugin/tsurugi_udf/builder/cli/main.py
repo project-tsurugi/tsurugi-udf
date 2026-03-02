@@ -122,6 +122,34 @@ def main(argv: list[str] | None = None) -> None:
             )
             warn("Add them to --proto if code generation is required.")
             warn("")
+            if args.auto_deps:
+                warn(
+                    "Auto-deps enabled: adding these files to code generation and retrying."
+                )
+                warn("")
+                proto_files2 = [*proto_files, *unlisted]
+                cmd2 = protoc.build_protoc_cmd(
+                    includes=includes,
+                    proto_files=proto_files2,
+                    desc_out=desc_pb,
+                    gen_dir=paths.GEN,
+                    grpc_plugin_path=grpc_plugin,
+                )
+                debug("protoc cmd (auto-deps): " + " ".join(map(str, cmd2)))
+                protoc.run(cmd2)
+                info("code generation retried with auto-deps; reloading descriptor...")
+                fds = load_fds(desc_pb)
+                graph = build_import_graph(fds)
+                info(f"rebuilt import graph: {len(graph)} protos")
+                debug_list("import graph protos", sorted(graph.keys()))
+
+            else:
+                warn(
+                    "Code generation is performed only for explicitly specified .proto files."
+                )
+                warn("Add them to --proto or rerun with --auto-deps.")
+                warn("")
+
         info("=== templates ===")
         templates_dir = Path(__file__).resolve().parents[1] / "templates"
         debug(f"templates_dir: {templates_dir}")

@@ -108,42 +108,23 @@ class CliArgs:
             disable=ns.disable,
         )
 
-    def __str__(self) -> str:
+    def to_debug_summary(self) -> str:
         return (
-            f"proto_files={self.proto_files}, "
+            "args: "
+            f"protos={len(self.proto_files)}, "
+            f"includes={len(self.include)}, "
             f"build_dir={self.build_dir}, "
-            f"grpc_endpoint={self.grpc_endpoint}, "
-            f"grpc_transport={self.grpc_transport}, "
-            f"output_dir={self.output_dir}"
+            f"transport={self.grpc_transport}, "
+            f"secure={'true' if self.secure else 'false'}, "
+            f"auto_deps={'true' if self.auto_deps else 'false'}, "
+            f"clean={'true' if self.clean else 'false'}, "
+            f"out={self.output_dir}"
         )
 
-    def dump(self) -> list[str]:
-        return [
-            f"proto_files      : {self.proto_files}",
-            f"build_dir        : {self.build_dir}",
-            f"grpc_plugin      : {self.grpc_plugin}",
-            f"include          : {self.include}",
-            f"grpc_endpoint    : {self.grpc_endpoint}",
-            f"grpc_transport   : {self.grpc_transport}",
-            f"output_dir       : {self.output_dir}",
-            f"debug            : {self.debug}",
-            f"auto_deps        : {self.auto_deps}",
-            f"secure           : {self.secure}",
-            f"disable          : {self.disable}",
-        ]
-
-    def to_info_lines(self) -> list[str]:
-        return [
-            f"proto files     :",
-            *[f"  - {p}" for p in self.proto_files],
-            f"build dir       : {self.build_dir}",
-            f"grpc plugin     : {self.grpc_plugin}",
-            f"include         : {self.include}",
-            f"grpc endpoint   : {self.grpc_endpoint}",
-            f"grpc transport  : {self.grpc_transport}",
-            f"output dir      : {self.output_dir}",
-            f"debug           : {self.debug}",
-            f"auto deps       : {self.auto_deps}",
-            f"secure          : {self.secure}",
-            f"disable         : {self.disable}",
-        ]
+    def to_debug_detail_lines(self) -> list[str]:
+        lines = ["args.protos:"]
+        lines += [f"  - {p}" for p in self.proto_files]
+        if self.include:
+            lines.append("args.includes:")
+            lines += [f"  - {p}" for p in self.include]
+        return lines

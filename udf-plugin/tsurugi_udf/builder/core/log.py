@@ -3,8 +3,12 @@ from __future__ import annotations
 import os
 import sys
 from collections.abc import Iterable
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any
 
 _DEBUG = False
+_INDENT = 0
 
 _USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
 
@@ -19,36 +23,86 @@ def setup(debug: bool, *, color: bool | None = None) -> None:
     global _DEBUG, _USE_COLOR
     _DEBUG = debug
     if color is not None:
-        _USE_COLOR = color and sys.stdout.isatty()
+        _USE_COLOR = bool(color) and sys.stdout.isatty()
+
+
+def _indent_str() -> str:
+    return "  " * _INDENT
+
+
+def _fmt(obj: Any) -> str:
+    if isinstance(obj, Path):
+        s = str(obj)
+    else:
+        s = str(obj)
+
+    try:
+        home = str(Path.home())
+        if s.startswith(home + os.sep):
+            s = "~" + s[len(home) :]
+    except Exception:
+        pass
+
+    return s
+
+
+def _emit(prefix: str, msg: str, *, end: str = "\n", file=sys.stdout) -> None:
+    print(prefix + _indent_str() + msg, end=end, file=file)
 
 
 def info(msg: str, *, end: str = "\n") -> None:
     prefix = _c("1;34", "[INFO] ")
-    print(prefix + msg, end=end)
+    _emit(prefix, msg, end=end)
 
 
 def debug(msg: str, *, end: str = "\n") -> None:
     if not _DEBUG:
         return
     prefix = _c("2;37", "[DEBUG] ")
-    print(prefix + msg, end=end)
-
-
-def debug_list(title: str, items: Iterable[object]) -> None:
-    if not _DEBUG:
-        return
-    items_list = list(items)
-    prefix = _c("2;37", "[DEBUG] ")
-    print(prefix + f"{title}: {len(items_list)}")
-    for x in items_list:
-        print(prefix + f"  - {x}")
-
-
-def error(msg: str, file=sys.stderr, end: str = "\n") -> None:
-    prefix = _c("1;31", "[ERROR] ")
-    print(prefix + msg, file=file, end=end)
+    _emit(prefix, msg, end=end)
 
 
 def warn(msg: str, *, end: str = "\n") -> None:
     prefix = _c("1;33", "[WARN] ")
-    print(prefix + msg, end=end)
+    _emit(prefix, msg, end=end)
+
+
+def error(msg: str, *, end: str = "\n") -> None:
+    prefix = _c("1;31", "[ERROR] ")
+    _emit(prefix, msg, end=end, file=sys.stderr)
+
+
+@contextmanager
+def section(title: str, *, level: str = "INFO") -> Iterable[None]:
+    global _INDENT
+    if level.upper() == "DEBUG":
+        debug(f"== {title} ==")
+    else:
+        info(f"== {title} ==")
+
+    _INDENT += 1
+    try:
+        yield
+    finally:
+        _INDENT -= 1
+
+
+def debug_list(
+    title: str,
+    items: Iterable[object],
+    *,
+    empty_note: str = "empty",
+) -> None:
+    if not _DEBUG:
+        return
+
+    items_list = list(items)
+    n = len(items_list)
+
+    if n == 0:
+        debug(f"{title}: 0 ({empty_note})")
+        return
+
+    debug(f"{title}: {n}")
+    for x in items_list:
+        debug(f"  - {_fmt(x)}")

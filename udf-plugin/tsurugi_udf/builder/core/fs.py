@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from .paths import BuildPaths
-from .log import info
+from .log import debug
 import shutil
 
 
@@ -37,12 +37,12 @@ def move_outputs(
         for p in src_lib_dir.iterdir():
             if p.is_file() and p.suffix == ".so":
                 dst = dst_root / p.name
-                info(f"move {p} -> {dst}")
+                debug(f"move {p} -> {dst}")
                 shutil.move(str(p), dst)
 
     if src_ini_dir.exists():
         for p in src_ini_dir.iterdir():
             if p.is_file() and p.suffix == ".ini":
                 dst = dst_root / p.name
-                info(f"move {p} -> {dst}")
+                debug(f"move {p} -> {dst}")
                 shutil.move(str(p), dst)

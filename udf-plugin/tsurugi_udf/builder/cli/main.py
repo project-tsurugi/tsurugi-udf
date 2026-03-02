@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 import sys
 import shutil
@@ -22,17 +24,13 @@ from ..core.analyze_rpcs import dump_rpc_so_report
 from ..core.write_ini import write_ini_files_for_rpc_libs
 
 
-def mkdir(p: Path) -> None:
-    p.mkdir(exist_ok=True)
-
-
 def main(argv: list[str] | None = None) -> None:
     args = CliArgs.from_cli(argv)
     setup(debug=args.debug)
 
-    info("=== args ===")
+    debug("=== args ===")
     for line in args.to_info_lines():
-        info(line)
+        debug(line)
 
     spec = importlib.util.find_spec("tsurugi_udf")
     if spec is None or not spec.submodule_search_locations:
@@ -50,32 +48,34 @@ def main(argv: list[str] | None = None) -> None:
     debug_list("proto_files", (str(p) for p in proto_files))
 
     build_dir = Path(args.build_dir)
-
-    info("=== build dir ===")
-    if build_dir.exists():
-        info(f"build dir exists: {build_dir}")
-        if args.clean:
-            info(f"--clean specified, removing build dir: {build_dir}")
-            shutil.rmtree(build_dir)
-            info(f"recreating build dir: {build_dir}")
-        else:
-            info(f"reusing existing build dir: {build_dir}")
-    else:
-        info(f"creating build dir: {build_dir}")
-
     paths = BuildPaths.from_build_dir(build_dir)
-    ensure_dirs(paths)
-    debug(
-        "BuildPaths: "
-        f"GEN={paths.GEN} TPL={paths.TPL} OBJ={paths.OBJ} "
-        f"LIB={paths.LIB} INI={paths.INI} OUT={paths.OUT}"
-    )
-
     desc_pb = paths.OUT / "all.desc.pb"
 
+    outputs: dict[str, Path] | None = None
+    ini_outputs: dict[str, Path] | None = None
+    output_dir: Path | None = None
+
     try:
-        info("=== protoc ===")
-        info("running protoc...")
+        info("=== build dir ===")
+        if build_dir.exists():
+            if args.clean:
+                info(f"cleaning build dir: {build_dir}")
+                shutil.rmtree(build_dir)
+            else:
+                info(f"reusing build dir: {build_dir}")
+        else:
+            info(f"creating build dir: {build_dir}")
+
+        ensure_dirs(paths)
+        debug(
+            "BuildPaths: "
+            f"GEN={paths.GEN} TPL={paths.TPL} OBJ={paths.OBJ} "
+            f"LIB={paths.LIB} INI={paths.INI} OUT={paths.OUT}"
+        )
+
+        # --- protoc / codegen ---
+        info("=== code generation ===")
+        info("generating C++/gRPC sources from .proto files...")
         grpc_plugin = find_grpc_cpp_plugin(args.grpc_plugin)
         debug(f"resolved grpc plugin: {grpc_plugin}")
 
@@ -88,12 +88,12 @@ def main(argv: list[str] | None = None) -> None:
         )
         debug("protoc cmd: " + " ".join(map(str, cmd)))
         protoc.run(cmd)
-        info(f"protoc done; descriptor: {desc_pb}")
+        debug(f"descriptor: {desc_pb}")
 
-        info("=== import graph ===")
+        # --- descriptor / import graph ---
         fds = load_fds(desc_pb)
         graph = build_import_graph(fds)
-        info(f"built import graph: {len(graph)} protos")
+        debug(f"built import graph: {len(graph)} protos")
         debug_list("import graph protos", sorted(graph.keys()))
 
         unmappable, unlisted = find_unlisted_imports(
@@ -105,29 +105,18 @@ def main(argv: list[str] | None = None) -> None:
 
         if unmappable:
             warn("Some specified .proto files are not under any -I include path.")
-            warn("Cannot map them to protoc import names (check your --I settings):")
+            warn("Cannot map them to import names (check your --I settings):")
             for p in unmappable:
                 warn(f"  - {p}")
-            warn("")
 
         if unlisted:
-            warn("=" * 72)
-            warn(" Unlisted imported .proto files detected")
-            warn("=" * 72)
+            warn("Imported .proto files detected that were not explicitly specified:")
             for n in unlisted:
                 warn(f"  - {n}")
-            warn("")
-            warn(
-                "Code generation is performed only for explicitly specified .proto files."
-            )
-            warn("Add them to --proto if code generation is required.")
-            warn("")
+
             if args.auto_deps:
-                warn(
-                    "Auto-deps enabled: adding these files to code generation and retrying."
-                )
-                warn("")
-                proto_files2 = [*proto_files, *unlisted]
+                warn("Auto-deps enabled: including them and retrying code generation.")
+                proto_files2 = [*proto_files, *unlisted]  # Path + str 混在OK
                 cmd2 = protoc.build_protoc_cmd(
                     includes=includes,
                     proto_files=proto_files2,
@@ -137,34 +126,34 @@ def main(argv: list[str] | None = None) -> None:
                 )
                 debug("protoc cmd (auto-deps): " + " ".join(map(str, cmd2)))
                 protoc.run(cmd2)
-                info("code generation retried with auto-deps; reloading descriptor...")
+
                 fds = load_fds(desc_pb)
                 graph = build_import_graph(fds)
-                info(f"rebuilt import graph: {len(graph)} protos")
+                debug(f"rebuilt import graph: {len(graph)} protos")
                 debug_list("import graph protos", sorted(graph.keys()))
-
             else:
                 warn(
                     "Code generation is performed only for explicitly specified .proto files."
                 )
                 warn("Add them to --proto or rerun with --auto-deps.")
-                warn("")
+
+        info("code generation completed.")
 
         info("=== templates ===")
+        info("rendering RPC templates...")
         templates_dir = Path(__file__).resolve().parents[1] / "templates"
         debug(f"templates_dir: {templates_dir}")
 
-        info("rendering templates for RPC protos...")
-        render_tpl_for_rpc_protos(
+        rendered = render_tpl_for_rpc_protos(
             fds=fds,
             templates_dir=templates_dir,
             tpl_dir=paths.TPL,
         )
-        info(f"template render done: {paths.TPL}")
+        info(f"template rendering completed. ({len(rendered)} proto(s))")
+        debug(f"template dir: {paths.TPL}")
 
         tpl_subdirs = [str(p) for p in sorted(paths.TPL.glob("*")) if p.is_dir()]
         gen_subdirs = [str(p) for p in paths.GEN.rglob("*") if p.is_dir()]
-
         tpl_include_dirs = [
             *tpl_subdirs,
             str(tsurugi_udf_common_dir / "include" / "udf"),
@@ -176,15 +165,14 @@ def main(argv: list[str] | None = None) -> None:
         debug_list("gen_subdirs", gen_subdirs)
         debug_list("tpl_include_dirs", tpl_include_dirs)
 
-        info("=== compile tpl ===")
-        info("compiling template-generated objects...")
+        info("=== compile templates ===")
         tpl_objs, tpl_objs_by_stem = compile_tpl_objects_parallel(
             tpl_dir=paths.TPL,
             obj_dir=paths.OBJ,
             include_dirs=tpl_include_dirs,
             jobs=None,
         )
-        info(f"compiled tpl objects: {len(tpl_objs)}")
+        info(f"compiled template sources: {len(tpl_objs)} objects")
 
         for stem, objs in sorted(tpl_objs_by_stem.items()):
             debug(
@@ -193,7 +181,7 @@ def main(argv: list[str] | None = None) -> None:
             for o in sorted(objs, key=lambda p: p.name):
                 debug(f"  - {o.name}")
 
-        info("=== compile common ===")
+        info("=== compile runtime ===")
         common_srcs = [
             tsurugi_udf_common_dir / "src" / "udf" / "descriptor_impl.cpp",
             tsurugi_udf_common_dir / "src" / "udf" / "error_info.cpp",
@@ -207,26 +195,21 @@ def main(argv: list[str] | None = None) -> None:
         debug_list("common_srcs", (str(p) for p in common_srcs))
         debug_list("common_include_dirs", common_include_dirs)
 
-        info("compiling common objects...")
         common_obj_dir = paths.OBJ / "common" / "obj"
         common_objs = compile_common_objects(
             sources=common_srcs,
             obj_dir=common_obj_dir,
             include_dirs=common_include_dirs,
         )
-        info(f"compiled common objects: {len(common_objs)} -> {common_obj_dir}")
-        debug("common objects:")
-        for o in common_objs:
-            debug(f"  - {o}")
-
-        info("archiving common static library...")
         common_a = archive_common_static(
             objs=common_objs,
             out_dir=paths.OBJ / "common" / "lib",
         )
-        info(f"archived common static: {common_a}")
+        info(f"compiled runtime library: {common_a.name}")
+        debug(f"runtime static: {common_a}")
 
-        info("=== compile gen ===")
+        # --- compile generated ---
+        info("=== compile generated ===")
         gen_include_dirs = [
             str(paths.GEN),
             *[str(p) for p in includes],
@@ -234,14 +217,13 @@ def main(argv: list[str] | None = None) -> None:
         ]
         debug_list("gen_include_dirs", gen_include_dirs)
 
-        info("compiling generated sources...")
         gen_objs = build_objects_parallel(
             gen_dir=paths.GEN,
             obj_dir=paths.OBJ / "gen",
             include_dirs=gen_include_dirs,
             jobs=None,
         )
-        info(f"compiled generated objects: {len(gen_objs)}")
+        info(f"compiled generated sources: {len(gen_objs)} objects")
         for obj in gen_objs:
             rel = obj.relative_to(paths.OBJ / "gen")
             src = (paths.GEN / rel).with_suffix(".cc")
@@ -251,7 +233,6 @@ def main(argv: list[str] | None = None) -> None:
         target_protos = set(graph.keys())
         exclude_protos: set[str] = set()
 
-        info("linking shared libraries (layered)...")
         outputs = build_shared_libs_layered_parallel(
             import_graph=graph,
             target_protos=target_protos,
@@ -262,26 +243,23 @@ def main(argv: list[str] | None = None) -> None:
             tpl_objs_by_stem=tpl_objs_by_stem,
             common_static=common_a,
         )
-        info(f"linked shared libs: {len(outputs)} -> {paths.LIB}")
+        info(f"linked shared libraries: {len(outputs)}")
         for pn in sorted(outputs.keys()):
             debug(f"so: {pn} -> {outputs[pn]}")
 
         info("=== verify ===")
-        info("verifying shared libraries...")
         verify_shared_libs(
             outputs=outputs,
             import_graph=graph,
             require_origin_rpath=True,
             forbid_path_needed=True,
         )
-        info("verify done")
+        info("verification completed.")
 
         info("=== report ===")
-        info("dumping RPC so report...")
         dump_rpc_so_report(fds)
 
         info("=== ini ===")
-        info("writing ini files for rpc-bearing libs...")
         ini_outputs = write_ini_files_for_rpc_libs(
             fds,
             lib_dir=paths.LIB,
@@ -291,19 +269,34 @@ def main(argv: list[str] | None = None) -> None:
             secure=args.secure,
             enabled=not args.disable,
         )
-        info(f"wrote ini files: {len(ini_outputs)} -> {paths.INI}")
+        info(f"wrote ini files: {len(ini_outputs)}")
         for so, ini in sorted(ini_outputs.items()):
             debug(f"ini: {so} -> {ini}")
 
-        info("=== move ===")
+        info("=== output ===")
         output_dir = Path(args.output_dir).resolve()
-        info(f"moving outputs to: {output_dir}")
         move_outputs(
             src_lib_dir=paths.LIB,
             src_ini_dir=paths.INI,
             dst_root=output_dir,
         )
-        info(f"moved output files to: {output_dir}")
+
+        info(f"output directory: {output_dir}")
+
+        info("")
+        info("Build succeeded.")
+        info("")
+
+        if outputs:
+            info("Generated libraries:")
+            for so_path in sorted(outputs.values(), key=lambda p: p.name):
+                info(f"  - {so_path.name}")
+
+        if ini_outputs:
+            info("")
+            info("Generated ini files:")
+            for ini_path in sorted(ini_outputs.values(), key=lambda p: p.name):
+                info(f"  - {ini_path.name}")
 
     except ToolNotFoundError as e:
         error(f"{e}", file=sys.stderr)
@@ -312,8 +305,6 @@ def main(argv: list[str] | None = None) -> None:
         if e.stderr:
             error(e.stderr, file=sys.stderr, end="")
         raise SystemExit(e.returncode)
-
-    return
 
 
 if __name__ == "__main__":

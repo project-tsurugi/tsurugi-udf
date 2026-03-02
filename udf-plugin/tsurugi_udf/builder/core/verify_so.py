@@ -4,6 +4,8 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Set
 
+from .log import debug, warn, error
+
 
 def _readelf_dynamic(so: Path) -> str:
     r = subprocess.run(["readelf", "-d", str(so)], text=True, capture_output=True)
@@ -69,14 +71,14 @@ def verify_shared_libs(
             errors.append(f"{so_path.name}: missing DT_NEEDED for deps: {missing}")
 
     if warnings:
-        print("# VERIFY WARNINGS")
+        warn("verify: warnings detected:")
         for w in warnings:
-            print("WARNING:", w)
+            warn(f"  - {w}")
 
     if errors:
-        print("# VERIFY ERRORS")
+        error("verify: errors detected:")
         for e in errors:
-            print("ERROR:", e)
+            error(f"  - {e}")
         raise SystemExit(2)
 
-    print("# VERIFY OK: DT_NEEDED / RUNPATH look consistent")
+    debug("verify: OK (DT_NEEDED / RUNPATH look consistent)")

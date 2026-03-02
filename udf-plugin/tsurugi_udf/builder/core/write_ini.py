@@ -6,6 +6,7 @@ from typing import Dict
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
 
 from .analyze_rpcs import collect_rpc_so_report
+from .log import debug, warn
 
 
 def write_ini_files_for_rpc_libs(
@@ -28,7 +29,7 @@ def write_ini_files_for_rpc_libs(
         ini_path = ini_dir / Path(so_file).with_suffix(".ini").name
 
         if not so_path.exists():
-            print(f"WARNING: missing paired .so for ini: {so_path}")
+            warn(f"missing paired .so for ini: {so_path}")
             continue
 
         ini_text = "\n".join(
@@ -43,5 +44,7 @@ def write_ini_files_for_rpc_libs(
         )
         ini_path.write_text(ini_text, encoding="utf-8")
         out[so_file] = ini_path
+
+        debug(f"wrote ini: {ini_path} (for {so_file})")
 
     return out

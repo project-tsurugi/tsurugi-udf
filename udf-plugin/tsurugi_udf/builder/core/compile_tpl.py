@@ -6,6 +6,8 @@ import shlex
 import subprocess
 from pathlib import Path
 
+from .log import debug, debug_list
+
 
 def _pkg_config_cflags() -> list[str]:
     try:
@@ -55,7 +57,7 @@ def compile_tpl_objects_parallel(
 
     cpp_files = sorted(tpl_dir.rglob("*.cpp"))
     if not cpp_files:
-        print(f"# no tpl cpp files under: {tpl_dir}")
+        debug(f"no template .cpp files under: {tpl_dir}")
         return [], {}
 
     def _obj_for(src: Path) -> Path:
@@ -65,9 +67,12 @@ def compile_tpl_objects_parallel(
     objs = [_obj_for(s) for s in cpp_files]
 
     max_workers = jobs or (os.cpu_count() or 4)
-    print(
-        f"# compiling tpl {len(cpp_files)} files -> {obj_dir / 'tpl'} (jobs={max_workers})"
+    out_dir = obj_dir / "tpl"
+
+    debug(
+        f"compiling templates: {len(cpp_files)} files -> {out_dir} (jobs={max_workers})"
     )
+    debug_list("tpl cpp files", (str(p) for p in cpp_files))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
         futs = [
@@ -86,7 +91,7 @@ def compile_tpl_objects_parallel(
 
     by_stem: dict[str, list[Path]] = {}
     for o in objs:
-        rel = o.relative_to(obj_dir / "tpl")
+        rel = o.relative_to(out_dir)
         stem = rel.parts[0]
         by_stem.setdefault(stem, []).append(o)
 

@@ -11,9 +11,9 @@ from ..core.fs import ensure_dirs, move_outputs
 from ..core.tools.grpc_plugin import find_grpc_cpp_plugin
 from ..core.tools import protoc
 from ..core.errors import ToolNotFoundError, CommandFailedError
-from ..core.descriptor import load_fds, build_import_graph
+from ..core.descriptor import load_fds, build_import_graph, find_unlisted_imports
 from ..core.gen_tpl import render_tpl_for_rpc_protos
-from ..core.log import info, debug, error, debug_list, setup
+from ..core.log import info, debug, error, debug_list, setup, warn
 from ..core.compile_tpl import compile_tpl_objects_parallel
 from ..core.compile_common import compile_common_objects, archive_common_static
 from ..core.link_shared import build_shared_libs_layered_parallel
@@ -96,6 +96,32 @@ def main(argv: list[str] | None = None) -> None:
         info(f"built import graph: {len(graph)} protos")
         debug_list("import graph protos", sorted(graph.keys()))
 
+        unmappable, unlisted = find_unlisted_imports(
+            fds=fds,
+            includes=includes,
+            proto_files=proto_files,
+            exclude_well_known=True,
+        )
+
+        if unmappable:
+            warn("Some specified .proto files are not under any -I include path.")
+            warn("Cannot map them to protoc import names (check your --I settings):")
+            for p in unmappable:
+                warn(f"  - {p}")
+            warn("")
+
+        if unlisted:
+            warn("=" * 72)
+            warn(" Unlisted imported .proto files detected")
+            warn("=" * 72)
+            for n in unlisted:
+                warn(f"  - {n}")
+            warn("")
+            warn(
+                "Code generation is performed only for explicitly specified .proto files."
+            )
+            warn("Add them to --proto if code generation is required.")
+            warn("")
         info("=== templates ===")
         templates_dir = Path(__file__).resolve().parents[1] / "templates"
         debug(f"templates_dir: {templates_dir}")

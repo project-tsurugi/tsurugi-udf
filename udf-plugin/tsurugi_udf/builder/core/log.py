@@ -47,3 +47,8 @@ def debug_list(title: str, items: Iterable[object]) -> None:
 def error(msg: str, file=sys.stderr, end: str = "\n") -> None:
     prefix = _c("1;31", "[ERROR] ")
     print(prefix + msg, file=file, end=end)
+
+
+def warn(msg: str, *, end: str = "\n") -> None:
+    prefix = _c("1;33", "[WARN] ")
+    print(prefix + msg, end=end)

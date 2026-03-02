@@ -180,7 +180,7 @@ from tsurugidb.udf import *
 
 BLOB クライアントは、Tsurugi の内部で動作しているgRPCサービスである [BLOB中継サービス](https://github.com/project-tsurugi/data-relay-grpc) と gRPC 通信を行い BLOB / CLOB データの送受信を行います。
 
-BLOB クライアントから BLOB中継サービス に対するgRPCサービスのエンドポイントは、Tsurugi 構成ファイル（`tsurugi.ini`）の `[grpc_server]` セクションの `endpoint` パラメータ (以下「 `grpc_server.endpoint` と表記) で指定します。デフォルトは `dns:///localhost:52345` です。この設定はgRPCコンテキスト経由でBLOBクライアントに引き継がれます。
+BLOB クライアントから BLOB中継サービス に対するgRPCサービスのエンドポイントは、Tsurugi 構成ファイル（`tsurugi.ini`）の `[grpc_server]` セクションの `endpoint` パラメータ (以下 `grpc_server.endpoint` と表記) で指定します。デフォルトは `dns:///localhost:52345` です。この設定はgRPCコンテキスト経由でBLOBクライアントに引き継がれます。
 
 BLOBクライアントを実行するgRPCサーバを Tsurugi と同一ホスト上で動作させる場合は `grpc_server.endpoint` はそのままの設定で問題ありませんが、gRPCサーバを Tsurugi と異なるホスト上で動作させる場合は、BLOBクライアントが BLOB中継サービス(を実行するTsurugiの実行サーバ) に接続できるように `grpc_server.endpoint` を適切に設定してください。
 

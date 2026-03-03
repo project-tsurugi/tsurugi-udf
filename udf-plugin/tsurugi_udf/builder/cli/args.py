@@ -16,7 +16,7 @@ class CliArgs:
     output_dir: str | None = None
     debug: bool = False
     clean: bool = False
-    auto_deps: bool = False
+    auto_deps: bool = True
     secure: bool = False
     disable: bool = False
 
@@ -75,8 +75,10 @@ class CliArgs:
         )
         p.add_argument(
             "--auto-deps",
-            action="store_true",
-            help="Automatically include imported .proto files for code generation",
+            action=argparse.BooleanOptionalAction,
+            default=True,
+            help="Automatically include imported .proto files (default: enabled). "
+            "Use --no-auto-deps to disable and treat unlisted imports as error.",
         )
         p.add_argument(
             "--secure",

@@ -105,15 +105,15 @@ def main(argv: list[str] | None = None) -> None:
                     warn(f"  - {p}")
 
             if unlisted:
-                warn(
+                info(
                     "Imported .proto files detected that were not explicitly specified:"
                 )
                 for n in unlisted:
-                    warn(f"  - {n}")
+                    info(f"  - {n}")
 
                 if args.auto_deps:
-                    warn(
-                        "Auto-deps enabled: including them and retrying code generation."
+                    info(
+                        "Auto-deps enabled (default): including them and retrying code generation."
                     )
                     proto_files2 = [*proto_files, *unlisted]  # Path + str 混在OK
                     cmd2 = protoc.build_protoc_cmd(
@@ -133,10 +133,13 @@ def main(argv: list[str] | None = None) -> None:
                         "import graph protos (after auto-deps)", sorted(graph.keys())
                     )
                 else:
-                    warn(
-                        "Code generation is performed only for explicitly specified .proto files."
+                    error(
+                        "Unlisted imported .proto files found and --no-auto-deps specified."
                     )
-                    warn("Add them to --proto or rerun with --auto-deps.")
+                    error("Please explicitly add them via --proto or enable auto-deps.")
+                    for n in unlisted:
+                        error(f"  - {n}")
+                    raise SystemExit(1)
 
             info("code generation completed.")
 

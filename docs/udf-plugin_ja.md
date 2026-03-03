@@ -79,7 +79,7 @@ $ udf-plugin-builder
 usage: udf-plugin-builder [-h] --proto PROTO_FILES [PROTO_FILES ...] [--build-dir BUILD_DIR]
                           [--grpc-plugin GRPC_PLUGIN] [-I INCLUDE] [--grpc-endpoint GRPC_ENDPOINT]
                           [--grpc-transport GRPC_TRANSPORT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
-                          [--secure] [--disable]
+                          [--auto-deps | --no-auto-deps] [--secure] [--disable]
 udf-plugin-builder: error: the following arguments are required: --proto
 ```
 
@@ -95,6 +95,7 @@ udf-plugin-builder: error: the following arguments are required: --proto
 | `--disable` | No | `false` | 生成される UDF を無効状態で出力します（`.ini` に反映されます）。 |
 | `--debug` | No | `false` | デバッグログを有効にします。 |
 | `--clean` | No | `false` | ビルド前に`--build_dir`で指定した一時ディレクトリを削除します。 |
+| `--auto-deps`, `--no-auto-deps` | No | `--auto-deps` (有効) | `.proto` の `import` で参照された未指定のファイルを自動的にビルド対象に含めます。`--no-auto-deps` を指定した場合、未指定の `.proto` が検出されるとエラーになります。 |
 
 ### `.proto` の制約とバリデーションエラー
 
@@ -114,9 +115,14 @@ udf-plugin-builder: error: the following arguments are required: --proto
 - -I / --include オプションを 2回指定して、以下のディレクトリを include パスとして追加する
   - UDF関数インターフェース を定義した `.proto` ファイルのディレクトリ
   - `tsurugi-udf/proto` ディレクトリ
-- `--proto` に以下の2つのファイルパスを指定する
+- `--proto` に以下の1つのファイルパスを指定する
   - UDF関数インターフェース を定義した `.proto` ファイルのファイルパス
-  - `tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパス
+
+注:
+
+- デフォルトで--auto-depが有効なため`tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパスは`.proto` 内で `import` されていれば自動的にビルド対象へ追加されます。
+
+- `--no-auto-deps`を指定した場合、`tsurugi-udf/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパスを`--proto` に明示的に指定する必要があります。指定しない場合、未指定の `.proto` が検出されたとしてエラー終了します。
 
 例:
 
@@ -124,8 +130,12 @@ udf-plugin-builder: error: the following arguments are required: --proto
 - `${TSURUGI_UDF_DIR}` に `tsurugi-udf` リポジトリを配置
 
 ```sh
-$ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto ${TSURUGI_UDF_DIR}/proto/tsurugidb/udf/tsurugi_types.proto
+$ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto
 ```
+
+注:
+
+- デフォルトで`--auto-deps`が有効なため`${TSURUGI_UDF_DIR}/proto/tsurugidb/udf/tsurugi_types.proto` のファイルパスは`.proto` 内で `import` されていれば自動的にビルド対象へ追加されます。
 
 ## UDF プラグインの構成
 
@@ -138,13 +148,13 @@ $ udf-plugin-builder --I . --I ${TSURUGI_UDF_DIR}/proto --proto my.proto ${TSURU
 
 Tsurugi が生成した UDF を実行するための拡張用共有ライブラリです。
 
-ファイル名は `lib{name}.so` です。 `name` 部分は `udf-plugin-builder` の `--name` オプションで指定した文字列です。
+ファイル名は.protoファイルの先頭にlib、拡張子を.soに置換した `lib{name}.so` です。
 
 ### プラグイン設定ファイル（`.ini`）
 
 UDF プラグインの設定情報を含む ini 形式のファイルです。
 
-ファイル名は `lib{name}.ini` です。`name` 部分は `udf-plugin-builder` の `--name` オプションで指定した文字列です。
+ファイル名は.protoファイルの先頭にlib、拡張子を.iniに置換した `lib{name}.ini` です。
 
 プラグイン設定ファイルは以下の設定項目を含みます。
 

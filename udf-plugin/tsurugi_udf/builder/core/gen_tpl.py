@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 from jinja2 import Environment, FileSystemLoader
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
-from .log import info
+from .log import debug
 
 TEMPLATE = {
     "plugin_api_impl.cpp.j2": "plugin_api_impl.cpp",
@@ -62,7 +62,8 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
     for fd in fds.file:
         for msg in fd.message_type:
             register_message(fd.package, msg)
-# https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L246
+
+    # https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L246
     FIELD_TYPE = {
         1: "float8",
         2: "float4",
@@ -208,10 +209,12 @@ def render_tpl_for_rpc_protos(
             )
             gen.write_text(rendered)
             out[proto_file][out_name] = gen
-        created = [p.name for p in out[proto_file].values()]
-        created.sort()
-        info(f"generated RPC templates for proto '{proto_file}' -> {subdir}")
+
+        created = sorted(p.name for p in out[proto_file].values())
+        debug(
+            f"generated RPC templates: proto='{proto_file}' dir='{subdir}' files={len(created)}"
+        )
         for name in created:
-            info(f"  - {name}")
+            debug(f"  - {name}")
 
     return out

@@ -7,6 +7,8 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Set, List, Tuple
 
+from .log import debug
+
 
 def _pkg_config_libs() -> list[str]:
     try:
@@ -191,8 +193,12 @@ def build_shared_libs_layered_parallel(
     max_workers = jobs or (os.cpu_count() or 4)
     outputs: Dict[str, Path] = {}
 
+    debug(
+        f"link: {len(proto_list)} libs in {len(layers)} layer(s) (jobs={max_workers})"
+    )
+
     for i, layer in enumerate(layers):
-        print(f"# link layer[{i}] ({len(layer)} libs)")
+        debug(f"link layer[{i}]: {len(layer)} lib(s)")
 
         def _job(pn: str) -> Tuple[str, Path]:
             out = lib_dir / proto_to_libfile[pn]

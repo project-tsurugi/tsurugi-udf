@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, List
+
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
+
+from .log import info, warn, debug
 
 
 def default_so_name_for_proto(proto_name: str) -> str:
@@ -62,24 +65,6 @@ def collect_rpc_so_report(
     return out
 
 
-def print_rpc_so_report(report: Dict[str, dict]) -> None:
-    print("\n# === RPC-bearing .so report (from all.desc.pb) ===")
-    if not report:
-        print("# (no services/rpcs found)")
-        return
-
-    for so in sorted(report.keys()):
-        info = report[so]
-        print(f"\n{so}")
-        print(f"  proto: {info['proto']}")
-        if info["package"]:
-            print(f"  package: {info['package']}")
-        for svc, methods in info["services"].items():
-            print(f"  service: {svc}")
-            for m in methods:
-                print(f"    - {m}")
-
-
 def dump_rpc_so_report(
     fds: FileDescriptorSet,
     *,
@@ -90,4 +75,26 @@ def dump_rpc_so_report(
         _check_so_name_collisions(fds, so_name_for_proto=so_name_for_proto)
 
     report = collect_rpc_so_report(fds, so_name_for_proto=so_name_for_proto)
-    print_rpc_so_report(report)
+
+    info("RPC-bearing .so report:")
+
+    if not report:
+        info("  (no services/rpcs found)")
+        return
+
+    for so in sorted(report.keys()):
+        entry = report[so]
+        info(f"{so}")
+        info(f"  proto: {entry['proto']}")
+        if entry["package"]:
+            info(f"  package: {entry['package']}")
+        for svc, methods in entry["services"].items():
+            info(f"  service: {svc}")
+            for m in methods:
+                info(f"    - {m}")
+
+    debug("RPC fully-qualified names:")
+    for so in sorted(report.keys()):
+        entry = report[so]
+        for fq in entry.get("rpcs", []):
+            debug(f"  - {so}: {fq}")

@@ -6,6 +6,8 @@ import shlex
 import subprocess
 from pathlib import Path
 
+from .log import debug, debug_list
+
 
 def find_generated_cc(gen_dir: Path) -> list[Path]:
     cc: list[Path] = []
@@ -74,13 +76,20 @@ def build_objects_parallel(
 
     cc_files = find_generated_cc(gen_dir)
     if not cc_files:
-        print(f"no generated .cc files found under: {gen_dir}")
+        debug(f"no generated .cc files found under: {gen_dir}")
         return []
 
     objs = [obj_path_for(cc, gen_dir, obj_dir) for cc in cc_files]
 
     max_workers = jobs or (os.cpu_count() or 4)
-    print(f"# compiling {len(cc_files)} files -> {obj_dir} (jobs={max_workers})")
+    debug(
+        f"compiling generated sources: {len(cc_files)} files -> {obj_dir} (jobs={max_workers})"
+    )
+
+    if len(cc_files) <= 30:
+        debug_list("generated .cc files", (str(p) for p in cc_files))
+    else:
+        debug(f"generated .cc files: {len(cc_files)} (list omitted)")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
         futs = [

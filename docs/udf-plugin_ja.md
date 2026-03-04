@@ -172,6 +172,12 @@ secure=false
 | `secure` | Boolean (true/false) | gRPC との通信にセキュアな通信路を利用するかどうか。現時点では `false` のみサポート。 | この項目を未指定にした場合、Tsurugi 構成ファイル (`tsurugi.ini`) - `[udf]` セクションの `secure` パラメータの値が使用されます。 |
 | `transport` | string | gRPCストリーミング通信の方式。デフォルト値は `stream` | |
 
+### UDF プラグインとgRPCサーバの接続設定
+
+生成した UDF プラグインは、プラグイン設定ファイルの `[udf]` セクションの `endpoint` パラメータ (以下「 `udf.endpoint` と表記) で指定された宛先 gRPC サーバと接続して通信を行います。デフォルトは `dns:///localhost:50051` です。
+
+UDFを実行するgRPCサーバを Tsurugi と同一ホスト上で動作させる場合、かつgRPCサーバの接続ポートを上記デフォルト値に合わせて実行する場合は `udf.endpoint` はそのままの設定で問題ありませんが、gRPCサーバを Tsurugi と異なるホスト上で動作させる場合や接続ポートを変更する場合は、TsurugiがUDFを実行するgRPCサーバに接続できるように `udf.endpoint` を適切に設定してください。
+
 ## UDF プラグインのデプロイ
 
 生成した UDF プラグインを Tsurugi にデプロイすることで、UDF が利用可能になります。

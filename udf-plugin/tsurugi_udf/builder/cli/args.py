@@ -46,7 +46,8 @@ class CliArgs:
             "--include",
             action="append",
             default=[],
-            help="proto include path (can be specified multiple times)",
+            help="proto include path (can be specified multiple times). "
+                 "If omitted, current directory '.' is assumed.",
         )
         p.add_argument(
             "--grpc-endpoint",

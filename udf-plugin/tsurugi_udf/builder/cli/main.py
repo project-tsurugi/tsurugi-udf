@@ -39,7 +39,8 @@ def main(argv: list[str] | None = None) -> None:
     pkg_dir = Path(next(iter(spec.submodule_search_locations))).resolve()
     tsurugi_udf_common_dir = pkg_dir / "common" / "tsurugi_udf_common"
 
-    includes = validate_includes(list(args.include))
+    raw_includes = list(args.include) if args.include else ["."]
+    includes = validate_includes(raw_includes)
     proto_files = validate_proto_files([Path(p) for p in args.proto_files])
 
     debug(f"pkg: tsurugi_udf={pkg_dir} common={tsurugi_udf_common_dir}")

@@ -30,7 +30,7 @@
 
 ```sh
 # tsurugi-udf のソースアーカイブのダウンロードと展開
-$ TSURUGI_UDF_VERSION="0.1.0"
+$ TSURUGI_UDF_VERSION="0.2.0"
 $ curl -OL https://github.com/project-tsurugi/tsurugi-udf/archive/refs/tags/${TSURUGI_UDF_VERSION}.tar.gz
 $ tar xf ${TSURUGI_UDF_VERSION}.tar.gz
 $ cd tsurugi-udf-${TSURUGI_UDF_VERSION}

@@ -13,7 +13,12 @@ from ..core.fs import ensure_dirs, move_outputs
 from ..core.tools.grpc_plugin import find_grpc_cpp_plugin
 from ..core.tools import protoc
 from ..core.errors import ToolNotFoundError, CommandFailedError
-from ..core.descriptor import load_fds, build_import_graph, find_unlisted_imports
+from ..core.descriptor import (
+    load_fds,
+    build_import_graph,
+    find_unlisted_imports,
+    descriptor_name,
+)
 from ..core.gen_tpl import render_tpl_for_rpc_protos
 from ..core.log import info, debug, error, debug_list, setup, warn, section
 from ..core.compile_tpl import compile_tpl_objects_parallel
@@ -47,7 +52,7 @@ def main(argv: list[str] | None = None) -> None:
 
     build_dir = Path(args.build_dir)
     paths = BuildPaths.from_build_dir(build_dir)
-    desc_pb = paths.OUT / "all.desc.pb"
+    desc_pb = paths.OUT / descriptor_name(proto_files)
 
     outputs: dict[str, Path] | None = None
     ini_outputs: dict[str, Path] | None = None
@@ -98,19 +103,18 @@ def main(argv: list[str] | None = None) -> None:
                 proto_files=proto_files,
                 exclude_well_known=True,
             )
-
             if unmappable:
                 warn("Some specified .proto files are not under any -I include path.")
                 warn("Cannot map them to import names (check your --I settings):")
                 for p in unmappable:
-                    warn(f"  - {p}")
+                    warn(f" - {p}")
 
             if unlisted:
                 info(
                     "Imported .proto files detected that were not explicitly specified:"
                 )
                 for n in unlisted:
-                    info(f"  - {n}")
+                    info(f" - {n}")
 
                 if args.auto_deps:
                     info(
@@ -131,7 +135,8 @@ def main(argv: list[str] | None = None) -> None:
                     graph = build_import_graph(fds)
                     info(f"import graph (after auto-deps): {len(graph)} proto(s)")
                     debug_list(
-                        "import graph protos (after auto-deps)", sorted(graph.keys())
+                        "import graph protos (after auto-deps)",
+                        sorted(graph.keys()),
                     )
                 else:
                     error(
@@ -139,7 +144,7 @@ def main(argv: list[str] | None = None) -> None:
                     )
                     error("Please explicitly add them via --proto or enable auto-deps.")
                     for n in unlisted:
-                        error(f"  - {n}")
+                        error(f" - {n}")
                     raise SystemExit(1)
 
             info("code generation completed.")
@@ -166,7 +171,6 @@ def main(argv: list[str] | None = None) -> None:
                 *gen_subdirs,
                 *includes,
             ]
-
             debug_list("tpl_subdirs", tpl_subdirs)
             debug_list("gen_subdirs", gen_subdirs)
             debug_list("tpl_include_dirs", tpl_include_dirs)
@@ -179,13 +183,12 @@ def main(argv: list[str] | None = None) -> None:
                 jobs=None,
             )
             info(f"compiled template sources: {len(tpl_objs)} objects")
-
             for stem, objs in sorted(tpl_objs_by_stem.items()):
                 debug(
                     f"tpl stem '{stem}': {len(objs)} objs -> {(paths.OBJ / 'tpl' / stem)}"
                 )
                 for o in sorted(objs, key=lambda p: p.name):
-                    debug(f"  - {o.name}")
+                    debug(f" - {o.name}")
 
         with section("compile runtime"):
             common_srcs = [
@@ -237,7 +240,6 @@ def main(argv: list[str] | None = None) -> None:
         with section("link"):
             target_protos = set(graph.keys())
             exclude_protos: set[str] = set()
-
             outputs = build_shared_libs_layered_parallel(
                 import_graph=graph,
                 target_protos=target_protos,
@@ -286,23 +288,20 @@ def main(argv: list[str] | None = None) -> None:
                 src_ini_dir=paths.INI,
                 dst_root=output_dir,
             )
-            info(f"output directory: {output_dir}")
+
+            shutil.copy2(desc_pb, output_dir / desc_pb.name)
 
         info("")
         info("Build succeeded.")
         info("")
-
+        info("Generated outputs:")
         if outputs:
-            info("Generated libraries:")
             for so_path in sorted(outputs.values(), key=lambda p: p.name):
-                info(f"  - {so_path.name}")
-
+                info(f" - {so_path.name}")
         if ini_outputs:
-            info("")
-            info("Generated ini files:")
             for ini_path in sorted(ini_outputs.values(), key=lambda p: p.name):
-                info(f"  - {ini_path.name}")
-
+                info(f" - {ini_path.name}")
+        info(f" - {desc_pb.name}")
     except ToolNotFoundError as e:
         error(f"{e}")
         raise SystemExit(2)

@@ -1,5 +1,6 @@
 from pathlib import Path
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
+import re
 
 
 def load_fds(desc_pb: Path) -> FileDescriptorSet:
@@ -53,3 +54,16 @@ def find_unlisted_imports(
         unlisted = {n for n in unlisted if not is_well_known(n)}
 
     return (unmappable, sorted(unlisted))
+
+
+def slugify(text: str) -> str:
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9_\-]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
+    return text or "all"
+
+
+def descriptor_name(proto_files: list[Path]) -> str:
+    names = sorted(p.stem for p in proto_files)
+    joined = "_".join(names)
+    return f"{slugify(joined)}.desc.pb"

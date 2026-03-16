@@ -1,16 +1,16 @@
 # tsurugi-udf
 
-**tsurugi-udf** is a collection of tools for developing and using `User-Defined Functions (UDFs)` for [Tsurugi Database](https://github.com/project-tsurugi/tsurugidb).
+**tsurugi-udf** is a collection of tools for developing and using `User-Defined Functions (UDFs)` for [Tsurugi](https://github.com/project-tsurugi/tsurugidb).
 
 This repository consists of two modules:
 
-- **[Tsurugi UDF plugin toolchain](udf-plugin/README.md)**
+- [Tsurugi UDF plugin toolchain](udf-plugin/README.md)
+- [Tsurugi UDF Python library](udf-library/python/README.md)
 
-- **[Tsurugi UDF Python library](udf-library/python/README.md)**
+## Documents
 
-## Tsurugi UDF User's guide(ja)
-
-- **[tsurugi-udf guide(ja)](docs/udf-guide_ja.md)**
+- [Overview (ja)](docs/udf-overview_ja.md)
+- [TOC of Tsurugi UDF documents (ja)](docs/README.md)
 
 ## Requirements
 

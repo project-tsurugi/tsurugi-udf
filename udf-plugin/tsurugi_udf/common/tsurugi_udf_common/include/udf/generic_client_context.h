@@ -54,7 +54,7 @@ public:
      * @brief sets timeout value for gRPC calls.
      *
      * @param value timeout value
-     * @param value std::nullopt means no timeout (no deadline will be set)
+     * @note std::nullopt means no timeout (no deadline will be set)
      *
      * @note This setting is intended to be applied at most once.
      *       Once a deadline is set on the underlying grpc::ClientContext,

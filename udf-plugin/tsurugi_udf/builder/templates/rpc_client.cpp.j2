@@ -242,6 +242,16 @@ rpc_client::call_server_streaming_async(
         stream->end_of_stream();
         return stream;
     }
+    if (!generic_client_context) {
+        auto err = std::make_unique<generic_record_impl>();
+        err->set_error(error_info(
+            grpc::StatusCode::INTERNAL,
+            "generic_client_context is null"
+        ));
+        stream->push(std::move(err));
+        stream->end_of_stream();
+        return stream;
+    }
 
     switch (function_index.second) {
 {% for pkg in packages %}

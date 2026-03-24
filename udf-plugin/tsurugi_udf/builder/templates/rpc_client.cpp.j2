@@ -7,7 +7,8 @@
 #include <thread>
 
 #include "generic_record_impl.h"
-using grpc::ClientContext;
+#include "generic_client_context.h"
+
 using grpc::Status;
 using namespace plugin::udf;
 
@@ -159,15 +160,15 @@ rpc_client::rpc_client(std::shared_ptr<grpc::Channel> channel)
 // Call dispatcher
 // =======================
 
-void rpc_client::call(ClientContext& context,
+void rpc_client::call(plugin::udf::generic_client_context& generic_client_context,
                       function_index_type function_index,
                       generic_record& request,
                       generic_record& response) const {
+    auto& context = generic_client_context.grpc_context();
     auto cursor = request.cursor();
     if (!cursor) { throw std::runtime_error("request cursor is null"); }
 
     response.reset();
-    auto fail = [&response]() { response.add_string("RPC failed"); };
 
     switch (function_index.second) {
 {% for pkg in packages %}
@@ -224,11 +225,10 @@ void rpc_client::call(ClientContext& context,
 
 std::unique_ptr<generic_record_stream>
 rpc_client::call_server_streaming_async(
-    std::unique_ptr<grpc::ClientContext> context,
+    std::unique_ptr<plugin::udf::generic_client_context> generic_client_context,
     function_index_type function_index,
     generic_record& request
 ) const {
-
     auto stream = std::make_unique<generic_record_stream_impl>();
     auto cursor = request.cursor();
 
@@ -237,17 +237,6 @@ rpc_client::call_server_streaming_async(
         err->set_error(error_info(
             grpc::StatusCode::INTERNAL,
             "request cursor is null"
-        ));
-        stream->push(std::move(err));
-        stream->end_of_stream();
-        return stream;
-    }
-
-    if (!context) {
-        auto err = std::make_unique<generic_record_impl>();
-        err->set_error(error_info(
-            grpc::StatusCode::INTERNAL,
-            "ClientContext is null"
         ));
         stream->push(std::move(err));
         stream->end_of_stream();
@@ -281,57 +270,60 @@ rpc_client::call_server_streaming_async(
 
         auto* stub = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_.get();
         auto* out_stream = stream.get();
-        std::thread([context = std::move(context), stub, req = std::move(req), out_stream]() mutable {
-            try {
-                auto reader = stub->{{ fn.function_name }}(context.get(), req);
-                if (!reader) {
-                    auto err = std::make_unique<generic_record_impl>();
-                    err->set_error(error_info(grpc::StatusCode::INTERNAL,
-                                              "Failed to create server streaming reader"));
-                    out_stream->push(std::move(err));
-                    out_stream->end_of_stream();
-                    return;
-                }
+        std::thread(
+            [generic_client_context = std::move(generic_client_context),
+             stub,
+             req = std::move(req),
+             out_stream]() mutable {
+                try {
+                    auto& context = generic_client_context->grpc_context();
+                    auto reader = stub->{{ fn.function_name }}(&context, req);
+                    if (!reader) {
+                        auto err = std::make_unique<generic_record_impl>();
+                        err->set_error(error_info(
+                            grpc::StatusCode::INTERNAL,
+                            "Failed to create server streaming reader"
+                        ));
+                        out_stream->push(std::move(err));
+                        out_stream->end_of_stream();
+                        return;
+                    }
 
-                response_type rep;
-                while (reader->Read(&rep)) {
-                    auto record = std::make_unique<generic_record_impl>();
-                    {{ emit_response_add_streaming(
-                        "rep",
-                        "record",
-                        fn.output_record,
-                        "response_type"
-                    ) }}
-                    out_stream->push(std::move(record));
-                }
+                    response_type rep;
+                    while (reader->Read(&rep)) {
+                        auto record = std::make_unique<generic_record_impl>();
+                        {{ emit_response_add_streaming("rep", "record", fn.output_record, "response_type") }}
+                        out_stream->push(std::move(record));
+                    }
 
-                Status status = reader->Finish();
-                if (!status.ok()) {
+                    Status status = reader->Finish();
+                    if (!status.ok()) {
+                        auto err = std::make_unique<generic_record_impl>();
+                        err->set_error(error_info(
+                            status.error_code(),
+                            status.error_message()
+                        ));
+                        out_stream->push(std::move(err));
+                    }
+                } catch (const std::exception& e) {
                     auto err = std::make_unique<generic_record_impl>();
                     err->set_error(error_info(
-                        status.error_code(),
-                        status.error_message()
+                        grpc::StatusCode::INTERNAL,
+                        e.what()
+                    ));
+                    out_stream->push(std::move(err));
+                } catch (...) {
+                    auto err = std::make_unique<generic_record_impl>();
+                    err->set_error(error_info(
+                        grpc::StatusCode::UNKNOWN,
+                        "Unknown error in async RPC handling"
                     ));
                     out_stream->push(std::move(err));
                 }
-            } catch (const std::exception& e) {
-                auto err = std::make_unique<generic_record_impl>();
-                err->set_error(error_info(
-                    grpc::StatusCode::INTERNAL,
-                    e.what()
-                ));
-                out_stream->push(std::move(err));
-            } catch (...) {
-                auto err = std::make_unique<generic_record_impl>();
-                err->set_error(error_info(
-                    grpc::StatusCode::UNKNOWN,
-                    "Unknown error in async RPC handling"
-                ));
-                out_stream->push(std::move(err));
-            }
 
-            out_stream->end_of_stream();
-        }).detach();
+                out_stream->end_of_stream();
+            }
+        ).detach();
 
         return stream;
     }

@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <utility>
 
+#include "generic_client_context.h"
 #include "generic_record.h"
 
 #include <grpcpp/client_context.h>
@@ -34,13 +35,13 @@ public:
     generic_client& operator=(generic_client&&) = delete;
 
     virtual void call(
-        grpc::ClientContext& context,
+        plugin::udf::generic_client_context& context,
         function_index_type function_index,
         generic_record& request,
         generic_record& response
     ) const = 0;
     virtual std::unique_ptr<plugin::udf::generic_record_stream> call_server_streaming_async(
-        std::unique_ptr<grpc::ClientContext> context,
+        std::unique_ptr<plugin::udf::generic_client_context> context,
         function_index_type function_index,
         generic_record& request
     ) const = 0;

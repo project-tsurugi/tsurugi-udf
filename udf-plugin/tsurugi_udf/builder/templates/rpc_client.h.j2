@@ -2,6 +2,7 @@
 
 #include "{{ proto_base_name }}.grpc.pb.h"
 #include "generic_client.h"
+#include "generic_client_context.h"
 #include <grpcpp/grpcpp.h>
 #include <memory>
 #include <string>
@@ -11,11 +12,11 @@ class rpc_client : public generic_client {
   public:
     explicit rpc_client(std::shared_ptr<grpc::Channel> channel);
 
-    void call(grpc::ClientContext& context, function_index_type function_index,
+    void call(plugin::udf::generic_client_context& generic_client_context, function_index_type function_index,
         generic_record& request, generic_record& response) const override;
 
     std::unique_ptr<plugin::udf::generic_record_stream> call_server_streaming_async(
-        std::unique_ptr<grpc::ClientContext> context,
+        std::unique_ptr<plugin::udf::generic_client_context> generic_client_context,
         function_index_type function_index,
         generic_record& request
     ) const override;

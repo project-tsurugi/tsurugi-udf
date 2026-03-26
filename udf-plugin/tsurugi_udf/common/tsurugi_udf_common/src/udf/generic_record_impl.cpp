@@ -16,14 +16,14 @@
 
 #include "generic_record_impl.h"
 
+#include <chrono>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <chrono>
-#include <queue>
 
 #include "error_info.h"
 namespace plugin::udf {
@@ -164,7 +164,7 @@ generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record
 
 void generic_record_impl::assign_from(generic_record_impl&& other) noexcept {
     values_ = std::move(other.values_);
-    err_    = std::move(other.err_);
+    err_ = std::move(other.err_);
     other.reset();
 }
 

@@ -59,6 +59,7 @@ private:
 class record_descriptor;
 class column_descriptor {
 public:
+
     using type_kind_type = plugin::udf::type_kind;
     using index_type = std::size_t;
     using oneof_index_type = std::size_t;
@@ -92,6 +93,7 @@ public:
 
 class function_descriptor {
 public:
+
     using function_kind_type = plugin::udf::function_kind;
     function_descriptor() = default;
     using index_type = std::size_t;

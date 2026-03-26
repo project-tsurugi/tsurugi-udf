@@ -15,14 +15,14 @@
  */
 #pragma once
 
+#include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
-#include <optional>
-#include <string>
-#include <condition_variable>
-#include <queue>
-#include <chrono>
 #include <mutex>
+#include <optional>
+#include <queue>
+#include <string>
 
 #include "error_info.h"
 namespace plugin::udf {
@@ -94,6 +94,7 @@ public:
 
 class generic_record_stream {
 public:
+
     /// @brief represents the status of record retrieval.
     using status_type = generic_record_stream_status;
     generic_record_stream() = default;

@@ -62,10 +62,5 @@ enum class load_status {
     factory_creation_failed
 };
 
-enum class generic_record_stream_status {
-    ok,
-    error,
-    end_of_stream,
-    not_ready
-};
+enum class generic_record_stream_status { ok, error, end_of_stream, not_ready };
 }  // namespace plugin::udf

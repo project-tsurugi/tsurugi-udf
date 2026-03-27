@@ -12,35 +12,6 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 
 # ------------------------------------------------------------
-# tsurugi_udf_common location
-# ------------------------------------------------------------
-if(DEFINED SKBUILD)
-  message(STATUS "Detected pip / scikit-build environment")
-  set(USE_INSTALLED_TSURUGI_UDF_COMMON OFF)
-else()
-  option(USE_INSTALLED_TSURUGI_UDF_COMMON
-         "Use installed tsurugi-udf-common instead of source tree" ON)
-endif()
-
-if(USE_INSTALLED_TSURUGI_UDF_COMMON)
-  execute_process(
-    COMMAND
-      ${Python3_EXECUTABLE} -c
-      "import tsurugi_udf_common, os; print(os.path.dirname(tsurugi_udf_common.__file__))"
-    OUTPUT_VARIABLE TSURUGI_UDF_COMMON_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE _import_result)
-  if(NOT _import_result EQUAL 0)
-    message(FATAL_ERROR "tsurugi_udf_common not importable")
-  endif()
-else()
-  set(TSURUGI_UDF_COMMON_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/../../common/tsurugi_udf_common")
-endif()
-
-message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
-
-# ------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------
 find_package(nlohmann_json CONFIG REQUIRED)

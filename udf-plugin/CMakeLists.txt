@@ -68,7 +68,6 @@ pybind11_add_module(
   _udf_plugin
   ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/viewer/udf_plugin_viewer/bindings.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/viewer_loader.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/error_info.cpp
 )
 
 target_include_directories(

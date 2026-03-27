@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -156,11 +157,7 @@ PYBIND11_MODULE(_udf_plugin, m) {
     m.def("load_plugin", [](const std::string& path) {
         viewer_loader loader;
 
-        auto results = loader.load(path);
-        for(const auto& result: results) {
-            std::cerr << "[gRPC] " << result.status() << " file: " << result.file() << " detail: " << result.detail()
-                      << std::endl;
-        }
+        if(! loader.load(path)) { throw std::runtime_error(std::string(loader.last_error_message())); }
 
         const auto& plugins = loader.plugins();
         std::vector<plugin_api*> apis;

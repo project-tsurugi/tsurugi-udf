@@ -46,21 +46,6 @@ message(STATUS "TSURUGI_UDF_COMMON_DIR=${TSURUGI_UDF_COMMON_DIR}")
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
 
-find_package(gRPC CONFIG QUIET)
-
-set(HAVE_GRPC OFF)
-if(gRPC_FOUND)
-  message(STATUS "gRPC found via CMake config")
-  set(HAVE_GRPC ON)
-else()
-  message(STATUS "gRPCConfig.cmake not found, falling back to system libs")
-  find_library(GRPC_LIB grpc)
-  find_library(GRPCPP_LIB grpc++)
-  if(GRPC_LIB AND GRPCPP_LIB)
-    set(HAVE_GRPC ON)
-  endif()
-endif()
-
 # ------------------------------------------------------------
 # Python module (_udf_plugin)
 # ------------------------------------------------------------
@@ -78,17 +63,6 @@ target_include_directories(
 
 target_link_libraries(_udf_plugin PRIVATE protobuf::libprotobuf
                                           nlohmann_json::nlohmann_json)
-
-if(HAVE_GRPC)
-  target_compile_definitions(_udf_plugin PRIVATE TSURUGI_HAVE_GRPC=1)
-  if(gRPC_FOUND)
-    target_link_libraries(_udf_plugin PRIVATE gRPC::grpc++ gRPC::grpc)
-  else()
-    target_link_libraries(_udf_plugin PRIVATE ${GRPCPP_LIB} ${GRPC_LIB})
-  endif()
-else()
-  message(WARNING "Building without gRPC support")
-endif()
 
 # ------------------------------------------------------------
 # install (Python package layout)

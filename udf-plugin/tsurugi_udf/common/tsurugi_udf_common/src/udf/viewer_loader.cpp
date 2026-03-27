@@ -80,7 +80,12 @@ bool viewer_loader::create_view_api_from_handle(void* handle, std::string const&
     void* sym = dlsym(handle, "create_plugin_api");
     const char* err = dlerror();
 
-    if(sym == nullptr || err != nullptr) {
+    if(err != nullptr) {
+        set_error(std::string("Failed to load symbol 'create_plugin_api': ") + err + " (" + full_path + ")");
+        return false;
+    }
+
+    if(sym == nullptr) {
         set_error("Symbol 'create_plugin_api' not found: " + full_path);
         return false;
     }

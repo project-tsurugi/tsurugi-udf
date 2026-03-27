@@ -18,10 +18,8 @@ if(DEFINED SKBUILD)
   message(STATUS "Detected pip / scikit-build environment")
   set(USE_INSTALLED_TSURUGI_UDF_COMMON OFF)
 else()
-  option(
-    USE_INSTALLED_TSURUGI_UDF_COMMON
-    "Use installed tsurugi-udf-common instead of source tree"
-    ON)
+  option(USE_INSTALLED_TSURUGI_UDF_COMMON
+         "Use installed tsurugi-udf-common instead of source tree" ON)
 endif()
 
 if(USE_INSTALLED_TSURUGI_UDF_COMMON)
@@ -69,7 +67,7 @@ endif()
 pybind11_add_module(
   _udf_plugin
   ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/viewer/udf_plugin_viewer/bindings.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/udf_loader.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/viewer_loader.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/src/udf/error_info.cpp
 )
 
@@ -79,12 +77,8 @@ target_include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/tsurugi_udf/common/tsurugi_udf_common/include/udf
 )
 
-target_link_libraries(
-  _udf_plugin
-  PRIVATE
-    protobuf::libprotobuf
-    nlohmann_json::nlohmann_json
-)
+target_link_libraries(_udf_plugin PRIVATE protobuf::libprotobuf
+                                          nlohmann_json::nlohmann_json)
 
 if(HAVE_GRPC)
   target_compile_definitions(_udf_plugin PRIVATE TSURUGI_HAVE_GRPC=1)
@@ -100,7 +94,5 @@ endif()
 # ------------------------------------------------------------
 # install (Python package layout)
 # ------------------------------------------------------------
-install(
-  TARGETS _udf_plugin
-  LIBRARY DESTINATION tsurugi_udf/viewer/udf_plugin_viewer
-)
+install(TARGETS _udf_plugin
+        LIBRARY DESTINATION tsurugi_udf/viewer/udf_plugin_viewer)

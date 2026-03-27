@@ -16,10 +16,10 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
-#include "udf_loader.h"
+#include "viewer_loader.h"
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -50,6 +50,7 @@ std::string type_kind_to_string(plugin::udf::type_kind kind) {
         default: return "UNKNOWN";
     }
 }
+
 std::string function_kind_to_string(plugin::udf::function_kind kind) {
     switch(kind) {
         case plugin::udf::function_kind::unary: return "unary";
@@ -59,6 +60,7 @@ std::string function_kind_to_string(plugin::udf::function_kind kind) {
         default: return "unknown_function_kind";
     }
 }
+
 py::dict record_to_dict(const record_descriptor& record);
 
 py::dict column_to_dict(const column_descriptor* col) {
@@ -67,21 +69,15 @@ py::dict column_to_dict(const column_descriptor* col) {
     d["column_name"] = std::string(col->column_name());
     d["type_kind"] = type_kind_to_string(col->type_kind());
 
-    // oneof_index
     if(col->has_oneof()) {
         d["oneof_index"] = py::cast(col->oneof_index().value());
-    } else {
-        d["oneof_index"] = py::none();
-    }
-
-    // oneof_name
-    if(col->has_oneof()) {
         d["oneof_name"] = py::cast(std::string(col->oneof_name().value()));
     } else {
+        d["oneof_index"] = py::none();
         d["oneof_name"] = py::none();
     }
 
-    if(auto nested = col->nested()) {
+    if(auto* nested = col->nested()) {
         d["nested_record"] = record_to_dict(*nested);
     } else {
         d["nested_record"] = py::none();
@@ -123,7 +119,7 @@ py::dict service_to_dict(const service_descriptor* svc) {
 py::list services_to_list(const std::vector<service_descriptor*>& svcs) {
     py::list result;
     for(auto* svc: svcs) {
-        if(! svc) {
+        if(svc == nullptr) {
             std::cerr << "Warning: null service_descriptor pointer encountered" << std::endl;
             continue;
         }
@@ -155,24 +151,22 @@ py::list package_to_list(const std::vector<plugin_api*>& apis) {
 }
 
 PYBIND11_MODULE(_udf_plugin, m) {
-    m.doc() = "UDF Plugin Loader (with nested record support)";
-    m.def("load_plugin", [](const std::string& path) {
-        udf_loader loader;
+    m.doc() = "UDF Plugin Viewer";
 
-        auto results = loader.view_load(path);
+    m.def("load_plugin", [](const std::string& path) {
+        viewer_loader loader;
+
+        auto results = loader.load(path);
         for(const auto& result: results) {
-            std::cerr << "[gRPC] " << result.status()
-                      << " file: " << result.file()
-                      << " detail: " << result.detail()
+            std::cerr << "[gRPC] " << result.status() << " file: " << result.file() << " detail: " << result.detail()
                       << std::endl;
         }
 
-        auto plugins = loader.get_plugins();
+        const auto& plugins = loader.plugins();
         std::vector<plugin_api*> apis;
         apis.reserve(plugins.size());
-        for(const auto& plugin: plugins) {
-            apis.push_back(std::get<0>(plugin).get());
-        }
+
+        for(const auto& api: plugins) { apis.push_back(api.get()); }
 
         return package_to_list(apis);
     });

@@ -86,6 +86,7 @@ py::dict column_to_dict(const column_descriptor* col) {
     } else {
         d["nested_record"] = py::none();
     }
+    d["optional"] = col->optional();
 
     return d;
 }

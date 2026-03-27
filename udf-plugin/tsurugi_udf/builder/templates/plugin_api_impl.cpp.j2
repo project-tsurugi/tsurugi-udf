@@ -45,7 +45,8 @@ class plugin_api_impl : public plugin_api {
                                 type_kind::{{ ncol.type_kind }},
                                 nullptr,
                                 {% if ncol.oneof_index is not none %} {{ ncol.oneof_index }} {% else %} std::nullopt {% endif %},
-                                {% if ncol.oneof_name is not none %} "{{ ncol.oneof_name }}" {% else %} std::nullopt {% endif %}
+                                {% if ncol.oneof_name is not none %} "{{ ncol.oneof_name }}" {% else %} std::nullopt {% endif %},
+                                {% if ncol.proto3_optional %} true {% else %} false {% endif %}
                             )
                         );
 {% endfor %}
@@ -56,7 +57,8 @@ class plugin_api_impl : public plugin_api {
                                 type_kind::{{ col.type_kind }},
                                 new record_descriptor_impl("{{ col.nested_record.record_name }}", std::move(nested_columns)),
                                 {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
-                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %},
+                                {% if col.proto3_optional %} true {% else %} false {% endif %}
                             )
                         );
                     }
@@ -68,7 +70,8 @@ class plugin_api_impl : public plugin_api {
                             type_kind::{{ col.type_kind }},
                             nullptr,
                             {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
-                            {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                            {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %},
+                            {% if col.proto3_optional %} true {% else %} false {% endif %}
                         )
                     );
 {% endif %}
@@ -89,7 +92,8 @@ class plugin_api_impl : public plugin_api {
                                 type_kind::{{ ncol.type_kind }},
                                 nullptr,
                                 {% if ncol.oneof_index is not none %} {{ ncol.oneof_index }} {% else %} std::nullopt {% endif %},
-                                {% if ncol.oneof_name is not none %} "{{ ncol.oneof_name }}" {% else %} std::nullopt {% endif %}
+                                {% if ncol.oneof_name is not none %} "{{ ncol.oneof_name }}" {% else %} std::nullopt {% endif %},
+                                {% if ncol.proto3_optional %} true {% else %} false {% endif %}
                             )
                         );
 {% endfor %}
@@ -100,7 +104,8 @@ class plugin_api_impl : public plugin_api {
                                 type_kind::{{ col.type_kind }},
                                 new record_descriptor_impl("{{ col.nested_record.record_name }}", std::move(nested_columns)),
                                 {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
-                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                                {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %},
+                                {% if col.proto3_optional %} true {% else %} false {% endif %}
                             )
                         );
                     }
@@ -112,7 +117,8 @@ class plugin_api_impl : public plugin_api {
                             type_kind::{{ col.type_kind }},
                             nullptr,
                             {% if col.oneof_index is not none %} {{ col.oneof_index }} {% else %} std::nullopt {% endif %},
-                            {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %}
+                            {% if col.oneof_name is not none %} "{{ col.oneof_name }}" {% else %} std::nullopt {% endif %},
+                            {% if col.proto3_optional %} true {% else %} false {% endif %}
                         )
                     );
 {% endif %}

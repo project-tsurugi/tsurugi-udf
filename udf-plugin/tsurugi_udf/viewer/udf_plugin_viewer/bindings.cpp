@@ -70,11 +70,15 @@ py::dict column_to_dict(const column_descriptor* col) {
     d["column_name"] = std::string(col->column_name());
     d["type_kind"] = type_kind_to_string(col->type_kind());
 
-    if(col->has_oneof()) {
-        d["oneof_index"] = py::cast(col->oneof_index().value());
-        d["oneof_name"] = py::cast(std::string(col->oneof_name().value()));
+    if(auto idx = col->oneof_index()) {
+        d["oneof_index"] = py::cast(*idx);
     } else {
         d["oneof_index"] = py::none();
+    }
+
+    if(auto name = col->oneof_name()) {
+        d["oneof_name"] = py::cast(std::string(*name));
+    } else {
         d["oneof_name"] = py::none();
     }
 

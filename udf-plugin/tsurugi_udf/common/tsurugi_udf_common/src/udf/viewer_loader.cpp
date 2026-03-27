@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <utility>
 
 namespace fs = std::filesystem;
@@ -37,14 +38,24 @@ bool viewer_loader::load(std::string_view so_path) {
     last_error_message_.clear();
 
     fs::path path(so_path);
+    std::error_code ec;
 
-    if(! fs::exists(path)) {
-        set_error("Shared library not found: " + std::string(so_path));
+    if(! fs::exists(path, ec)) {
+        if(ec) {
+            set_error("Failed to check file existence: " + ec.message() + " (" + std::string(so_path) + ")");
+        } else {
+            set_error("Shared library not found: " + std::string(so_path));
+        }
         return false;
     }
 
-    if(! fs::is_regular_file(path)) {
-        set_error("Path is not a regular file: " + std::string(so_path));
+    ec.clear();
+    if(! fs::is_regular_file(path, ec)) {
+        if(ec) {
+            set_error("Failed to check file type: " + ec.message() + " (" + std::string(so_path) + ")");
+        } else {
+            set_error("Path is not a regular file: " + std::string(so_path));
+        }
         return false;
     }
 

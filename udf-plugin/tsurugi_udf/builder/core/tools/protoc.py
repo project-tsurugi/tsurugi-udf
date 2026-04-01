@@ -32,18 +32,24 @@ def _get_protoc_version(protoc: str = "protoc") -> tuple[int, int, int]:
 
 
 def _proto3_optional_extra_args(protoc: str = "protoc") -> list[str]:
-    major, minor, patch = _get_protoc_version(protoc)
+    try:
+        major, minor, patch = _get_protoc_version(protoc)
+    except Exception as e:
+        raise CommandFailedError(
+            cmd=[protoc, "--version"],
+            returncode=-1,
+            stderr=str(e),
+        ) from e
 
-    # proto3 optional was introduced experimentally in 3.12
     if major < 3 or (major == 3 and minor < 12):
-        raise RuntimeError(
-            f"protoc {major}.{minor}.{patch} does not support proto3 optional"
+        raise CommandFailedError(
+            cmd=[protoc, "--version"],
+            returncode=0,
+            stderr=f"protoc {major}.{minor}.{patch} does not support proto3 optional",
         )
 
-    # only 3.12.x - 3.14.x require the experimental flag
-    if major == 3 and 12 <= minor < 15:
+    if major == 3 and minor < 15:
         return ["--experimental_allow_proto3_optional"]
-
     return []
 
 

@@ -76,6 +76,8 @@ public:
     [[nodiscard]] virtual bool has_oneof() const noexcept = 0;
     [[nodiscard]] virtual std::optional<oneof_index_type> oneof_index() const noexcept = 0;
     [[nodiscard]] virtual std::optional<std::string_view> oneof_name() const noexcept = 0;
+    [[nodiscard]] virtual bool optional() const noexcept = 0;
+    [[nodiscard]] virtual bool proto3_optional() const noexcept = 0;
 };
 class record_descriptor {
 public:

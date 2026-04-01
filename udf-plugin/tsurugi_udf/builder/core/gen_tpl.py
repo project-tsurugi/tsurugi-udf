@@ -96,6 +96,7 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
                         "nested_record": None,
                         "oneof_index": None,
                         "oneof_name": None,
+                        "proto3_optional": False,
                     }
                 ],
             }
@@ -115,6 +116,7 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
                     "nested_record": nested,
                     "oneof_index": oneof_idx,
                     "oneof_name": oneof_name,
+                    "proto3_optional": field.proto3_optional,
                 }
             )
         return {"record_name": type_name.lstrip("."), "columns": cols}

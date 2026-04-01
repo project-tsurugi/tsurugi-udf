@@ -6,8 +6,8 @@
 #include <stdexcept>
 #include <thread>
 
-#include "generic_record_impl.h"
 #include "generic_client_context.h"
+#include "generic_record_impl.h"
 
 using grpc::Status;
 using namespace plugin::udf;
@@ -16,16 +16,18 @@ using namespace plugin::udf;
 // Macros (recursive code)
 // =======================
 
-{# 入力: request(generic_record)→req(Proto) に詰める #}
+{# Builds a protobuf request from a flattened generic_record. #}
 {% macro emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
     {% set oneof_groups = [] %}
     {% for col in record.columns %}
-        {% if col.oneof_index is not none and col.oneof_index not in oneof_groups %}
+        {% if col.proto3_optional and col.oneof_index is not none and col.oneof_index not in oneof_groups %}
+            {# proto3 optional uses a synthetic oneof internally, but it is not treated as a user-level oneof here. #}
+        {% elif col.oneof_index is not none and col.oneof_index not in oneof_groups %}
             {% set _ = oneof_groups.append(col.oneof_index) %}
         {% endif %}
     {% endfor %}
 
-    {# oneofグループのフラグ #}
+    {# Tracks whether exactly one field is selected in each real oneof group. #}
     {% for g in oneof_groups %}
 bool oneof_group{{ g }}_selected = false;
 int oneof_group{{ g }}_count = 0;
@@ -39,13 +41,21 @@ int oneof_group{{ g }}_count = 0;
             }
         {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-            {% if col.oneof_index is not none %}
+            {% if col.proto3_optional and col.oneof_index is not none %}
+                // For proto3 optional fields, set the field only when a value is present.
+                // If the value is nullopt, leave the protobuf field unset.
+                if (arg{{ cursor_prefix }}{{ col.index }}) {
+                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                }
+            {% elif col.oneof_index is not none %}
+                // For real oneof fields, require exactly one selected member on input.
                 if (arg{{ cursor_prefix }}{{ col.index }}) {
                     {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
                     oneof_group{{ col.oneof_index }}_selected = true;
                     oneof_group{{ col.oneof_index }}_count++;
                 }
             {% else %}
+                // For regular non-optional fields, a value is required.
                 if (!arg{{ cursor_prefix }}{{ col.index }}) {
                     throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
                 }
@@ -54,7 +64,7 @@ int oneof_group{{ g }}_count = 0;
         {% endif %}
     {% endfor %}
 
-    {# oneofグループチェック #}
+    {# Enforces the current input policy for real oneof groups: exactly one field must be selected. #}
     {% for g in oneof_groups %}
 if (!oneof_group{{ g }}_selected) {
     throw std::runtime_error("No field selected in oneof group {{ g }}");
@@ -65,7 +75,7 @@ if (oneof_group{{ g }}_count > 1) {
     {% endfor %}
 {%- endmacro %}
 
-{# 出力: rep(Proto)→response(generic_record) にフラットに積む #}
+{# Writes a protobuf response into a flattened generic_record. #}
 {% macro emit_response_add(parent, record, parent_type, is_pointer=False) -%}
     {% for col in record.columns %}
         {% if col.nested_record %}
@@ -74,11 +84,25 @@ if (oneof_group{{ g }}_count > 1) {
                 {{ emit_response_add("nested", col.nested_record, parent_type, False) }}
             }
         {% else %}
-            {% if col.oneof_index is not none %}
+            {% if col.proto3_optional and col.oneof_index is not none %}
+                // Preserve column order for proto3 optional fields.
+                // If the field is unset, emit a typed null placeholder.
+                if ({{ parent }}.has_{{ col.column_name }}()) {
+                    response.add_{{ fetch_add_name(col.type_kind) }}(
+                        {{ parent }}.{{ col.column_name }}()
+                    );
+                } else {
+                    response.add_{{ fetch_add_name(col.type_kind) }}_null();
+                }
+            {% elif col.oneof_index is not none %}
+                // Preserve column order for real oneof fields as well.
+                // Emit the selected member value, and emit typed null for non-selected members.
                 if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
                     response.add_{{ fetch_add_name(col.type_kind) }}(
                         {{ parent }}.{{ col.column_name }}()
                     );
+                } else {
+                    response.add_{{ fetch_add_name(col.type_kind) }}_null();
                 }
             {% else %}
                 response.add_{{ fetch_add_name(col.type_kind) }}(
@@ -89,10 +113,22 @@ if (oneof_group{{ g }}_count > 1) {
     {% endfor %}
 {%- endmacro %}
 
-{# =========================================================
-   async emit_setters
-   ========================================================= #}
+{# Builds an async protobuf request from a flattened generic_record. #}
 {% macro async_emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
+    {% set oneof_groups = [] %}
+    {% for col in record.columns %}
+        {% if col.proto3_optional and col.oneof_index is not none and col.oneof_index not in oneof_groups %}
+            {# proto3 optional uses a synthetic oneof internally, but it is not treated as a user-level oneof here. #}
+        {% elif col.oneof_index is not none and col.oneof_index not in oneof_groups %}
+            {% set _ = oneof_groups.append(col.oneof_index) %}
+        {% endif %}
+    {% endfor %}
+
+    {% for g in oneof_groups %}
+bool oneof_group{{ g }}_selected = false;
+int oneof_group{{ g }}_count = 0;
+    {% endfor %}
+
     {% for col in record.columns %}
         {% if col.nested_record %}
             {
@@ -102,17 +138,40 @@ if (oneof_group{{ g }}_count > 1) {
             }
         {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-            if (arg{{ cursor_prefix }}{{ col.index }}) {
+            {% if col.proto3_optional and col.oneof_index is not none %}
+                // For proto3 optional fields, set the field only when a value is present.
+                if (arg{{ cursor_prefix }}{{ col.index }}) {
+                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                }
+            {% elif col.oneof_index is not none %}
+                // For real oneof fields, keep the same input policy in async mode:
+                // exactly one member must be provided.
+                if (arg{{ cursor_prefix }}{{ col.index }}) {
+                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                    oneof_group{{ col.oneof_index }}_selected = true;
+                    oneof_group{{ col.oneof_index }}_count++;
+                }
+            {% else %}
+                // For regular non-optional fields, a value is required.
+                if (!arg{{ cursor_prefix }}{{ col.index }}) {
+                    throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
+                }
                 {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
-            }
+            {% endif %}
         {% endif %}
+    {% endfor %}
+
+    {% for g in oneof_groups %}
+if (!oneof_group{{ g }}_selected) {
+    throw std::runtime_error("No field selected in oneof group {{ g }}");
+}
+if (oneof_group{{ g }}_count > 1) {
+    throw std::runtime_error("Multiple fields selected in oneof group {{ g }}");
+}
     {% endfor %}
 {%- endmacro %}
 
-
-{# =========================================================
-   async : rep(Proto) → generic_record_impl
-   ========================================================= #}
+{# Writes an async streaming protobuf response into a flattened generic_record_impl. #}
 {% macro emit_response_add_streaming(parent, out_ptr, record, parent_type) -%}
 {% for col in record.columns %}
     {% if col.nested_record %}
@@ -121,12 +180,24 @@ if (oneof_group{{ g }}_count > 1) {
         {{ emit_response_add_streaming("nested", out_ptr, col.nested_record, parent_type) }}
     }
     {% else %}
-        {% if col.oneof_index is not none %}
+        {% if col.proto3_optional and col.oneof_index is not none %}
+        // Preserve column order for proto3 optional fields.
+        if ({{ parent }}.has_{{ col.column_name }}()) {
+            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
+                {{ parent }}.{{ col.column_name }}()
+            );
+        } else {
+            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}_null();
+        }
+        {% elif col.oneof_index is not none %}
+        // Preserve column order for real oneof fields as well.
         if ({{ parent }}.{{ col.oneof_name }}_case()
             == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
             {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
                 {{ parent }}.{{ col.column_name }}()
             );
+        } else {
+            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}_null();
         }
         {% else %}
         {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
@@ -179,15 +250,14 @@ void rpc_client::call(plugin::udf::generic_client_context& generic_client_contex
             {% set parent_type = fn.output_record.record_name | replace('.', '::') %}
             {{ fn.output_record.record_name | replace('.', '::') }}  rep;
 
-            // Build request from generic_record (flatten -> nested)
+            // Build the protobuf request from the flattened generic_record.
             {{ emit_setters("req", fn.input_record, "", False) }}
 
-            // Call
+            // Invoke the RPC and translate the protobuf response back into generic_record.
             {% if fn.function_kind == "unary" %}
             Status status = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
 
             if (status.ok()) {
-                // Write response into generic_record (nested -> flatten)
                 {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
             } else {
                 response.set_error(error_info(
@@ -219,6 +289,7 @@ void rpc_client::call(plugin::udf::generic_client_context& generic_client_contex
             throw std::runtime_error("Unsupported function_index");
     }
 }
+
 // =======================
 // Async server streaming
 // =======================

@@ -164,7 +164,7 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
         pkg = {
             "package_name": pkg_name,
             "file_name": fd.name,
-            "version": {"major": 0, "minor": 3, "patch": 0},
+            "version": {"major": 0, "minor": 3, "patch": 1},
             "services": services,
         }
         out.setdefault(fd.name, []).append(pkg)

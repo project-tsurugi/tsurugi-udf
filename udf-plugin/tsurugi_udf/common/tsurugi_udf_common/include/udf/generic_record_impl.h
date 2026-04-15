@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 #pragma once
 #include <cstdint>
+#include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>
@@ -52,6 +53,8 @@ public:
     [[nodiscard]] std::optional<error_info> const& error() const noexcept override;
     void set_error(error_info const& status) override;
     void assign_from(generic_record_impl&& other) noexcept;
+    [[nodiscard]] std::string debug_string() const;
+    void dump(std::ostream& os) const;
 
 private:
 
@@ -73,6 +76,8 @@ public:
     [[nodiscard]] std::optional<double> fetch_double() override;
     [[nodiscard]] std::optional<std::string> fetch_string() override;
     [[nodiscard]] bool has_next() override;
+    [[nodiscard]] runtime_type_kind current_kind() const override;
+    [[nodiscard]] bool current_is_null() const override;
 
 private:
 
@@ -102,6 +107,8 @@ public:
 
     status_type try_next(generic_record& record) override;
     status_type next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) override;
+    [[nodiscard]] std::string debug_string() const;
+    friend std::ostream& operator<<(std::ostream& os, generic_record_impl const& record);
 
 private:
 
@@ -114,5 +121,7 @@ private:
     std::mutex mutex_;
     std::condition_variable cv_;
 };
+
+std::ostream& operator<<(std::ostream& os, generic_record_impl const& record);
 
 }  // namespace plugin::udf

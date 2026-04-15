@@ -82,6 +82,22 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
         18: "sint8",
         11: "message",
     }
+    RUNTIME_KIND = {
+        "boolean": "boolean",
+        "int4": "int4",
+        "fixed4": "uint4",
+        "uint4": "uint4",
+        "sint4": "int4",
+        "sfixed4": "int4",
+        "int8": "int8",
+        "fixed8": "uint8",
+        "uint8": "uint8",
+        "sint8": "int8",
+        "sfixed8": "int8",
+        "float4": "float4",
+        "float8": "float8",
+        "string": "string",
+    }
 
     def resolve_record(type_name: str) -> dict:
         d = message_type_map.get(type_name)
@@ -101,6 +117,8 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
                 ],
             }
         cols = []
+        oneof_groups = []
+        oneof_groups_by_index = {}
         for idx, field in enumerate(d.field):
             kind = FIELD_TYPE.get(field.type, f"TYPE_{field.type}")
             oneof_idx = field.oneof_index if field.HasField("oneof_index") else None
@@ -108,18 +126,52 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
             nested = None
             if kind == "message":
                 nested = resolve_record(field.type_name)
-            cols.append(
-                {
-                    "index": idx,
-                    "column_name": field.name,
-                    "type_kind": kind,
-                    "nested_record": nested,
-                    "oneof_index": oneof_idx,
-                    "oneof_name": oneof_name,
-                    "proto3_optional": field.proto3_optional,
-                }
-            )
-        return {"record_name": type_name.lstrip("."), "columns": cols}
+            runtime_kind = RUNTIME_KIND.get(kind)
+            is_user_oneof_member = oneof_idx is not None and not field.proto3_optional
+            col = {
+                "index": idx,
+                "column_name": field.name,
+                "type_kind": kind,
+                "runtime_kind": runtime_kind,
+                "nested_record": nested,
+                "oneof_index": oneof_idx,
+                "oneof_name": oneof_name,
+                "proto3_optional": field.proto3_optional,
+                "is_user_oneof_member": is_user_oneof_member,
+            }
+            cols.append(col)
+            if is_user_oneof_member:
+                group = oneof_groups_by_index.get(oneof_idx)
+                if group is None:
+                    group = {
+                        "oneof_index": oneof_idx,
+                        "oneof_name": oneof_name,
+                        "members": [],
+                    }
+                    oneof_groups_by_index[oneof_idx] = group
+                    oneof_groups.append(group)
+                group["members"].append(col)
+
+        for group in oneof_groups:
+            seen_runtime_kinds = {}
+            for member in group["members"]:
+                runtime_kind = member["runtime_kind"]
+                if runtime_kind is None:
+                    raise ValueError(
+                        f"Unsupported oneof member type '{member['type_kind']}' in {type_name}.{member['column_name']}"
+                    )
+                other = seen_runtime_kinds.get(runtime_kind)
+                if other is not None:
+                    raise ValueError(
+                        f"Ambiguous oneof runtime kind '{runtime_kind}' in {type_name}.{group['oneof_name']}: {other} and {member['column_name']}"
+                    )
+                seen_runtime_kinds[runtime_kind] = member["column_name"]
+
+        return {
+            "record_name": type_name.lstrip("."),
+            "columns": cols,
+            "oneof_groups": oneof_groups,
+        }
 
     service_counter = 0
     function_counter = 0

@@ -24,7 +24,7 @@ using namespace plugin::udf;
 // =======================
 
 {# Builds a protobuf request from a flattened generic_record. #}
-{% macro emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
+{% macro emit_setters(parent, record, cursor_prefix, log_tag="", is_pointer=False) -%}
     {% set oneof_groups = [] %}
     {% for col in record.columns %}
         {% if col.proto3_optional and col.oneof_index is not none and col.oneof_index not in oneof_groups %}
@@ -42,14 +42,14 @@ int oneof_group{{ g }}_count = 0;
     {% for col in record.columns %}
         {% if col.nested_record %}
             {
-                RPC_LOG("[rpc_client] nested field '{{ col.column_name }}' begin");
+                RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' begin");
                 {% set nested_scalar_vars = [] %}
                 {% for nested_col in col.nested_record.columns %}
                     {% if not nested_col.nested_record %}
                         {% set var_name = "arg" ~ cursor_prefix ~ col.index ~ "_" ~ nested_col.index %}
                         {% set _ = nested_scalar_vars.append((nested_col, var_name)) %}
 auto {{ var_name }} = cursor->fetch_{{ fetch_add_name(nested_col.type_kind) }}();
-RPC_LOG("[rpc_client] fetch {{ cursor_prefix }}{{ col.index }}_{{ nested_col.index }} '{{ nested_col.column_name }}' = "
+RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ nested_col.index }} '{{ nested_col.column_name }}' = "
           << ({{ var_name }} ? "SET" : "NULL"));
                     {% endif %}
                 {% endfor %}
@@ -65,65 +65,65 @@ RPC_LOG("[rpc_client] fetch {{ cursor_prefix }}{{ col.index }}_{{ nested_col.ind
                 }
                 {% endfor %}
 
-                RPC_LOG("[rpc_client] nested field '{{ col.column_name }}' summary: all_absent="
+                RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' summary: all_absent="
                           << (nested_all_absent ? "true" : "false")
                           << ", all_present=" << (nested_all_present ? "true" : "false"));
 
                 if (nested_all_absent) {
-                    RPC_LOG("[rpc_client] nested field '{{ col.column_name }}' left unset");
+                    RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' left unset");
                 } else if (!nested_all_present) {
-                    RPC_LOG("[rpc_client] nested field '{{ col.column_name }}' incomplete input");
+                    RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' incomplete input");
                     throw std::runtime_error("Incomplete input for nested field '{{ col.column_name }}'");
                 } else {
                     auto* nested = {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
-                    RPC_LOG("[rpc_client] nested field '{{ col.column_name }}' materialized");
+                    RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' materialized");
 
                     {% for nested_col, var_name in nested_scalar_vars %}
                     nested->set_{{ nested_col.column_name }}(*{{ var_name }});
-                    RPC_LOG("[rpc_client]   set nested '{{ nested_col.column_name }}'");
+                    RPC_LOG("[rpc_client]{{ log_tag }}   set nested '{{ nested_col.column_name }}'");
                     {% endfor %}
 
                     {% for nested_col in col.nested_record.columns %}
                         {% if nested_col.nested_record %}
-                    {{ emit_setters("nested", nested_col.nested_record, cursor_prefix ~ col.index ~ "_" ~ nested_col.index ~ "_", True) }}
+                    {{ emit_setters("nested", nested_col.nested_record, cursor_prefix ~ col.index ~ "_" ~ nested_col.index ~ "_", log_tag, True) }}
                         {% endif %}
                     {% endfor %}
                 }
-                RPC_LOG("[rpc_client] nested field '{{ col.column_name }}' end");
+                RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' end");
             }
         {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-            RPC_LOG("[rpc_client] fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' = "
+            RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' = "
                       << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
             {% if col.proto3_optional and col.oneof_index is not none %}
                 if (arg{{ cursor_prefix }}{{ col.index }}) {
                     {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
-                    RPC_LOG("[rpc_client]   set proto3 optional '{{ col.column_name }}'");
+                    RPC_LOG("[rpc_client]{{ log_tag }}   set proto3 optional '{{ col.column_name }}'");
                 } else {
-                    RPC_LOG("[rpc_client]   leave proto3 optional '{{ col.column_name }}' unset");
+                    RPC_LOG("[rpc_client]{{ log_tag }}   leave proto3 optional '{{ col.column_name }}' unset");
                 }
             {% elif col.oneof_index is not none %}
                 if (arg{{ cursor_prefix }}{{ col.index }}) {
                     {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
                     oneof_group{{ col.oneof_index }}_selected = true;
                     oneof_group{{ col.oneof_index }}_count++;
-                    RPC_LOG("[rpc_client]   set oneof '{{ col.column_name }}'");
+                    RPC_LOG("[rpc_client]{{ log_tag }}   set oneof '{{ col.column_name }}'");
                 } else {
-                    RPC_LOG("[rpc_client]   oneof '{{ col.column_name }}' not selected");
+                    RPC_LOG("[rpc_client]{{ log_tag }}   oneof '{{ col.column_name }}' not selected");
                 }
             {% else %}
                 if (!arg{{ cursor_prefix }}{{ col.index }}) {
-                    RPC_LOG("[rpc_client]   missing required '{{ col.column_name }}'");
+                    RPC_LOG("[rpc_client]{{ log_tag }}   missing required '{{ col.column_name }}'");
                     throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
                 }
                 {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
-                RPC_LOG("[rpc_client]   set required '{{ col.column_name }}'");
+                RPC_LOG("[rpc_client]{{ log_tag }}   set required '{{ col.column_name }}'");
             {% endif %}
         {% endif %}
     {% endfor %}
 
     {% for g in oneof_groups %}
-RPC_LOG("[rpc_client] oneof group {{ g }} summary: selected="
+RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ g }} summary: selected="
           << (oneof_group{{ g }}_selected ? "true" : "false")
           << ", count=" << oneof_group{{ g }}_count);
 if (!oneof_group{{ g }}_selected) {
@@ -169,117 +169,6 @@ if (oneof_group{{ g }}_count > 1) {
     {% endfor %}
 {%- endmacro %}
 
-{# Builds an async protobuf request from a flattened generic_record. #}
-{% macro async_emit_setters(parent, record, cursor_prefix, is_pointer=False) -%}
-    {% set oneof_groups = [] %}
-    {% for col in record.columns %}
-        {% if col.proto3_optional and col.oneof_index is not none and col.oneof_index not in oneof_groups %}
-        {% elif col.oneof_index is not none and col.oneof_index not in oneof_groups %}
-            {% set _ = oneof_groups.append(col.oneof_index) %}
-        {% endif %}
-    {% endfor %}
-
-    {% for g in oneof_groups %}
-bool oneof_group{{ g }}_selected = false;
-int oneof_group{{ g }}_count = 0;
-    {% endfor %}
-
-    {% for col in record.columns %}
-        {% if col.nested_record %}
-            {
-                RPC_LOG("[rpc_client][async] nested field '{{ col.column_name }}' begin");
-                {% set nested_scalar_vars = [] %}
-                {% for nested_col in col.nested_record.columns %}
-                    {% if not nested_col.nested_record %}
-                        {% set var_name = "arg" ~ cursor_prefix ~ col.index ~ "_" ~ nested_col.index %}
-                        {% set _ = nested_scalar_vars.append((nested_col, var_name)) %}
-auto {{ var_name }} = cursor->fetch_{{ fetch_add_name(nested_col.type_kind) }}();
-RPC_LOG("[rpc_client][async] fetch {{ cursor_prefix }}{{ col.index }}_{{ nested_col.index }} '{{ nested_col.column_name }}' = "
-          << ({{ var_name }} ? "SET" : "NULL"));
-                    {% endif %}
-                {% endfor %}
-
-                bool nested_all_absent = true;
-                bool nested_all_present = true;
-
-                {% for nested_col, var_name in nested_scalar_vars %}
-                if ({{ var_name }}) {
-                    nested_all_absent = false;
-                } else {
-                    nested_all_present = false;
-                }
-                {% endfor %}
-
-                RPC_LOG("[rpc_client][async] nested field '{{ col.column_name }}' summary: all_absent="
-                          << (nested_all_absent ? "true" : "false")
-                          << ", all_present=" << (nested_all_present ? "true" : "false"));
-
-                if (nested_all_absent) {
-                    RPC_LOG("[rpc_client][async] nested field '{{ col.column_name }}' left unset");
-                } else if (!nested_all_present) {
-                    RPC_LOG("[rpc_client][async] nested field '{{ col.column_name }}' incomplete input");
-                    throw std::runtime_error("Incomplete input for nested field '{{ col.column_name }}'");
-                } else {
-                    auto* nested =
-                        {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
-                    RPC_LOG("[rpc_client][async] nested field '{{ col.column_name }}' materialized");
-
-                    {% for nested_col, var_name in nested_scalar_vars %}
-                    nested->set_{{ nested_col.column_name }}(*{{ var_name }});
-                    RPC_LOG("[rpc_client][async]   set nested '{{ nested_col.column_name }}'");
-                    {% endfor %}
-
-                    {% for nested_col in col.nested_record.columns %}
-                        {% if nested_col.nested_record %}
-                    {{ async_emit_setters("nested", nested_col.nested_record, cursor_prefix ~ col.index ~ "_" ~ nested_col.index ~ "_", True) }}
-                        {% endif %}
-                    {% endfor %}
-                }
-                RPC_LOG("[rpc_client][async] nested field '{{ col.column_name }}' end");
-            }
-        {% else %}
-            auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-            RPC_LOG("[rpc_client][async] fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' = "
-                      << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
-            {% if col.proto3_optional and col.oneof_index is not none %}
-                if (arg{{ cursor_prefix }}{{ col.index }}) {
-                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
-                    RPC_LOG("[rpc_client][async]   set proto3 optional '{{ col.column_name }}'");
-                } else {
-                    RPC_LOG("[rpc_client][async]   leave proto3 optional '{{ col.column_name }}' unset");
-                }
-            {% elif col.oneof_index is not none %}
-                if (arg{{ cursor_prefix }}{{ col.index }}) {
-                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
-                    oneof_group{{ col.oneof_index }}_selected = true;
-                    oneof_group{{ col.oneof_index }}_count++;
-                    RPC_LOG("[rpc_client][async]   set oneof '{{ col.column_name }}'");
-                } else {
-                    RPC_LOG("[rpc_client][async]   oneof '{{ col.column_name }}' not selected");
-                }
-            {% else %}
-                if (!arg{{ cursor_prefix }}{{ col.index }}) {
-                    RPC_LOG("[rpc_client][async]   missing required '{{ col.column_name }}'");
-                    throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
-                }
-                {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
-                RPC_LOG("[rpc_client][async]   set required '{{ col.column_name }}'");
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-
-    {% for g in oneof_groups %}
-RPC_LOG("[rpc_client][async] oneof group {{ g }} summary: selected="
-          << (oneof_group{{ g }}_selected ? "true" : "false")
-          << ", count=" << oneof_group{{ g }}_count);
-if (!oneof_group{{ g }}_selected) {
-    throw std::runtime_error("No field selected in oneof group {{ g }}");
-}
-if (oneof_group{{ g }}_count > 1) {
-    throw std::runtime_error("Multiple fields selected in oneof group {{ g }}");
-}
-    {% endfor %}
-{%- endmacro %}
 
 {# Writes an async streaming protobuf response into a flattened generic_record_impl. #}
 {% macro emit_response_add_streaming(parent, out_ptr, record, parent_type) -%}
@@ -359,7 +248,7 @@ void rpc_client::call(plugin::udf::generic_client_context& generic_client_contex
             {{ fn.output_record.record_name | replace('.', '::') }}  rep;
 
             RPC_LOG("[rpc_client] build request begin function_index={{ fn.function_index }} function_name={{ fn.function_name }}");
-            {{ emit_setters("req", fn.input_record, "", False) }}
+            {{ emit_setters("req", fn.input_record, "", "", False) }}
             RPC_LOG("[rpc_client] build request end function_index={{ fn.function_index }} function_name={{ fn.function_name }}");
 
             {% if fn.function_kind == "unary" %}
@@ -443,7 +332,7 @@ rpc_client::call_server_streaming_async(
         request_type req;
         try {
             RPC_LOG("[rpc_client][async] build request begin function_index={{ fn.function_index }} function_name={{ fn.function_name }}");
-            {{ async_emit_setters("req", fn.input_record, "", False) }}
+            {{ emit_setters("req", fn.input_record, "", "[async]", False) }}
             RPC_LOG("[rpc_client][async] build request end function_index={{ fn.function_index }} function_name={{ fn.function_name }}");
         } catch (const std::exception& e) {
             auto err = std::make_unique<generic_record_impl>();

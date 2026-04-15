@@ -1,3 +1,4 @@
+
 #include "rpc_client.h"
 #include "{{ proto_base_name }}.grpc.pb.h"
 #include "{{ proto_base_name }}.pb.h"
@@ -23,18 +24,103 @@ using namespace plugin::udf;
 // Macros (recursive code)
 // =======================
 
+{% macro emit_special_nested_setter(parent, col, cursor_prefix, log_tag="", is_pointer=False) -%}
+    auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ col.special_fetch_name }}();
+    RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} special '{{ col.column_name }}' = "
+              << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
+    if (arg{{ cursor_prefix }}{{ col.index }}) {
+        auto* nested = {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
+        {% for field in col.special_fields %}
+        nested->set_{{ field.name }}(arg{{ cursor_prefix }}{{ col.index }}->{{ field.name }});
+        {% endfor %}
+        RPC_LOG("[rpc_client]{{ log_tag }}   materialized special '{{ col.column_name }}'");
+    } else {
+        RPC_LOG("[rpc_client]{{ log_tag }}   leave special '{{ col.column_name }}' unset");
+    }
+{%- endmacro %}
+
+{% macro emit_special_oneof_setter(parent, col, cursor_prefix, log_tag="", is_pointer=False) -%}
+    auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ col.special_fetch_name }}();
+    RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} special oneof '{{ col.column_name }}' = "
+              << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
+    if (!arg{{ cursor_prefix }}{{ col.index }}) {
+        throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
+    }
+    auto* nested = {{ parent }}{% if is_pointer %}->mutable_{{ col.column_name }}(){% else %}.mutable_{{ col.column_name }}(){% endif %};
+    {% for field in col.special_fields %}
+    nested->set_{{ field.name }}(arg{{ cursor_prefix }}{{ col.index }}->{{ field.name }});
+    {% endfor %}
+{%- endmacro %}
+
+{% macro emit_special_response_add(parent, out, col, out_is_pointer=False, is_pointer=False) -%}
+    {% if col.oneof_index is not none and not col.proto3_optional %}
+        if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
+            const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
+            {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ col.special_fetch_name }}(
+                plugin::udf::{{ col.cpp_value_type }}{
+                    {% for field in col.special_fields -%}
+                    nested.{{ field.getter }}{% if not loop.last %}, {% endif %}
+                    {%- endfor %}
+                }
+            );
+        } else {
+            {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ col.special_fetch_name }}_null();
+        }
+    {% else %}
+        if ({{ parent }}.has_{{ col.column_name }}()) {
+            const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
+            {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ col.special_fetch_name }}(
+                plugin::udf::{{ col.cpp_value_type }}{
+                    {% for field in col.special_fields -%}
+                    nested.{{ field.getter }}{% if not loop.last %}, {% endif %}
+                    {%- endfor %}
+                }
+            );
+        } else {
+            {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ col.special_fetch_name }}_null();
+        }
+    {% endif %}
+{%- endmacro %}
+
+
+
+{% macro emit_scalar_proto_value(expr, col) -%}
+    {% if col.type_kind == "bytes" -%}
+        {{ expr }}->value
+    {%- else -%}
+        *{{ expr }}
+    {%- endif %}
+{%- endmacro %}
+
+{% macro emit_scalar_record_add(out, col, value_expr, out_is_pointer=False) -%}
+    {% if col.type_kind == "bytes" %}
+        {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_bytes(
+            plugin::udf::bytes_value{ {{ value_expr }} }
+        );
+    {% else %}
+        {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
+            {{ value_expr }}
+        );
+    {% endif %}
+{%- endmacro %}
 {# Builds a protobuf request from a flattened generic_record. #}
 {% macro emit_setters(parent, record, cursor_prefix, log_tag="", is_pointer=False) -%}
     {% for col in record.columns %}
-        {% if col.nested_record %}
+        {% if col.nested_record and col.special_record_kind %}
+            {
+                RPC_LOG("[rpc_client]{{ log_tag }} special field '{{ col.column_name }}' begin");
+                {{ emit_special_nested_setter(parent, col, cursor_prefix, log_tag, is_pointer) }}
+                RPC_LOG("[rpc_client]{{ log_tag }} special field '{{ col.column_name }}' end");
+            }
+        {% elif col.nested_record %}
             {
                 RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' begin");
                 {% set nested_scalar_vars = [] %}
                 {% for nested_col in col.nested_record.columns %}
-                    {% if not nested_col.nested_record %}
+                    {% if not nested_col.nested_record or nested_col.special_record_kind %}
                         {% set var_name = "arg" ~ cursor_prefix ~ col.index ~ "_" ~ nested_col.index %}
                         {% set _ = nested_scalar_vars.append((nested_col, var_name)) %}
-auto {{ var_name }} = cursor->fetch_{{ fetch_add_name(nested_col.type_kind) }}();
+auto {{ var_name }} = cursor->fetch_{% if nested_col.special_record_kind %}{{ nested_col.special_fetch_name }}{% else %}{{ fetch_add_name(nested_col.type_kind) }}{% endif %}();
 RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ nested_col.index }} '{{ nested_col.column_name }}' = "
           << ({{ var_name }} ? "SET" : "NULL"));
                     {% endif %}
@@ -65,12 +151,21 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                     RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' materialized");
 
                     {% for nested_col, var_name in nested_scalar_vars %}
+                        {% if nested_col.special_record_kind %}
+                    {
+                        auto* nested_special = nested->mutable_{{ nested_col.column_name }}();
+                            {% for field in nested_col.special_fields %}
+                        nested_special->set_{{ field.name }}({{ var_name }}->{{ field.name }});
+                            {% endfor %}
+                    }
+                        {% else %}
                     nested->set_{{ nested_col.column_name }}(*{{ var_name }});
+                        {% endif %}
                     RPC_LOG("[rpc_client]{{ log_tag }}   set nested '{{ nested_col.column_name }}'");
                     {% endfor %}
 
                     {% for nested_col in col.nested_record.columns %}
-                        {% if nested_col.nested_record %}
+                        {% if nested_col.nested_record and not nested_col.special_record_kind %}
                     {{ emit_setters("nested", nested_col.nested_record, cursor_prefix ~ col.index ~ "_" ~ nested_col.index ~ "_", log_tag, True) }}
                         {% endif %}
                     {% endfor %}
@@ -85,7 +180,7 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                       << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
             {% if col.proto3_optional and col.oneof_index is not none %}
                 if (arg{{ cursor_prefix }}{{ col.index }}) {
-                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                    {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% else %}.set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% endif %};
                     RPC_LOG("[rpc_client]{{ log_tag }}   set proto3 optional '{{ col.column_name }}'");
                 } else {
                     RPC_LOG("[rpc_client]{{ log_tag }}   leave proto3 optional '{{ col.column_name }}' unset");
@@ -95,7 +190,7 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                     RPC_LOG("[rpc_client]{{ log_tag }}   missing required '{{ col.column_name }}'");
                     throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
                 }
-                {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+                {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% else %}.set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% endif %};
                 RPC_LOG("[rpc_client]{{ log_tag }}   set required '{{ col.column_name }}'");
             {% endif %}
         {% endif %}
@@ -115,13 +210,17 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
         bool oneof_group_matched = false;
         {% for col in group.members %}
         if (!oneof_group_matched && current_kind == runtime_type_kind::{{ col.runtime_kind }}) {
+            {% if col.special_record_kind %}
+            {{ emit_special_oneof_setter(parent, col, cursor_prefix, log_tag, is_pointer) }}
+            {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
             RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' for oneof '{{ group.oneof_name }}' = "
                       << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
             if (!arg{{ cursor_prefix }}{{ col.index }}) {
                 throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
             }
-            {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% else %}.set_{{ col.column_name }}(*arg{{ cursor_prefix }}{{ col.index }}){% endif %};
+            {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% else %}.set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% endif %};
+            {% endif %}
             oneof_group_matched = true;
             RPC_LOG("[rpc_client]{{ log_tag }}   set oneof '{{ col.column_name }}'");
         }
@@ -138,7 +237,9 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
 {# Writes a protobuf response into a flattened generic_record target. #}
 {% macro emit_response_add(parent, out, record, parent_type, out_is_pointer=False, is_pointer=False) -%}
     {% for col in record.columns %}
-        {% if col.nested_record %}
+        {% if col.nested_record and col.special_record_kind %}
+            {{ emit_special_response_add(parent, out, col, out_is_pointer, is_pointer) }}
+        {% elif col.nested_record %}
             {
                 const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
                 {{ emit_response_add("nested", out, col.nested_record, parent_type, out_is_pointer, False) }}
@@ -146,17 +247,13 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
         {% else %}
             {% if col.proto3_optional and col.oneof_index is not none %}
                 if ({{ parent }}.has_{{ col.column_name }}()) {
-                    {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
-                        {{ parent }}.{{ col.column_name }}()
-                    );
+                    {{ emit_scalar_record_add(out, col, parent ~ '.' ~ col.column_name ~ '()', out_is_pointer) }}
                 } else {
                     {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}_null();
                 }
             {% elif col.oneof_index is not none %}
                 if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
-                    {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
-                        {{ parent }}.{{ col.column_name }}()
-                    );
+                    {{ emit_scalar_record_add(out, col, parent ~ '.' ~ col.column_name ~ '()', out_is_pointer) }}
                 } else {
                     {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}_null();
                 }

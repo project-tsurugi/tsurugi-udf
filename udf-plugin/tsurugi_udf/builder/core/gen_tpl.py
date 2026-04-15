@@ -13,6 +13,75 @@ TEMPLATE = {
     "rpc_client_factory.cpp.j2": "rpc_client_factory.cpp",
 }
 
+SPECIAL_RECORDS = {
+    "tsurugidb.udf.Decimal": {
+        "special_record_kind": "decimal",
+        "special_fetch_name": "decimal",
+        "cpp_value_type": "decimal_value",
+        "fields": [
+            {"name": "unscaled_value", "getter": "unscaled_value()"},
+            {"name": "exponent", "getter": "exponent()"},
+        ],
+    },
+    "tsurugidb.udf.Date": {
+        "special_record_kind": "date",
+        "special_fetch_name": "date",
+        "cpp_value_type": "date_value",
+        "fields": [
+            {"name": "days", "getter": "days()"},
+        ],
+    },
+    "tsurugidb.udf.LocalTime": {
+        "special_record_kind": "local_time",
+        "special_fetch_name": "local_time",
+        "cpp_value_type": "local_time_value",
+        "fields": [
+            {"name": "nanos", "getter": "nanos()"},
+        ],
+    },
+    "tsurugidb.udf.LocalDatetime": {
+        "special_record_kind": "local_datetime",
+        "special_fetch_name": "local_datetime",
+        "cpp_value_type": "local_datetime_value",
+        "fields": [
+            {"name": "offset_seconds", "getter": "offset_seconds()"},
+            {"name": "nano_adjustment", "getter": "nano_adjustment()"},
+        ],
+    },
+    "tsurugidb.udf.OffsetDatetime": {
+        "special_record_kind": "offset_datetime",
+        "special_fetch_name": "offset_datetime",
+        "cpp_value_type": "offset_datetime_value",
+        "fields": [
+            {"name": "offset_seconds", "getter": "offset_seconds()"},
+            {"name": "nano_adjustment", "getter": "nano_adjustment()"},
+            {"name": "time_zone_offset", "getter": "time_zone_offset()"},
+        ],
+    },
+    "tsurugidb.udf.BlobReference": {
+        "special_record_kind": "blob_reference",
+        "special_fetch_name": "blob_reference",
+        "cpp_value_type": "blob_reference_value",
+        "fields": [
+            {"name": "storage_id", "getter": "storage_id()"},
+            {"name": "object_id", "getter": "object_id()"},
+            {"name": "tag", "getter": "tag()"},
+            {"name": "provisioned", "getter": "provisioned()"},
+        ],
+    },
+    "tsurugidb.udf.ClobReference": {
+        "special_record_kind": "clob_reference",
+        "special_fetch_name": "clob_reference",
+        "cpp_value_type": "clob_reference_value",
+        "fields": [
+            {"name": "storage_id", "getter": "storage_id()"},
+            {"name": "object_id", "getter": "object_id()"},
+            {"name": "tag", "getter": "tag()"},
+            {"name": "provisioned", "getter": "provisioned()"},
+        ],
+    },
+}
+
 
 def _camelcase(s: str) -> str:
     parts = s.split("_")
@@ -26,7 +95,6 @@ def _has_service(fd) -> bool:
 def _default_fetch_add_name(type_kind: str) -> str:
     k = (type_kind or "").lower()
     m = {
-        # ints
         "int4": "int4",
         "sfixed4": "int4",
         "sint4": "int4",
@@ -41,7 +109,7 @@ def _default_fetch_add_name(type_kind: str) -> str:
         "float8": "double",
         "boolean": "bool",
         "string": "string",
-        "bytes": "string",
+        "bytes": "bytes",
     }
     return m.get(k, "/* no fetch, unknown type */")
 
@@ -63,7 +131,6 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
         for msg in fd.message_type:
             register_message(fd.package, msg)
 
-    # https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto#L246
     FIELD_TYPE = {
         1: "float8",
         2: "float4",
@@ -97,13 +164,24 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
         "float4": "float4",
         "float8": "float8",
         "string": "string",
+        "bytes": "bytes",
     }
 
     def resolve_record(type_name: str) -> dict:
         d = message_type_map.get(type_name)
+        record_name = type_name.lstrip(".")
+        special = SPECIAL_RECORDS.get(record_name)
         if not d:
             return {
-                "record_name": type_name.lstrip("."),
+                "record_name": record_name,
+                "special_record_kind": (
+                    special["special_record_kind"] if special else None
+                ),
+                "special_fetch_name": (
+                    special["special_fetch_name"] if special else None
+                ),
+                "cpp_value_type": special["cpp_value_type"] if special else None,
+                "special_fields": special["fields"] if special else [],
                 "columns": [
                     {
                         "index": 0,
@@ -115,18 +193,31 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
                         "proto3_optional": False,
                     }
                 ],
+                "oneof_groups": [],
             }
+
         cols = []
         oneof_groups = []
         oneof_groups_by_index = {}
+
         for idx, field in enumerate(d.field):
             kind = FIELD_TYPE.get(field.type, f"TYPE_{field.type}")
             oneof_idx = field.oneof_index if field.HasField("oneof_index") else None
             oneof_name = d.oneof_decl[oneof_idx].name if oneof_idx is not None else None
             nested = None
+            special_kind = None
+            special_fetch_name = None
+            cpp_value_type = None
+            special_fields = []
+
             if kind == "message":
                 nested = resolve_record(field.type_name)
-            runtime_kind = RUNTIME_KIND.get(kind)
+                special_kind = nested.get("special_record_kind")
+                special_fetch_name = nested.get("special_fetch_name")
+                cpp_value_type = nested.get("cpp_value_type")
+                special_fields = nested.get("special_fields", [])
+
+            runtime_kind = special_kind or RUNTIME_KIND.get(kind)
             is_user_oneof_member = oneof_idx is not None and not field.proto3_optional
             col = {
                 "index": idx,
@@ -138,6 +229,10 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
                 "oneof_name": oneof_name,
                 "proto3_optional": field.proto3_optional,
                 "is_user_oneof_member": is_user_oneof_member,
+                "special_record_kind": special_kind,
+                "special_fetch_name": special_fetch_name,
+                "cpp_value_type": cpp_value_type,
+                "special_fields": special_fields,
             }
             cols.append(col)
             if is_user_oneof_member:
@@ -168,7 +263,11 @@ def split_fds_by_proto_with_service(fds: FileDescriptorSet) -> Dict[str, List[di
                 seen_runtime_kinds[runtime_kind] = member["column_name"]
 
         return {
-            "record_name": type_name.lstrip("."),
+            "record_name": record_name,
+            "special_record_kind": special["special_record_kind"] if special else None,
+            "special_fetch_name": special["special_fetch_name"] if special else None,
+            "cpp_value_type": special["cpp_value_type"] if special else None,
+            "special_fields": special["fields"] if special else [],
             "columns": cols,
             "oneof_groups": oneof_groups,
         }

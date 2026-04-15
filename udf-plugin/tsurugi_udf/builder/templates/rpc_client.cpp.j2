@@ -4,7 +4,7 @@
 
 #ifdef DEBUG_RPC_CLIENT
 #include <iostream>
-#define RPC_LOG(x) RPC_LOG(x);
+#define RPC_LOG(x) do { std::cerr << x << std::endl; } while(0)
 #else
 #define RPC_LOG(x)
 #endif

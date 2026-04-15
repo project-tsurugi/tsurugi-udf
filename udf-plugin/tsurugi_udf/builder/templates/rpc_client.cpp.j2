@@ -135,74 +135,38 @@ if (oneof_group{{ g }}_count > 1) {
     {% endfor %}
 {%- endmacro %}
 
-{# Writes a protobuf response into a flattened generic_record. #}
-{% macro emit_response_add(parent, record, parent_type, is_pointer=False) -%}
+{# Writes a protobuf response into a flattened generic_record target. #}
+{% macro emit_response_add(parent, out, record, parent_type, out_is_pointer=False, is_pointer=False) -%}
     {% for col in record.columns %}
         {% if col.nested_record %}
             {
                 const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
-                {{ emit_response_add("nested", col.nested_record, parent_type, False) }}
+                {{ emit_response_add("nested", out, col.nested_record, parent_type, out_is_pointer, False) }}
             }
         {% else %}
             {% if col.proto3_optional and col.oneof_index is not none %}
                 if ({{ parent }}.has_{{ col.column_name }}()) {
-                    response.add_{{ fetch_add_name(col.type_kind) }}(
+                    {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
                         {{ parent }}.{{ col.column_name }}()
                     );
                 } else {
-                    response.add_{{ fetch_add_name(col.type_kind) }}_null();
+                    {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}_null();
                 }
             {% elif col.oneof_index is not none %}
                 if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
-                    response.add_{{ fetch_add_name(col.type_kind) }}(
+                    {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
                         {{ parent }}.{{ col.column_name }}()
                     );
                 } else {
-                    response.add_{{ fetch_add_name(col.type_kind) }}_null();
+                    {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}_null();
                 }
             {% else %}
-                response.add_{{ fetch_add_name(col.type_kind) }}(
+                {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
                     {{ parent }}.{{ col.column_name }}()
                 );
             {% endif %}
         {% endif %}
     {% endfor %}
-{%- endmacro %}
-
-
-{# Writes an async streaming protobuf response into a flattened generic_record_impl. #}
-{% macro emit_response_add_streaming(parent, out_ptr, record, parent_type) -%}
-{% for col in record.columns %}
-    {% if col.nested_record %}
-    {
-        const auto& nested = {{ parent }}.{{ col.column_name }}();
-        {{ emit_response_add_streaming("nested", out_ptr, col.nested_record, parent_type) }}
-    }
-    {% else %}
-        {% if col.proto3_optional and col.oneof_index is not none %}
-        if ({{ parent }}.has_{{ col.column_name }}()) {
-            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
-                {{ parent }}.{{ col.column_name }}()
-            );
-        } else {
-            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}_null();
-        }
-        {% elif col.oneof_index is not none %}
-        if ({{ parent }}.{{ col.oneof_name }}_case()
-            == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
-            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
-                {{ parent }}.{{ col.column_name }}()
-            );
-        } else {
-            {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}_null();
-        }
-        {% else %}
-        {{ out_ptr }}->add_{{ fetch_add_name(col.type_kind) }}(
-            {{ parent }}.{{ col.column_name }}()
-        );
-        {% endif %}
-    {% endif %}
-{% endfor %}
 {%- endmacro %}
 
 // =======================
@@ -255,7 +219,7 @@ void rpc_client::call(plugin::udf::generic_client_context& generic_client_contex
             Status status = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req, &rep);
 
             if (status.ok()) {
-                {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
+                {{ emit_response_add("rep", "response", fn.output_record, parent_type, False, False) }}
             } else {
                 response.set_error(error_info(
                     static_cast<error_info::error_code_type>(status.error_code()),
@@ -265,7 +229,7 @@ void rpc_client::call(plugin::udf::generic_client_context& generic_client_contex
             {% elif fn.function_kind == "server_streaming" %}
             auto reader = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_->{{ fn.function_name }}(&context, req);
             while (reader->Read(&rep)) {
-                {{ emit_response_add("rep", fn.output_record, parent_type, False) }}
+                {{ emit_response_add("rep", "response", fn.output_record, parent_type, False, False) }}
             }
             Status status = reader->Finish();
             if (!status.ok()) {
@@ -372,7 +336,7 @@ rpc_client::call_server_streaming_async(
                     response_type rep;
                     while (reader->Read(&rep)) {
                         auto record = std::make_unique<generic_record_impl>();
-                        {{ emit_response_add_streaming("rep", "record", fn.output_record, "response_type") }}
+                        {{ emit_response_add("rep", "record", fn.output_record, "response_type", True, False) }}
                         out_stream->push(std::move(record));
                     }
 

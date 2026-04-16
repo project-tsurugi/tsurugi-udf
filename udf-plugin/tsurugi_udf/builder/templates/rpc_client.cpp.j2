@@ -106,7 +106,9 @@ using namespace plugin::udf;
 {# Builds a protobuf request from a flattened generic_record. #}
 {% macro emit_setters(parent, record, cursor_prefix, log_tag="", is_pointer=False) -%}
     {% for col in record.columns %}
-        {% if col.nested_record and col.special_record_kind %}
+        {% if col.is_user_oneof_member %}
+            {# handled below as a oneof group #}
+        {% elif col.nested_record and col.special_record_kind %}
             {
                 RPC_LOG("[rpc_client]{{ log_tag }} special field '{{ col.column_name }}' begin");
                 {{ emit_special_nested_setter(parent, col, cursor_prefix, log_tag, is_pointer) }}
@@ -172,8 +174,6 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                 }
                 RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' end");
             }
-        {% elif col.is_user_oneof_member %}
-            {# handled below as a oneof group #}
         {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
             RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' = "
@@ -199,16 +199,26 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
     {% for group in record.oneof_groups %}
     {
         RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ group.oneof_index }} '{{ group.oneof_name }}' begin");
-        if (!cursor->has_next()) {
+        auto dbg_has_next = cursor->has_next();
+        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' has_next="
+          << (dbg_has_next ? "true" : "false"));
+
+        if (!dbg_has_next) {
             throw std::runtime_error("No field selected in oneof group {{ group.oneof_name }}");
         }
-        if (cursor->current_is_null()) {
-            RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ group.oneof_index }} '{{ group.oneof_name }}' saw NULL");
+        auto dbg_is_null = cursor->current_is_null();
+        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' current_is_null="
+          << (dbg_is_null ? "true" : "false"));
+
+        if (dbg_is_null) {
             throw std::runtime_error("No field selected in oneof group {{ group.oneof_name }}");
         }
         auto current_kind = cursor->current_kind();
+        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' current_kind="
+          << static_cast<int>(current_kind));
         bool oneof_group_matched = false;
         {% for col in group.members %}
+        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' candidate '{{ col.column_name }}' expects kind={{ col.runtime_kind }}");
         if (!oneof_group_matched && current_kind == runtime_type_kind::{{ col.runtime_kind }}) {
             {% if col.special_record_kind %}
             {{ emit_special_oneof_setter(parent, col, cursor_prefix, log_tag, is_pointer) }}

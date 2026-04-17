@@ -105,15 +105,73 @@ using namespace plugin::udf;
 {%- endmacro %}
 {# Builds a protobuf request from a flattened generic_record. #}
 {% macro emit_setters(parent, record, cursor_prefix, log_tag="", is_pointer=False) -%}
+    {% set ns = namespace(handled_oneof_indices=[]) %}
+
     {% for col in record.columns %}
         {% if col.is_user_oneof_member %}
-            {# handled below as a oneof group #}
+            {% if col.oneof_index in ns.handled_oneof_indices %}
+                {# already handled at the first member position #}
+            {% else %}
+                {% set _ = ns.handled_oneof_indices.append(col.oneof_index) %}
+                {% set group = (record.oneof_groups | selectattr("oneof_index", "equalto", col.oneof_index) | list | first) %}
+                {
+                    RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ group.oneof_index }} '{{ group.oneof_name }}' begin");
+
+                    auto dbg_has_next = cursor->has_next();
+                    RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' has_next="
+                      << (dbg_has_next ? "true" : "false"));
+
+                    if (!dbg_has_next) {
+                        throw std::runtime_error("No field selected in oneof group {{ group.oneof_name }}");
+                    }
+
+                    auto dbg_is_null = cursor->current_is_null();
+                    RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' current_is_null="
+                      << (dbg_is_null ? "true" : "false"));
+
+                    if (dbg_is_null) {
+                        throw std::runtime_error("No field selected in oneof group {{ group.oneof_name }}");
+                    }
+
+                    auto current_kind = cursor->current_kind();
+                    RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' current_kind="
+                      << static_cast<int>(current_kind));
+
+                    bool oneof_group_matched = false;
+                    {% for member in group.members %}
+                    RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' candidate '{{ member.column_name }}' expects kind={{ member.runtime_kind }}");
+                    if (!oneof_group_matched && current_kind == runtime_type_kind::{{ member.runtime_kind }}) {
+                        {% if member.special_record_kind %}
+                        {{ emit_special_oneof_setter(parent, member, cursor_prefix, log_tag, is_pointer) }}
+                        {% else %}
+                        auto arg{{ cursor_prefix }}{{ member.index }} = cursor->fetch_{{ fetch_add_name(member.type_kind) }}();
+                        RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ member.index }} '{{ member.column_name }}' for oneof '{{ group.oneof_name }}' = "
+                                  << (arg{{ cursor_prefix }}{{ member.index }} ? "SET" : "NULL"));
+                        if (!arg{{ cursor_prefix }}{{ member.index }}) {
+                            throw std::runtime_error("No input arg{{ cursor_prefix }}{{ member.index }}");
+                        }
+                        {{ parent }}{% if is_pointer %}->set_{{ member.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ member.index, member) }}){% else %}.set_{{ member.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ member.index, member) }}){% endif %};
+                        {% endif %}
+                        oneof_group_matched = true;
+                        RPC_LOG("[rpc_client]{{ log_tag }}   set oneof '{{ member.column_name }}'");
+                    }
+                    {% endfor %}
+
+                    RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ group.oneof_index }} '{{ group.oneof_name }}' matched="
+                              << (oneof_group_matched ? "true" : "false"));
+                    if (!oneof_group_matched) {
+                        throw std::runtime_error("Unsupported input kind for oneof group {{ group.oneof_name }}");
+                    }
+                }
+            {% endif %}
+
         {% elif col.nested_record and col.special_record_kind %}
             {
                 RPC_LOG("[rpc_client]{{ log_tag }} special field '{{ col.column_name }}' begin");
                 {{ emit_special_nested_setter(parent, col, cursor_prefix, log_tag, is_pointer) }}
                 RPC_LOG("[rpc_client]{{ log_tag }} special field '{{ col.column_name }}' end");
             }
+
         {% elif col.nested_record %}
             {
                 RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' begin");
@@ -174,6 +232,7 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                 }
                 RPC_LOG("[rpc_client]{{ log_tag }} nested field '{{ col.column_name }}' end");
             }
+
         {% else %}
             auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
             RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' = "
@@ -194,53 +253,6 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                 RPC_LOG("[rpc_client]{{ log_tag }}   set required '{{ col.column_name }}'");
             {% endif %}
         {% endif %}
-    {% endfor %}
-
-    {% for group in record.oneof_groups %}
-    {
-        RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ group.oneof_index }} '{{ group.oneof_name }}' begin");
-        auto dbg_has_next = cursor->has_next();
-        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' has_next="
-          << (dbg_has_next ? "true" : "false"));
-
-        if (!dbg_has_next) {
-            throw std::runtime_error("No field selected in oneof group {{ group.oneof_name }}");
-        }
-        auto dbg_is_null = cursor->current_is_null();
-        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' current_is_null="
-          << (dbg_is_null ? "true" : "false"));
-
-        if (dbg_is_null) {
-            throw std::runtime_error("No field selected in oneof group {{ group.oneof_name }}");
-        }
-        auto current_kind = cursor->current_kind();
-        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' current_kind="
-          << static_cast<int>(current_kind));
-        bool oneof_group_matched = false;
-        {% for col in group.members %}
-        RPC_LOG("[rpc_client] oneof '{{ group.oneof_name }}' candidate '{{ col.column_name }}' expects kind={{ col.runtime_kind }}");
-        if (!oneof_group_matched && current_kind == runtime_type_kind::{{ col.runtime_kind }}) {
-            {% if col.special_record_kind %}
-            {{ emit_special_oneof_setter(parent, col, cursor_prefix, log_tag, is_pointer) }}
-            {% else %}
-            auto arg{{ cursor_prefix }}{{ col.index }} = cursor->fetch_{{ fetch_add_name(col.type_kind) }}();
-            RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }} '{{ col.column_name }}' for oneof '{{ group.oneof_name }}' = "
-                      << (arg{{ cursor_prefix }}{{ col.index }} ? "SET" : "NULL"));
-            if (!arg{{ cursor_prefix }}{{ col.index }}) {
-                throw std::runtime_error("No input arg{{ cursor_prefix }}{{ col.index }}");
-            }
-            {{ parent }}{% if is_pointer %}->set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% else %}.set_{{ col.column_name }}({{ emit_scalar_proto_value('arg' ~ cursor_prefix ~ col.index, col) }}){% endif %};
-            {% endif %}
-            oneof_group_matched = true;
-            RPC_LOG("[rpc_client]{{ log_tag }}   set oneof '{{ col.column_name }}'");
-        }
-        {% endfor %}
-        RPC_LOG("[rpc_client]{{ log_tag }} oneof group {{ group.oneof_index }} '{{ group.oneof_name }}' matched="
-                  << (oneof_group_matched ? "true" : "false"));
-        if (!oneof_group_matched) {
-            throw std::runtime_error("Unsupported input kind for oneof group {{ group.oneof_name }}");
-        }
-    }
     {% endfor %}
 {%- endmacro %}
 

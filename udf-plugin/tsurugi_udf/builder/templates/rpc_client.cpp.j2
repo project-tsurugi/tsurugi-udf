@@ -1,4 +1,3 @@
-
 #include "rpc_client.h"
 #include "{{ proto_base_name }}.grpc.pb.h"
 #include "{{ proto_base_name }}.pb.h"
@@ -52,7 +51,7 @@ using namespace plugin::udf;
     {% endfor %}
 {%- endmacro %}
 
-{% macro emit_special_response_add(parent, out, col, out_is_pointer=False, is_pointer=False) -%}
+{% macro emit_special_response_add(parent, out, col, parent_type, out_is_pointer=False, is_pointer=False) -%}
     {% if col.oneof_index is not none and not col.proto3_optional %}
         if ({{ parent }}.{{ col.oneof_name }}_case() == {{ parent_type }}::k{{ col.column_name | camelcase }}) {
             const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
@@ -81,8 +80,6 @@ using namespace plugin::udf;
         }
     {% endif %}
 {%- endmacro %}
-
-
 
 {% macro emit_scalar_proto_value(expr, col) -%}
     {% if col.type_kind == "bytes" -%}
@@ -260,7 +257,7 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
 {% macro emit_response_add(parent, out, record, parent_type, out_is_pointer=False, is_pointer=False) -%}
     {% for col in record.columns %}
         {% if col.nested_record and col.special_record_kind %}
-            {{ emit_special_response_add(parent, out, col, out_is_pointer, is_pointer) }}
+            {{ emit_special_response_add(parent, out, col, parent_type, out_is_pointer, is_pointer) }}
         {% elif col.nested_record %}
             {
                 const auto& nested = {{ parent }}{% if is_pointer %}->{{ col.column_name }}(){% else %}.{{ col.column_name }}(){% endif %};
@@ -280,9 +277,7 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                     {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}_null();
                 }
             {% else %}
-                {{ out }}{% if out_is_pointer %}->{% else %}.{% endif %}add_{{ fetch_add_name(col.type_kind) }}(
-                    {{ parent }}.{{ col.column_name }}()
-                );
+                {{ emit_scalar_record_add(out, col, parent ~ '.' ~ col.column_name ~ '()', out_is_pointer) }}
             {% endif %}
         {% endif %}
     {% endfor %}

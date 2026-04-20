@@ -17,7 +17,6 @@
 #include "generic_record_impl.h"
 
 #include <chrono>
-#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <optional>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 Project Tsurugi.
+ * Copyright 2018-2026 Project Tsurugi.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,37 @@
  */
 #pragma once
 #include <cstdint>
+#include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
-#include "enum_types.h"
 #include "generic_record.h"
+
 namespace plugin::udf {
 
-using value_type = std::
-    variant<std::monostate, bool, std::int32_t, std::int64_t, std::uint32_t, std::uint64_t, float, double, std::string>;
+using value_type = std::variant<
+    std::monostate,
+    bool,
+    std::int32_t,
+    std::int64_t,
+    std::uint32_t,
+    std::uint64_t,
+    float,
+    double,
+    std::string,
+    bytes_value,
+    decimal_value,
+    date_value,
+    local_time_value,
+    local_datetime_value,
+    offset_datetime_value,
+    blob_reference_value,
+    clob_reference_value>;
+
 class generic_record_impl : public generic_record {
 public:
 
@@ -47,11 +66,29 @@ public:
     void add_double_null() override;
     void add_string(std::string value) override;
     void add_string_null() override;
+    void add_bytes(bytes_value value) override;
+    void add_bytes_null() override;
+    void add_decimal(decimal_value value) override;
+    void add_decimal_null() override;
+    void add_date(date_value value) override;
+    void add_date_null() override;
+    void add_local_time(local_time_value value) override;
+    void add_local_time_null() override;
+    void add_local_datetime(local_datetime_value value) override;
+    void add_local_datetime_null() override;
+    void add_offset_datetime(offset_datetime_value value) override;
+    void add_offset_datetime_null() override;
+    void add_blob_reference(blob_reference_value value) override;
+    void add_blob_reference_null() override;
+    void add_clob_reference(clob_reference_value value) override;
+    void add_clob_reference_null() override;
     [[nodiscard]] std::unique_ptr<generic_record_cursor> cursor() const override;
     [[nodiscard]] std::optional<error_info>& error() noexcept override;
     [[nodiscard]] std::optional<error_info> const& error() const noexcept override;
     void set_error(error_info const& status) override;
     void assign_from(generic_record_impl&& other) noexcept;
+    [[nodiscard]] std::string debug_string() const;
+    void dump(std::ostream& os) const;
 
 private:
 
@@ -72,7 +109,17 @@ public:
     [[nodiscard]] std::optional<float> fetch_float() override;
     [[nodiscard]] std::optional<double> fetch_double() override;
     [[nodiscard]] std::optional<std::string> fetch_string() override;
+    [[nodiscard]] std::optional<bytes_value> fetch_bytes() override;
+    [[nodiscard]] std::optional<decimal_value> fetch_decimal() override;
+    [[nodiscard]] std::optional<date_value> fetch_date() override;
+    [[nodiscard]] std::optional<local_time_value> fetch_local_time() override;
+    [[nodiscard]] std::optional<local_datetime_value> fetch_local_datetime() override;
+    [[nodiscard]] std::optional<offset_datetime_value> fetch_offset_datetime() override;
+    [[nodiscard]] std::optional<blob_reference_value> fetch_blob_reference() override;
+    [[nodiscard]] std::optional<clob_reference_value> fetch_clob_reference() override;
     [[nodiscard]] bool has_next() override;
+    [[nodiscard]] runtime_type_kind current_kind() const override;
+    [[nodiscard]] bool current_is_null() const override;
 
 private:
 
@@ -88,11 +135,9 @@ public:
     generic_record_stream_impl();
     ~generic_record_stream_impl() override;
 
-    // Copying is explicitly disabled because this class manages a mutex and condition_variable
     generic_record_stream_impl(const generic_record_stream_impl&) = delete;
     generic_record_stream_impl& operator=(const generic_record_stream_impl&) = delete;
 
-    // Move constructor and move assignment are allowed
     generic_record_stream_impl(generic_record_stream_impl&& other) noexcept;
     generic_record_stream_impl& operator=(generic_record_stream_impl&& other) noexcept;
 
@@ -102,6 +147,7 @@ public:
 
     status_type try_next(generic_record& record) override;
     status_type next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) override;
+    friend std::ostream& operator<<(std::ostream& os, generic_record_impl const& record);
 
 private:
 
@@ -114,5 +160,7 @@ private:
     std::mutex mutex_;
     std::condition_variable cv_;
 };
+
+std::ostream& operator<<(std::ostream& os, generic_record_impl const& record);
 
 }  // namespace plugin::udf

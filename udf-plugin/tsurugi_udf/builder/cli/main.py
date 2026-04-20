@@ -27,6 +27,7 @@ from ..core.link_shared import build_shared_libs_layered_parallel
 from ..core.verify_so import verify_shared_libs
 from ..core.analyze_rpcs import dump_rpc_so_report
 from ..core.write_ini import write_ini_files_for_rpc_libs
+from ..core.validate_descriptor import validate_oneof_categories
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -93,6 +94,7 @@ def main(argv: list[str] | None = None) -> None:
             debug(f"descriptor: {desc_pb}")
 
             fds = load_fds(desc_pb)
+            validate_oneof_categories(fds)
             graph = build_import_graph(fds)
             info(f"import graph: {len(graph)} proto(s)")
             debug_list("import graph protos", sorted(graph.keys()))
@@ -120,7 +122,7 @@ def main(argv: list[str] | None = None) -> None:
                     info(
                         "Auto-deps enabled (default): including them and retrying code generation."
                     )
-                    proto_files2 = [*proto_files, *unlisted]  # Path + str 混在OK
+                    proto_files2 = [*proto_files, *unlisted]  # Path + str mixed OK
                     cmd2 = protoc.build_protoc_cmd(
                         includes=includes,
                         proto_files=proto_files2,
@@ -132,6 +134,7 @@ def main(argv: list[str] | None = None) -> None:
                     protoc.run(cmd2)
 
                     fds = load_fds(desc_pb)
+                    validate_oneof_categories(fds)
                     graph = build_import_graph(fds)
                     info(f"import graph (after auto-deps): {len(graph)} proto(s)")
                     debug_list(
@@ -309,6 +312,9 @@ def main(argv: list[str] | None = None) -> None:
         if e.stderr:
             error(e.stderr, end="")
         raise SystemExit(e.returncode)
+    except ValueError as e:
+        error(str(e))
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

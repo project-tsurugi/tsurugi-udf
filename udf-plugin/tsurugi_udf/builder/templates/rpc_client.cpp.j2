@@ -216,7 +216,7 @@ RPC_LOG("[rpc_client]{{ log_tag }} fetch {{ cursor_prefix }}{{ col.index }}_{{ n
                             {% endfor %}
                     }
                         {% else %}
-                    nested->set_{{ nested_col.column_name }}(*{{ var_name }});
+                    nested->set_{{ nested_col.column_name }}({{ emit_scalar_proto_value(var_name, nested_col) }});
                         {% endif %}
                     RPC_LOG("[rpc_client]{{ log_tag }}   set nested '{{ nested_col.column_name }}'");
                     {% endfor %}

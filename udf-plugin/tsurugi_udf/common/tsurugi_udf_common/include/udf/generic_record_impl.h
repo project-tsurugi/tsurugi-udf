@@ -147,7 +147,6 @@ public:
 
     status_type try_next(generic_record& record) override;
     status_type next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) override;
-    [[nodiscard]] std::string debug_string() const;
     friend std::ostream& operator<<(std::ostream& os, generic_record_impl const& record);
 
 private:

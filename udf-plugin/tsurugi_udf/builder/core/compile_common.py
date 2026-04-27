@@ -1,23 +1,8 @@
 from __future__ import annotations
 
-import os
-import shlex
 import subprocess
 from pathlib import Path
-
-
-def _pkg_config_cflags() -> list[str]:
-    try:
-        r = subprocess.run(
-            ["pkg-config", "--cflags", "protobuf", "grpc++"],
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        out = r.stdout.strip()
-        return shlex.split(out) if out else []
-    except Exception:
-        return []
+from .toolchain import get_cxx, get_cxxflags
 
 
 def compile_common_objects(
@@ -25,12 +10,9 @@ def compile_common_objects(
     sources: list[Path],
     obj_dir: Path,
     include_dirs: list[str],
-    cxx: str | None = None,
 ) -> list[Path]:
-    cxx = cxx or os.environ.get("CXX", "g++")
-
-    extra = shlex.split(os.environ.get("CXXFLAGS", ""))
-    extra += _pkg_config_cflags()
+    cxx = get_cxx()
+    extra = get_cxxflags()
 
     objs: list[Path] = []
     for src in sources:

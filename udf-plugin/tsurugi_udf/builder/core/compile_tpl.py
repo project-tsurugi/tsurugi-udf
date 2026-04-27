@@ -2,25 +2,10 @@ from __future__ import annotations
 
 import concurrent.futures
 import os
-import shlex
 import subprocess
 from pathlib import Path
-
+from .toolchain import get_cxx, get_cxxflags
 from .log import debug, debug_list
-
-
-def _pkg_config_cflags() -> list[str]:
-    try:
-        r = subprocess.run(
-            ["pkg-config", "--cflags", "protobuf", "grpc++"],
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        out = r.stdout.strip()
-        return shlex.split(out) if out else []
-    except Exception:
-        return []
 
 
 def _compile_one(
@@ -44,16 +29,10 @@ def _compile_one(
 
 
 def compile_tpl_objects_parallel(
-    *,
-    tpl_dir: Path,
-    obj_dir: Path,
-    include_dirs: list[str],
-    jobs: int | None = None,
-    cxx: str | None = None,
+    *, tpl_dir: Path, obj_dir: Path, include_dirs: list[str], jobs: int | None = None
 ) -> tuple[list[Path], dict[str, list[Path]]]:
-    cxx = cxx or os.environ.get("CXX", "g++")
-    extra = shlex.split(os.environ.get("CXXFLAGS", ""))
-    extra += _pkg_config_cflags()
+    cxx = get_cxx()
+    extra = get_cxxflags()
 
     cpp_files = sorted(tpl_dir.rglob("*.cpp"))
     if not cpp_files:

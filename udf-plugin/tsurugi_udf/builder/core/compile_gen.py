@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import concurrent.futures
 import os
-import shlex
 import subprocess
 from pathlib import Path
 
 from .log import debug, debug_list
+from .toolchain import get_cxx, get_cxxflags
 
 
 def find_generated_cc(gen_dir: Path) -> list[Path]:
@@ -20,20 +20,6 @@ def find_generated_cc(gen_dir: Path) -> list[Path]:
 def obj_path_for(cc: Path, gen_dir: Path, obj_dir: Path) -> Path:
     rel = cc.relative_to(gen_dir)
     return (obj_dir / rel).with_suffix(".o")
-
-
-def _pkg_config_cflags() -> list[str]:
-    try:
-        r = subprocess.run(
-            ["pkg-config", "--cflags", "protobuf", "grpc++"],
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        out = r.stdout.strip()
-        return shlex.split(out) if out else []
-    except Exception:
-        return []
 
 
 def compile_one(
@@ -62,17 +48,10 @@ def compile_one(
 
 
 def build_objects_parallel(
-    *,
-    gen_dir: Path,
-    obj_dir: Path,
-    include_dirs: list[str],
-    jobs: int | None = None,
-    cxx: str | None = None,
+    *, gen_dir: Path, obj_dir: Path, include_dirs: list[str], jobs: int | None = None
 ) -> list[Path]:
-    cxx = cxx or os.environ.get("CXX", "g++")
-
-    extra = shlex.split(os.environ.get("CXXFLAGS", ""))
-    extra += _pkg_config_cflags()
+    cxx = get_cxx()
+    extra = get_cxxflags()
 
     cc_files = find_generated_cc(gen_dir)
     if not cc_files:

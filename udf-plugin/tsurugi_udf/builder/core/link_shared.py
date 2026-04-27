@@ -2,37 +2,11 @@ from __future__ import annotations
 
 import concurrent.futures
 import os
-import shlex
 import subprocess
 from pathlib import Path
 from typing import Dict, Set, List, Tuple
-
+from .toolchain import get_cxx, get_ldflags
 from .log import debug
-
-
-def _pkg_config_libs() -> list[str]:
-    try:
-        r = subprocess.run(
-            ["pkg-config", "--libs", "protobuf", "grpc++"],
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        out = r.stdout.strip()
-        return shlex.split(out) if out else []
-    except Exception:
-        return []
-
-
-def _dedup_keep_order(xs: list[str]) -> list[str]:
-    seen: set[str] = set()
-    out: list[str] = []
-    for x in xs:
-        if x in seen:
-            continue
-        seen.add(x)
-        out.append(x)
-    return out
 
 
 def topo_layers(graph: Dict[str, Set[str]]) -> List[List[str]]:
@@ -185,10 +159,8 @@ def build_shared_libs_layered_parallel(
     proto_list = sorted(lib_dep_graph.keys())
     proto_to_libfile = resolve_lib_names(proto_list)
 
-    cxx = os.environ.get("CXX", "g++")
-    extra = shlex.split(os.environ.get("LDFLAGS", ""))
-    extra += _pkg_config_libs()
-    extra = _dedup_keep_order(extra)
+    cxx = get_cxx()
+    extra = get_ldflags()
 
     max_workers = jobs or (os.cpu_count() or 4)
     outputs: Dict[str, Path] = {}

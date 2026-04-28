@@ -41,6 +41,12 @@ def topo_layers(graph: Dict[str, Set[str]]) -> List[List[str]]:
     return layers
 
 
+def force_needed(args: list[str]) -> list[str]:
+    if not args:
+        return []
+    return ["-Wl,--no-as-needed", *args, "-Wl,--as-needed"]
+
+
 def resolve_lib_names(proto_names: list[str]) -> Dict[str, str]:
     by_stem: Dict[str, list[str]] = {}
     for pn in proto_names:
@@ -138,7 +144,7 @@ def link_one_shared(
         cmd += [str(common_static)]
 
     cmd += [f"-L{lib_dir}"]
-    cmd += dep_lib_args
+    cmd += force_needed(dep_lib_args)
     cmd += [rpath_flag]
     cmd += extra_ldflags
 
@@ -177,7 +183,7 @@ def link_one_proto_shared(
     cmd = [cxx, "-shared", "-o", str(out_lib_path)]
     cmd += [str(o) for o in objs]
     cmd += [f"-L{lib_dir}"]
-    cmd += dep_lib_args
+    cmd += force_needed(dep_lib_args)
     cmd += ["-Wl,-rpath,$ORIGIN"]
     cmd += extra_ldflags
 
@@ -208,6 +214,8 @@ def link_one_plugin_shared(
 
     out_lib_path.parent.mkdir(parents=True, exist_ok=True)
 
+    proto_body_lib_arg = f"-l:{proto_to_proto_libfile[proto_name]}"
+
     cmd = [cxx, "-shared", "-o", str(out_lib_path)]
     cmd += [str(o) for o in objs]
 
@@ -218,7 +226,7 @@ def link_one_plugin_shared(
         cmd += [str(common_static)]
 
     cmd += [f"-L{proto_lib_dir}"]
-    cmd += [f"-l:{proto_to_proto_libfile[proto_name]}"]
+    cmd += force_needed([proto_body_lib_arg])
     cmd += ["-Wl,-rpath,$ORIGIN/deps"]
     cmd += extra_ldflags
 

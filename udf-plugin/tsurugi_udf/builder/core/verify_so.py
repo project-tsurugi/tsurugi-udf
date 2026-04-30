@@ -99,25 +99,23 @@ def verify_split_shared_libs(
     errors: list[str] = []
     warnings: list[str] = []
 
-    proto_libfiles = {p.name for p in proto_outputs.values()}
-
     for proto, so_path in sorted(proto_outputs.items()):
         n = needed_libs(so_path)
         rp = runpath_rpath(so_path)
+
         if require_origin_rpath and "$ORIGIN" not in rp:
             warnings.append(
                 f"{so_path.name}: missing $ORIGIN in RUNPATH/RPATH (got: {rp!r})"
             )
+
         if forbid_path_needed:
             bad = sorted([x for x in n if "/" in x])
             if bad:
                 errors.append(f"{so_path.name}: DT_NEEDED contains path entries: {bad}")
+
         deps = import_graph.get(proto, set())
-        expected = {
-            proto_libfile_for_proto(d)
-            for d in deps
-            if proto_libfile_for_proto(d) in proto_libfiles
-        }
+        expected = {proto_outputs[d].name for d in deps if d in proto_outputs}
+
         missing = sorted(expected - n)
         if missing:
             errors.append(
@@ -127,15 +125,23 @@ def verify_split_shared_libs(
     for proto, so_path in sorted(plugin_outputs.items()):
         n = needed_libs(so_path)
         rp = runpath_rpath(so_path)
+
         if require_origin_rpath and "$ORIGIN" not in rp:
             warnings.append(
                 f"{so_path.name}: missing $ORIGIN in RUNPATH/RPATH (got: {rp!r})"
             )
-        expected = proto_libfile_for_proto(proto)
-        if expected not in n:
+
+        if proto not in proto_outputs:
             errors.append(
-                f"{so_path.name}: missing DT_NEEDED for proto body: {expected}"
+                f"{so_path.name}: missing proto output for plugin body: {proto}"
             )
+        else:
+            expected = proto_outputs[proto].name
+            if expected not in n:
+                errors.append(
+                    f"{so_path.name}: missing DT_NEEDED for proto body: {expected}"
+                )
+
         if forbid_path_needed:
             bad = sorted([x for x in n if "/" in x])
             if bad:

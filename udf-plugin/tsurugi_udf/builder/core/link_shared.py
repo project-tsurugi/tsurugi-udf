@@ -374,10 +374,11 @@ def build_split_shared_libs_layered_parallel(
 
     plugin_outputs: Dict[str, Path] = {}
     rpc_targets = sorted(p for p in rpc_protos if p in proto_dep_graph)
+    plugin_to_libfile = resolve_lib_names(rpc_targets)
+
     debug(f"link plugin entry libs: {len(rpc_targets)} lib(s) (jobs={max_workers})")
 
     def _plugin_job(pn: str) -> Tuple[str, Path]:
-        plugin_to_libfile = resolve_lib_names(rpc_targets)
         out = plugin_lib_dir / plugin_to_libfile[pn]
         stem = Path(pn).stem
         extra_objs = (tpl_objs_by_stem or {}).get(stem, [])

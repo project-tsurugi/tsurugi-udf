@@ -8,6 +8,11 @@ from google.protobuf.descriptor_pb2 import FileDescriptorSet
 from .log import info, warn, debug
 
 
+def collect_rpc_proto_names(fds: FileDescriptorSet) -> set[str]:
+    """Return proto import names that define at least one gRPC service."""
+    return {fd.name for fd in fds.file if fd.service}
+
+
 def default_so_name_for_proto(proto_name: str) -> str:
     return f"lib{Path(proto_name).stem}.so"
 

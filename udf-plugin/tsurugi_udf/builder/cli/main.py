@@ -23,9 +23,9 @@ from ..core.gen_tpl import render_tpl_for_rpc_protos
 from ..core.log import info, debug, error, debug_list, setup, warn, section
 from ..core.compile_tpl import compile_tpl_objects_parallel
 from ..core.compile_common import compile_common_objects, archive_common_static
-from ..core.link_shared import build_shared_libs_layered_parallel
-from ..core.verify_so import verify_shared_libs
-from ..core.analyze_rpcs import dump_rpc_so_report
+from ..core.link_shared import build_split_shared_libs_layered_parallel
+from ..core.verify_so import verify_split_shared_libs
+from ..core.analyze_rpcs import dump_rpc_so_report, collect_rpc_proto_names
 from ..core.write_ini import write_ini_files_for_rpc_libs
 from ..core.validate_descriptor import validate_oneof_categories
 
@@ -242,24 +242,33 @@ def main(argv: list[str] | None = None) -> None:
 
         with section("link"):
             target_protos = set(graph.keys())
+            rpc_protos = collect_rpc_proto_names(fds)
             exclude_protos: set[str] = set()
-            outputs = build_shared_libs_layered_parallel(
+            outputs, proto_outputs = build_split_shared_libs_layered_parallel(
                 import_graph=graph,
                 target_protos=target_protos,
+                rpc_protos=rpc_protos,
                 obj_dir=paths.OBJ / "gen",
-                lib_dir=paths.LIB,
+                plugin_lib_dir=paths.LIB,
+                proto_lib_dir=paths.LIB / "deps",
                 exclude_protos=exclude_protos,
                 jobs=None,
                 tpl_objs_by_stem=tpl_objs_by_stem,
                 common_static=common_a,
             )
-            info(f"linked shared libraries: {len(outputs)}")
+            info(
+                f"linked shared libraries: "
+                f"{len(outputs)} plugin entry lib(s), {len(proto_outputs)} proto lib(s)"
+            )
             for pn in sorted(outputs.keys()):
-                debug(f"so: {pn} -> {outputs[pn]}")
+                debug(f"plugin so: {pn} -> {outputs[pn]}")
+            for pn in sorted(proto_outputs.keys()):
+                debug(f"proto so: {pn} -> {proto_outputs[pn]}")
 
         with section("verify"):
-            verify_shared_libs(
-                outputs=outputs,
+            verify_split_shared_libs(
+                plugin_outputs=outputs,
+                proto_outputs=proto_outputs,
                 import_graph=graph,
                 require_origin_rpath=True,
                 forbid_path_needed=True,
@@ -290,6 +299,7 @@ def main(argv: list[str] | None = None) -> None:
                 src_lib_dir=paths.LIB,
                 src_ini_dir=paths.INI,
                 dst_root=output_dir,
+                src_deps_lib_dir=paths.LIB / "deps",
             )
 
             shutil.copy2(desc_pb, output_dir / desc_pb.name)

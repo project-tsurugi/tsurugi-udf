@@ -29,6 +29,7 @@ def move_outputs(
     src_lib_dir: Path,
     src_ini_dir: Path,
     dst_root: Path,
+    src_deps_lib_dir: Path | None = None,
 ) -> None:
     dst_root = dst_root.resolve()
     dst_root.mkdir(parents=True, exist_ok=True)
@@ -44,5 +45,14 @@ def move_outputs(
         for p in src_ini_dir.iterdir():
             if p.is_file() and p.suffix == ".ini":
                 dst = dst_root / p.name
+                debug(f"move {p} -> {dst}")
+                shutil.move(str(p), dst)
+
+    if src_deps_lib_dir and src_deps_lib_dir.exists():
+        dst_deps = dst_root / "deps"
+        dst_deps.mkdir(parents=True, exist_ok=True)
+        for p in src_deps_lib_dir.iterdir():
+            if p.is_file() and p.suffix == ".so":
+                dst = dst_deps / p.name
                 debug(f"move {p} -> {dst}")
                 shutil.move(str(p), dst)

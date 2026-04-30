@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package multi;
+
+message BigintValueDataCS {
+  int64 value = 1;
+}
+
+message BigintTwoDataCS {
+  int64 f1 = 1;
+  int64 f2 = 2;
+}
+
+service MultiCS {
+  rpc BigintAddCS(BigintTwoDataCS) returns (BigintValueDataCS);
+}

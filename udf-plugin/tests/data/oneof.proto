@@ -1,0 +1,200 @@
+syntax = "proto3";
+// buf format -w
+package sample;
+
+import "tsurugidb/udf/tsurugi_types.proto";
+
+message NumericOneOfTwo {
+  oneof f1 {
+    int32 f1_int32 = 1;
+    int64 f1_int64 = 2;
+    float f1_float = 3;
+    double f1_double = 4;
+  }
+  oneof f2 {
+    int32 f2_int32 = 5;
+    int64 f2_int64 = 6;
+    float f2_float = 7;
+    double f2_double = 8;
+  }
+}
+message TsurugiOneOfTwo {
+  oneof f1 {
+    tsurugidb.udf.Decimal f1_decimal_value = 1;
+    tsurugidb.udf.Date f1_date_value = 2;
+    tsurugidb.udf.LocalTime f1_localtime_value = 3;
+    tsurugidb.udf.LocalDatetime f1_localdatetime_value = 4;
+    tsurugidb.udf.OffsetDatetime f1_offsetdatetime_value = 5;
+    tsurugidb.udf.BlobReference f1_blob_value = 6;
+    tsurugidb.udf.ClobReference f1_clob_value = 7;
+  }
+  oneof f2 {
+    tsurugidb.udf.Decimal f2_decimal_value = 8;
+    tsurugidb.udf.Date f2_date_value = 9;
+    tsurugidb.udf.LocalTime f2_localtime_value = 10;
+    tsurugidb.udf.LocalDatetime f2_localdatetime_value = 11;
+    tsurugidb.udf.OffsetDatetime f2_offsetdatetime_value = 12;
+    tsurugidb.udf.BlobReference f2_blob_value = 13;
+    tsurugidb.udf.ClobReference f2_clob_value = 14;
+  }
+}
+message full {
+  oneof z1 {
+    double z1_double_value = 1;
+    float z1_float_value = 2;
+    int32 z1_int32_value = 3;
+    uint64 z1_uint64_value = 6;
+    string z1_string_value = 13;
+    bytes z1_bytes_value = 14;
+    tsurugidb.udf.Decimal z1_decimal_value = 15;
+    tsurugidb.udf.Date z1_date_value = 16;
+    tsurugidb.udf.LocalTime z1_localtime_value = 17;
+    tsurugidb.udf.LocalDatetime z1_localdatetime_value = 18;
+    tsurugidb.udf.OffsetDatetime z1_offsetdatetime_value = 19;
+    tsurugidb.udf.BlobReference z1_blob_value = 20;
+    tsurugidb.udf.ClobReference z1_clob_value = 21;
+  }
+}
+message oneof_optional_pattern {
+  oneof z1 {
+    double z1_double_value = 1;
+    float z1_float_value = 2;
+    int32 z1_int32_value = 3;
+    int64 z1_int64_value = 4;
+    string z1_string_value = 7;
+    bytes z1_bytes_value = 8;
+    tsurugidb.udf.Decimal z1_decimal_value = 9;
+    tsurugidb.udf.Date z1_date_value = 10;
+    tsurugidb.udf.LocalTime z1_localtime_value = 11;
+    tsurugidb.udf.LocalDatetime z1_localdatetime_value = 12;
+    tsurugidb.udf.OffsetDatetime z1_offsetdatetime_value = 13;
+    tsurugidb.udf.BlobReference z1_blob_reference_value = 14;
+    tsurugidb.udf.ClobReference z1_clob_reference_value = 15;
+  }
+
+  double double_value = 16;
+  optional double optional_double_value = 17;
+
+  float float_value = 18;
+  optional float optional_float_value = 19;
+
+  int32 int32_value = 20;
+  optional int32 optional_int32_value = 21;
+
+  int64 int64_value = 22;
+  optional int64 optional_int64_value = 23;
+
+  uint32 uint32_value = 24;
+  optional uint32 optional_uint32_value = 25;
+
+  uint64 uint64_value = 26;
+  optional uint64 optional_uint64_value = 27;
+
+  sint32 sint32_value = 28;
+  optional sint32 optional_sint32_value = 29;
+
+  sint64 sint64_value = 30;
+  optional sint64 optional_sint64_value = 31;
+
+  fixed32 fixed32_value = 32;
+  optional fixed32 optional_fixed32_value = 33;
+
+  fixed64 fixed64_value = 34;
+  optional fixed64 optional_fixed64_value = 35;
+
+  sfixed32 sfixed32_value = 36;
+  optional sfixed32 optional_sfixed32_value = 37;
+
+  sfixed64 sfixed64_value = 38;
+  optional sfixed64 optional_sfixed64_value = 39;
+
+  string string_value = 40;
+  optional string optional_string_value = 41;
+
+  bytes bytes_value = 42;
+  optional bytes optional_bytes_value = 43;
+
+  tsurugidb.udf.Decimal decimal_value = 44;
+  optional tsurugidb.udf.Decimal optional_decimal_value = 45;
+
+  tsurugidb.udf.Date date_value = 46;
+  optional tsurugidb.udf.Date optional_date_value = 47;
+
+  tsurugidb.udf.LocalTime localtime_value = 48;
+  optional tsurugidb.udf.LocalTime optional_localtime_value = 49;
+
+  tsurugidb.udf.LocalDatetime localdatetime_value = 50;
+  optional tsurugidb.udf.LocalDatetime optional_localdatetime_value = 51;
+
+  tsurugidb.udf.OffsetDatetime offsetdatetime_value = 52;
+  optional tsurugidb.udf.OffsetDatetime optional_offsetdatetime_value = 53;
+
+  tsurugidb.udf.BlobReference blob_reference_value = 54;
+  optional tsurugidb.udf.BlobReference optional_blob_reference_value = 55;
+
+  tsurugidb.udf.ClobReference clob_reference_value = 56;
+  optional tsurugidb.udf.ClobReference optional_clob_reference_value = 57;
+
+  oneof z2 {
+    double z2_double_value = 58;
+    float z2_float_value = 59;
+    sint32 z2_sint32_value = 60;
+    fixed64 z2_fixed64_value = 63;
+    string z2_string_value = 64;
+    bytes z2_bytes_value = 65;
+    tsurugidb.udf.Decimal z2_decimal_value = 66;
+    tsurugidb.udf.Date z2_date_value = 67;
+    tsurugidb.udf.LocalTime z2_localtime_value = 68;
+    tsurugidb.udf.LocalDatetime z2_localdatetime_value = 69;
+    tsurugidb.udf.OffsetDatetime z2_offsetdatetime_value = 70;
+    tsurugidb.udf.BlobReference z2_blob_reference_value = 71;
+    tsurugidb.udf.ClobReference z2_clob_reference_value = 72;
+  }
+}
+message ScalarResponse {
+  double result = 1;
+}
+message IntResponse {
+  int32 result = 1;
+}
+message IntResponseOptional {
+  optional int32 result = 1;
+}
+message check {
+  oneof z1 {
+    double z1_double_value = 1;
+    float z1_float_value = 2;
+  }
+  double double_value = 16;
+  optional double optional_double_value = 17;
+}
+message check2 {
+  oneof z1 {
+    double z1_double_value = 1;
+    float z1_float_value = 2;
+    int32 z1_int32_value = 3;
+    int64 z1_int64_value = 4;
+    string z1_string_value = 7;
+    bytes z1_bytes_value = 8;
+    tsurugidb.udf.Decimal z1_decimal_value = 9;
+    tsurugidb.udf.Date z1_date_value = 10;
+    tsurugidb.udf.LocalTime z1_localtime_value = 11;
+    tsurugidb.udf.LocalDatetime z1_localdatetime_value = 12;
+    tsurugidb.udf.OffsetDatetime z1_offsetdatetime_value = 13;
+    tsurugidb.udf.BlobReference z1_blob_reference_value = 14;
+    tsurugidb.udf.ClobReference z1_clob_reference_value = 15;
+  }
+  double double_value = 16;
+  optional double optional_double_value = 17;
+}
+service OneofTest {
+  rpc tsurugi_oneof_test(NumericOneOfTwo) returns (ScalarResponse);
+  rpc tsurugi_complex_oneof_test(TsurugiOneOfTwo) returns (ScalarResponse);
+  rpc oneof_optional_pattern_test(oneof_optional_pattern) returns (IntResponse);
+  rpc oneof_optional_pattern_test_stream(oneof_optional_pattern) returns (stream IntResponse);
+  rpc oneof_optional_pattern_test_optional(oneof_optional_pattern) returns (IntResponseOptional);
+  rpc oneof_optional_pattern_test_stream_optional(oneof_optional_pattern) returns (stream IntResponseOptional);
+  rpc tsurugi_oneof_full(full) returns (stream ScalarResponse);
+  rpc check_bug(check) returns (IntResponse);
+  rpc check_bug2(check2) returns (IntResponse);
+}

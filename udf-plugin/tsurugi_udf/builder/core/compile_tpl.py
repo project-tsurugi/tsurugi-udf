@@ -13,7 +13,15 @@ def _compile_one(
 ) -> None:
     obj.parent.mkdir(parents=True, exist_ok=True)
 
-    cmd = [cxx, "-fPIC", "-c", str(src), "-o", str(obj)]
+    cmd = [
+        cxx,
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-c",
+        str(src),
+        "-o",
+        str(obj),
+    ]
     for inc in include_dirs:
         cmd.append(f"-I{inc}")
     cmd += extra_cflags

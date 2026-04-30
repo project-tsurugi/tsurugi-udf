@@ -1,0 +1,73 @@
+syntax = "proto3";
+// buf format -w
+package sample;
+
+import "tsurugidb/udf/tsurugi_types.proto";
+
+message OptionalScalarRequest {
+  optional double double_value = 1;
+  optional float float_value = 2;
+  optional int32 int32_value = 3;
+  optional int64 int64_value = 4;
+  optional uint32 uint32_value = 5;
+  optional uint64 uint64_value = 6;
+  optional sint32 sint32_value = 7;
+  optional sint64 sint64_value = 8;
+  optional fixed32 fixed32_value = 9;
+  optional fixed64 fixed64_value = 10;
+  optional sfixed32 sfixed32_value = 11;
+  optional sfixed64 sfixed64_value = 12;
+  optional string string_value = 13;
+  optional bytes bytes_value = 14;
+}
+message ScalarRequest {
+  double double_value = 1;
+  float float_value = 2;
+  int32 int32_value = 3;
+  int64 int64_value = 4;
+  uint32 uint32_value = 5;
+  uint64 uint64_value = 6;
+  sint32 sint32_value = 7;
+  sint64 sint64_value = 8;
+  fixed32 fixed32_value = 9;
+  fixed64 fixed64_value = 10;
+  sfixed32 sfixed32_value = 11;
+  sfixed64 sfixed64_value = 12;
+  string string_value = 13;
+  bytes bytes_value = 14;
+}
+
+message OptionalScalarResponse {
+  optional double result = 1;
+}
+message OptionalDecimal {
+  optional tsurugidb.udf.Decimal decimal_value = 1;
+  optional tsurugidb.udf.Date date_value = 2;
+  optional tsurugidb.udf.LocalTime localtime_value = 3;
+  optional tsurugidb.udf.LocalDatetime localdatetime_value = 4;
+  optional tsurugidb.udf.OffsetDatetime offsetdatetime_value = 5;
+  optional tsurugidb.udf.BlobReference blob_value = 6;
+  optional tsurugidb.udf.ClobReference clob_value = 7;
+}
+message AllTsurugi {
+  tsurugidb.udf.Decimal decimal_value = 1;
+  tsurugidb.udf.Date date_value = 2;
+  tsurugidb.udf.LocalTime localtime_value = 3;
+  tsurugidb.udf.LocalDatetime localdatetime_value = 4;
+  tsurugidb.udf.OffsetDatetime offsetdatetime_value = 5;
+  tsurugidb.udf.BlobReference blob_value = 6;
+  tsurugidb.udf.ClobReference clob_value = 7;
+}
+message ScalarResponse {
+  double result = 1;
+}
+service ScalarOptionalTest {
+  rpc tsurugi_scalar_optional_stream(OptionalScalarRequest) returns (stream OptionalScalarResponse);
+  rpc tsurugi_scalar_no_optional_stream(ScalarRequest) returns (stream ScalarResponse);
+  rpc tsurugi_scalar_no_optional(ScalarRequest) returns (OptionalScalarResponse);
+  rpc tsurugi_scalar_optional(OptionalScalarRequest) returns (OptionalScalarResponse);
+  rpc tsurugi_types_optional(OptionalDecimal) returns (OptionalDecimal);
+  rpc tsurugi_types_optional_stream(OptionalDecimal) returns (stream OptionalDecimal);
+  rpc tsurugi_stream(AllTsurugi) returns (stream AllTsurugi);
+  rpc tsurugi_tsurugi(ScalarResponse) returns (ScalarResponse);
+}

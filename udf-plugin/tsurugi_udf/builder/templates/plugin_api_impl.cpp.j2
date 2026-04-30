@@ -18,6 +18,12 @@
 #include <string_view>
 using namespace plugin::udf;
 
+#if defined(__GNUC__) || defined(__clang__)
+#define TSURUGI_UDF_EXPORT __attribute__((visibility("default")))
+#else
+#define TSURUGI_UDF_EXPORT
+#endif
+
 class plugin_api_impl : public plugin_api {
   public:
     plugin_api_impl() {
@@ -159,6 +165,6 @@ class plugin_api_impl : public plugin_api {
     std::vector<package_descriptor*> packages_;
 };
 
-extern "C" plugin_api* create_plugin_api() {
+extern "C" TSURUGI_UDF_EXPORT plugin_api* create_plugin_api() {
     return new plugin_api_impl();
 }

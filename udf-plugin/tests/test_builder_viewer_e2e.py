@@ -81,7 +81,7 @@ def build_cpp_checker(
         include_dirs.append(find_plugin_api_include_dir())
 
     cmd = [
-        "g++",
+        os.environ.get("CXX", "g++"),
         "-std=c++17",
         str(source),
         str(GENERIC_CLIENT_CONTEXT_CPP),
@@ -95,7 +95,6 @@ def build_cpp_checker(
         "-rdynamic",
         "-ldl",
         *pkg_config_flags("protobuf", "grpc++"),
-        "-lglog",
     ]
 
     result = subprocess.run(

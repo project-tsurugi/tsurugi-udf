@@ -24,7 +24,7 @@ message TsurugiOneOfTwo {
     tsurugidb.udf.Date f1_date_value = 2;
     tsurugidb.udf.LocalTime f1_localtime_value = 3;
     tsurugidb.udf.LocalDatetime f1_localdatetime_value = 4;
-    tsurugidb.udf.OffsetDatetime f1_offsetdatatime_value = 5;
+    tsurugidb.udf.OffsetDatetime f1_offsetdatetime_value = 5;
     tsurugidb.udf.BlobReference f1_blob_value = 6;
     tsurugidb.udf.ClobReference f1_clob_value = 7;
   }
@@ -33,7 +33,7 @@ message TsurugiOneOfTwo {
     tsurugidb.udf.Date f2_date_value = 9;
     tsurugidb.udf.LocalTime f2_localtime_value = 10;
     tsurugidb.udf.LocalDatetime f2_localdatetime_value = 11;
-    tsurugidb.udf.OffsetDatetime f2_offsetdatatime_value = 12;
+    tsurugidb.udf.OffsetDatetime f2_offsetdatetime_value = 12;
     tsurugidb.udf.BlobReference f2_blob_value = 13;
     tsurugidb.udf.ClobReference f2_clob_value = 14;
   }
@@ -50,7 +50,7 @@ message full {
     tsurugidb.udf.Date z1_date_value = 16;
     tsurugidb.udf.LocalTime z1_localtime_value = 17;
     tsurugidb.udf.LocalDatetime z1_localdatetime_value = 18;
-    tsurugidb.udf.OffsetDatetime z1_offsetdatatime_value = 19;
+    tsurugidb.udf.OffsetDatetime z1_offsetdatetime_value = 19;
     tsurugidb.udf.BlobReference z1_blob_value = 20;
     tsurugidb.udf.ClobReference z1_clob_value = 21;
   }

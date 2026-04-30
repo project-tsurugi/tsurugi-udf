@@ -83,11 +83,6 @@ def verify_shared_libs(
 
     debug("verify: OK (DT_NEEDED / RUNPATH look consistent)")
 
-
-def proto_libfile_for_proto(proto_name: str) -> str:
-    return f"lib{Path(proto_name).stem}_proto.so"
-
-
 def verify_split_shared_libs(
     *,
     plugin_outputs: Dict[str, Path],

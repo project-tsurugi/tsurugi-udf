@@ -26,13 +26,20 @@ REPO_PROTO_DIR = REPO_ROOT / "proto"
 
 
 def pkg_config_flags(*packages: str) -> list[str]:
-    result = subprocess.run(
-        ["pkg-config", "--cflags", "--libs", *packages],
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            ["pkg-config", "--cflags", "--libs", *packages],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except FileNotFoundError:
+        pytest.skip(
+            "pkg-config is required to prepare the C++ checker, "
+            "but it is not installed or not on PATH."
+        )
+
     if result.returncode != 0:
         pytest.fail(
             "pkg-config failed while preparing C++ checker\n"

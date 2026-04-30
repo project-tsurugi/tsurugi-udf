@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package multi;
+
+import "multi_common_service.proto";
+message IntValue {
+  int64 value = 1;
+}
+service MultiC {
+  rpc IntToDecimalC(IntValue) returns (IntValue);
+}

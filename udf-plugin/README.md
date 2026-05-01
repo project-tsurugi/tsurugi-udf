@@ -37,7 +37,7 @@ pip install -e tsurugi-udf
 
 ```bash
 udf-plugin-builder \
-  --I proto \
+  -I proto \
   --proto proto/sample.proto proto/complex_types.proto proto/primitive_types.proto \
   --grpc-endpoint dns:///localhost:50051 \
   --grpc-server-endpoint dns:///localhost:50052
@@ -48,7 +48,7 @@ udf-plugin-builder \
 | Option | Description | Default | Required |
 | ----------------- | --------------------------------------------------------- | ------------------------ | -------- |
 | `--proto` | Path(s) to `.proto` file(s). Multiple files supported. | None | **Yes** |
-| `-I`, `--include` | Directory containing `.proto` files. | First `.proto` file | No |
+| `-I`, `--include` | Directory containing `.proto` files. | Current directory (`.`) | No |
 | `--grpc-endpoint` | gRPC server endpoint for communication. The value is written to `[udf].endpoint` in the generated `.ini` file. | `dns:///localhost:50051` | No |
 | `--grpc-server-endpoint` | Tsurugi-side gRPC server endpoint. If specified, the value is written to `[grpc_server].endpoint` in the generated `.ini` file. | None | No |
 | `--build-dir` | Temporary directory for CMake build process. | `tmp/` | No |

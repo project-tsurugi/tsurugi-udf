@@ -12,6 +12,7 @@ class CliArgs:
     grpc_plugin: str | None = None
     include: list[str] = field(default_factory=list)
     grpc_endpoint: str = "dns:///localhost:50051"
+    grpc_server_endpoint: str | None = None
     grpc_transport: str = "stream"
     output_dir: str | None = None
     debug: bool = False
@@ -47,7 +48,7 @@ class CliArgs:
             action="append",
             default=[],
             help="proto include path (can be specified multiple times). "
-                 "If omitted, current directory '.' is assumed.",
+            "If omitted, current directory '.' is assumed.",
         )
         p.add_argument(
             "--grpc-endpoint",
@@ -91,6 +92,11 @@ class CliArgs:
             action="store_true",
             help="Disable generated UDF (enabled=false in ini)",
         )
+        p.add_argument(
+            "--grpc-server-endpoint",
+            default=None,
+            help="Tsurugi-side gRPC server endpoint written to [grpc_server].endpoint",
+        )
         return p
 
     @classmethod
@@ -102,6 +108,7 @@ class CliArgs:
             grpc_plugin=ns.grpc_plugin,
             include=list(ns.include),
             grpc_endpoint=ns.grpc_endpoint,
+            grpc_server_endpoint=ns.grpc_server_endpoint,
             grpc_transport=ns.grpc_transport,
             output_dir=ns.output_dir,
             debug=bool(ns.debug),
@@ -117,6 +124,7 @@ class CliArgs:
             f"protos={len(self.proto_files)}, "
             f"includes={len(self.include)}, "
             f"build_dir={self.build_dir}, "
+            f"grpc_server_endpoint={self.grpc_server_endpoint}, "
             f"transport={self.grpc_transport}, "
             f"secure={'true' if self.secure else 'false'}, "
             f"auto_deps={'true' if self.auto_deps else 'false'}, "

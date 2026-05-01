@@ -15,6 +15,7 @@ def write_ini_files_for_rpc_libs(
     lib_dir: Path,
     ini_dir: Path,
     endpoint: str,
+    grpc_server_endpoint: str | None,
     transport: str,
     secure: bool = False,
     enabled: bool = True,
@@ -39,6 +40,15 @@ def write_ini_files_for_rpc_libs(
                 f"endpoint={endpoint}",
                 f"secure={'true' if secure else 'false'}",
                 f"transport={transport}",
+                *(
+                    [
+                        "",
+                        "[grpc_server]",
+                        f"endpoint={grpc_server_endpoint}",
+                    ]
+                    if grpc_server_endpoint
+                    else []
+                ),
                 "",
             ]
         )

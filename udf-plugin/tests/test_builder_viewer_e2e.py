@@ -353,6 +353,76 @@ def test_builder_cli_generates_outputs(tmp_path: Path, proto_name: str) -> None:
     )
 
 
+def test_builder_cli_grpc_server_endpoint_ini_section(tmp_path: Path) -> None:
+    proto = DATA_DIR / "minimal.proto"
+    build_dir = tmp_path / "build"
+    out_dir = tmp_path / "out"
+
+    argv = [
+        "--proto",
+        str(proto),
+        "-I",
+        str(DATA_DIR),
+        "-I",
+        str(REPO_PROTO_DIR),
+        "--grpc-endpoint",
+        "dns:///localhost:40005",
+        "--grpc-server-endpoint",
+        "dns:///localhost:40006",
+        "--build-dir",
+        str(build_dir),
+        "--output-dir",
+        str(out_dir),
+        "--clean",
+        "--debug",
+    ]
+
+    try:
+        main(argv)
+    except SystemExit as e:
+        pytest.fail(f"builder cli failed with SystemExit({e.code})")
+
+    ini_text = (out_dir / "libminimal.ini").read_text(encoding="utf-8")
+
+    assert "[grpc_server]" in ini_text
+    assert "endpoint=dns:///localhost:40006" in ini_text
+
+
+def test_builder_cli_without_grpc_server_endpoint_omits_ini_section(
+    tmp_path: Path,
+) -> None:
+    proto = DATA_DIR / "minimal.proto"
+    build_dir = tmp_path / "build"
+    out_dir = tmp_path / "out"
+
+    argv = [
+        "--proto",
+        str(proto),
+        "-I",
+        str(DATA_DIR),
+        "-I",
+        str(REPO_PROTO_DIR),
+        "--grpc-endpoint",
+        "dns:///localhost:40005",
+        "--build-dir",
+        str(build_dir),
+        "--output-dir",
+        str(out_dir),
+        "--clean",
+        "--debug",
+    ]
+
+    try:
+        main(argv)
+    except SystemExit as e:
+        pytest.fail(f"builder cli failed with SystemExit({e.code})")
+
+    ini_text = (out_dir / "libminimal.ini").read_text(encoding="utf-8")
+
+    assert "[grpc_server]" not in ini_text
+    assert "dns:///localhost:40006" not in ini_text
+
+
 def test_builder_cli_generates_outputs_for_multi_imported_service(
     tmp_path: Path,
 ) -> None:

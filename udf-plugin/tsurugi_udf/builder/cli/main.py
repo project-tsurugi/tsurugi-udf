@@ -56,6 +56,7 @@ def main(argv: list[str] | None = None) -> None:
     desc_pb = paths.OUT / descriptor_name(proto_files)
 
     outputs: dict[str, Path] | None = None
+    proto_outputs: dict[str, Path] | None = None
     ini_outputs: dict[str, Path] | None = None
     output_dir: Path | None = None
 
@@ -312,6 +313,9 @@ def main(argv: list[str] | None = None) -> None:
         if outputs:
             for so_path in sorted(outputs.values(), key=lambda p: p.name):
                 info(f" - {so_path.name}")
+        if proto_outputs:
+            for so_path in sorted(proto_outputs.values(), key=lambda p: p.name):
+                info(f" - deps/{so_path.name}")
         if ini_outputs:
             for ini_path in sorted(ini_outputs.values(), key=lambda p: p.name):
                 info(f" - {ini_path.name}")

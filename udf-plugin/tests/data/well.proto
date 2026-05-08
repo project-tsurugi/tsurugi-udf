@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package types;
+
+import "google/protobuf/wrappers.proto";
+
+service WellKnown {
+  rpc Int32ValueIncrement(google.protobuf.Int32Value) returns (google.protobuf.Int32Value);
+}

@@ -514,3 +514,65 @@ def test_builder_cli_generates_outputs_for_multi_imported_service(
         expected_rpc_names=rpc_names_from_proto(proto)
         | rpc_names_from_proto(imported_proto),
     )
+
+
+def test_builder_cli_handles_protobuf_well_known_types(
+    tmp_path: Path,
+) -> None:
+    proto = DATA_DIR / "well.proto"
+
+    assert proto.exists(), f"Proto file not found: {proto}"
+
+    build_dir = tmp_path / "build"
+    out_dir = tmp_path / "out"
+
+    argv = [
+        "--proto",
+        str(proto),
+        "-I",
+        str(DATA_DIR),
+        "-I",
+        str(REPO_PROTO_DIR),
+        "--grpc-endpoint",
+        "dns:///localhost:40006",
+        "--build-dir",
+        str(build_dir),
+        "--output-dir",
+        str(out_dir),
+        "--clean",
+        "--debug",
+    ]
+
+    print(f"[well.proto] argv: {argv}")
+
+    try:
+        main(argv)
+    except SystemExit as e:
+        pytest.fail(f"builder cli failed with SystemExit({e.code})")
+
+    plugin_so = out_dir / "libwell.so"
+    proto_so = out_dir / "deps" / "libwell_proto.so"
+    ini_file = out_dir / "libwell.ini"
+    desc_file = out_dir / "well.desc.pb"
+
+    assert_standard_outputs(
+        proto_name="well.proto",
+        out_dir=out_dir,
+        plugin_so=plugin_so,
+        proto_so=proto_so,
+        ini_file=ini_file,
+        desc_file=desc_file,
+    )
+
+    deps_so_files = sorted((out_dir / "deps").glob("lib*.so"))
+    deps_so_names = {p.name for p in deps_so_files}
+
+    assert deps_so_names == {"libwell_proto.so"}
+
+    assert_plugins_dlopenable(tmp_path, [plugin_so])
+
+    assert_expected_functions_visible(
+        tmp_path=tmp_path,
+        plugin_sos=[plugin_so],
+        expected_rpc_names=rpc_names_from_proto(proto),
+    )

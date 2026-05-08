@@ -9,6 +9,10 @@ def load_fds(desc_pb: Path) -> FileDescriptorSet:
     return fds
 
 
+def is_well_known_proto(name: str) -> bool:
+    return name.startswith("google/protobuf/")
+
+
 def build_import_graph(fds: FileDescriptorSet) -> dict[str, set[str]]:
     return {fd.name: set(fd.dependency) for fd in fds.file}
 
@@ -34,11 +38,10 @@ def find_unlisted_imports(
     proto_files: list[Path],
     exclude_well_known: bool = True,
 ) -> tuple[list[str], list[str]]:
-
     resolved = {fd.name for fd in fds.file}
-
     specified: set[str] = set()
     unmappable: list[str] = []
+
     for pf in proto_files:
         name = normalize_proto_arg_to_fd_name(pf, includes)
         if name is None:
@@ -46,12 +49,10 @@ def find_unlisted_imports(
         else:
             specified.add(name)
 
-    def is_well_known(n: str) -> bool:
-        return n.startswith("google/protobuf/")
-
     unlisted = resolved - specified
+
     if exclude_well_known:
-        unlisted = {n for n in unlisted if not is_well_known(n)}
+        unlisted = {n for n in unlisted if not is_well_known_proto(n)}
 
     return (unmappable, sorted(unlisted))
 

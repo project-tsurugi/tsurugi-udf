@@ -18,6 +18,7 @@ from ..core.descriptor import (
     build_import_graph,
     find_unlisted_imports,
     descriptor_name,
+    is_well_known_proto,
 )
 from ..core.gen_tpl import render_tpl_for_rpc_protos
 from ..core.log import info, debug, error, debug_list, setup, warn, section
@@ -244,7 +245,11 @@ def main(argv: list[str] | None = None) -> None:
         with section("link"):
             target_protos = set(graph.keys())
             rpc_protos = collect_rpc_proto_names(fds)
-            exclude_protos: set[str] = set()
+
+            exclude_protos: set[str] = {
+                p for p in target_protos if is_well_known_proto(p)
+            }
+
             outputs, proto_outputs = build_split_shared_libs_layered_parallel(
                 import_graph=graph,
                 target_protos=target_protos,

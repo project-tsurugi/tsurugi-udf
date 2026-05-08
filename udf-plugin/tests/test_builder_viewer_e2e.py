@@ -533,8 +533,6 @@ def test_builder_cli_handles_protobuf_well_known_types(
         str(DATA_DIR),
         "-I",
         str(REPO_PROTO_DIR),
-        "-I",
-        "/usr/include",
         "--grpc-endpoint",
         "dns:///localhost:40006",
         "--build-dir",
@@ -569,11 +567,7 @@ def test_builder_cli_handles_protobuf_well_known_types(
     deps_so_files = sorted((out_dir / "deps").glob("lib*.so"))
     deps_so_names = {p.name for p in deps_so_files}
 
-    assert "libwell_proto.so" in deps_so_names
-
-    assert "libwrappers_proto.so" not in deps_so_names
-    assert not any("wrappers" in name for name in deps_so_names)
-    assert not any("google" in name and "protobuf" in name for name in deps_so_names)
+    assert deps_so_names == {"libwell_proto.so"}
 
     assert_plugins_dlopenable(tmp_path, [plugin_so])
 

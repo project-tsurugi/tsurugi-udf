@@ -576,3 +576,104 @@ def test_builder_cli_handles_protobuf_well_known_types(
         plugin_sos=[plugin_so],
         expected_rpc_names=rpc_names_from_proto(proto),
     )
+
+
+def test_builder_cli_udf_timeout_ini_entry(tmp_path: Path) -> None:
+    proto = DATA_DIR / "minimal.proto"
+    build_dir = tmp_path / "build"
+    out_dir = tmp_path / "out"
+
+    argv = [
+        "--proto",
+        str(proto),
+        "-I",
+        str(DATA_DIR),
+        "-I",
+        str(REPO_PROTO_DIR),
+        "--grpc-endpoint",
+        "dns:///localhost:40005",
+        "--udf-timeout",
+        "5000",
+        "--build-dir",
+        str(build_dir),
+        "--output-dir",
+        str(out_dir),
+        "--clean",
+        "--debug",
+    ]
+
+    try:
+        main(argv)
+    except SystemExit as e:
+        pytest.fail(f"builder cli failed with SystemExit({e.code})")
+
+    ini_text = (out_dir / "libminimal.ini").read_text(encoding="utf-8")
+
+    assert "[udf]" in ini_text
+    assert "timeout=5000" in ini_text
+
+
+def test_builder_cli_without_udf_timeout_omits_ini_entry(tmp_path: Path) -> None:
+    proto = DATA_DIR / "minimal.proto"
+    build_dir = tmp_path / "build"
+    out_dir = tmp_path / "out"
+
+    argv = [
+        "--proto",
+        str(proto),
+        "-I",
+        str(DATA_DIR),
+        "-I",
+        str(REPO_PROTO_DIR),
+        "--grpc-endpoint",
+        "dns:///localhost:40005",
+        "--build-dir",
+        str(build_dir),
+        "--output-dir",
+        str(out_dir),
+        "--clean",
+        "--debug",
+    ]
+
+    try:
+        main(argv)
+    except SystemExit as e:
+        pytest.fail(f"builder cli failed with SystemExit({e.code})")
+
+    ini_text = (out_dir / "libminimal.ini").read_text(encoding="utf-8")
+
+    assert "timeout=" not in ini_text
+
+
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_builder_cli_udf_timeout_must_be_positive(
+    tmp_path: Path,
+    value: str,
+) -> None:
+    proto = DATA_DIR / "minimal.proto"
+    build_dir = tmp_path / "build"
+    out_dir = tmp_path / "out"
+
+    argv = [
+        "--proto",
+        str(proto),
+        "-I",
+        str(DATA_DIR),
+        "-I",
+        str(REPO_PROTO_DIR),
+        "--grpc-endpoint",
+        "dns:///localhost:40005",
+        "--udf-timeout",
+        value,
+        "--build-dir",
+        str(build_dir),
+        "--output-dir",
+        str(out_dir),
+        "--clean",
+        "--debug",
+    ]
+
+    with pytest.raises(SystemExit) as e:
+        main(argv)
+
+    assert e.value.code == 2

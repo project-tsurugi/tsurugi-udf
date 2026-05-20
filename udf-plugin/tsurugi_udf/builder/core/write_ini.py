@@ -19,6 +19,7 @@ def write_ini_files_for_rpc_libs(
     transport: str,
     secure: bool = False,
     enabled: bool = True,
+    udf_timeout: int | None = None,
 ) -> Dict[str, Path]:
     report = collect_rpc_so_report(fds)
 
@@ -40,6 +41,7 @@ def write_ini_files_for_rpc_libs(
                 f"endpoint={endpoint}",
                 f"secure={'true' if secure else 'false'}",
                 f"transport={transport}",
+                *([f"timeout={udf_timeout}"] if udf_timeout is not None else []),
                 *(
                     [
                         "",

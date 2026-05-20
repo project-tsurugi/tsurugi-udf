@@ -294,6 +294,7 @@ def main(argv: list[str] | None = None) -> None:
                 transport=args.grpc_transport,
                 secure=args.secure,
                 enabled=not args.disable,
+                udf_timeout=args.udf_timeout,
             )
             info(
                 "wrote ini files: "

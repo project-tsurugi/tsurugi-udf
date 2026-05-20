@@ -14,6 +14,7 @@ class CliArgs:
     grpc_endpoint: str = "dns:///localhost:50051"
     grpc_server_endpoint: str | None = None
     grpc_transport: str = "stream"
+    udf_timeout: int | None = None
     output_dir: str | None = None
     debug: bool = False
     clean: bool = False
@@ -61,6 +62,12 @@ class CliArgs:
             help="gRPC server transport",
         )
         p.add_argument(
+            "--udf-timeout",
+            type=int,
+            default=None,
+            help="UDF RPC call timeout in seconds. If omitted, no timeout is written to ini.",
+        )
+        p.add_argument(
             "--output-dir",
             default=".",
             help="Directory to write final generated files (default: current directory)",
@@ -101,7 +108,12 @@ class CliArgs:
 
     @classmethod
     def from_cli(cls, argv: Sequence[str] | None = None) -> "CliArgs":
-        ns = cls.build_parser().parse_args(argv)
+        parser = cls.build_parser()
+        ns = parser.parse_args(argv)
+
+        if ns.udf_timeout is not None and ns.udf_timeout <= 0:
+            parser.error("--udf-timeout must be a positive integer in seconds")
+
         return cls(
             proto_files=list(ns.proto_files),
             build_dir=ns.build_dir,
@@ -110,6 +122,7 @@ class CliArgs:
             grpc_endpoint=ns.grpc_endpoint,
             grpc_server_endpoint=ns.grpc_server_endpoint,
             grpc_transport=ns.grpc_transport,
+            udf_timeout=ns.udf_timeout,
             output_dir=ns.output_dir,
             debug=bool(ns.debug),
             clean=bool(ns.clean),
@@ -129,7 +142,8 @@ class CliArgs:
             f"secure={'true' if self.secure else 'false'}, "
             f"auto_deps={'true' if self.auto_deps else 'false'}, "
             f"clean={'true' if self.clean else 'false'}, "
-            f"out={self.output_dir}"
+            f"out={self.output_dir}, "
+            f"udf_timeout={self.udf_timeout}, "
         )
 
     def to_debug_detail_lines(self) -> list[str]:

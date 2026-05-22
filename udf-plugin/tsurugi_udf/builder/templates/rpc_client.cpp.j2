@@ -9,6 +9,7 @@
 #define RPC_LOG(x)
 #endif
 
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
@@ -18,6 +19,21 @@
 
 using grpc::Status;
 using namespace plugin::udf;
+
+namespace {
+
+void apply_deadline(
+    grpc::ClientContext& context,
+    const plugin::udf::generic_client_context& source
+) {
+    if (auto timeout = source.timeout()) {
+        if (*timeout > std::chrono::milliseconds{0}) {
+            context.set_deadline(std::chrono::system_clock::now() + *timeout);
+        }
+    }
+}
+
+} // namespace
 
 // =======================
 // Macros (recursive code)
@@ -311,6 +327,7 @@ void rpc_client::call(plugin::udf::generic_client_context& generic_client_contex
                       generic_record& request,
                       generic_record& response) const {
     auto& context = generic_client_context.grpc_context();
+    apply_deadline(context, generic_client_context);
     auto cursor = request.cursor();
     if (!cursor) { throw std::runtime_error("request cursor is null"); }
 
@@ -435,6 +452,7 @@ rpc_client::call_server_streaming_async(
              out_stream]() mutable {
                 try {
                     auto& context = generic_client_context->grpc_context();
+                    apply_deadline(context, *generic_client_context);
                     auto reader = stub->{{ fn.function_name }}(&context, req);
                     if (!reader) {
                         auto err = std::make_unique<generic_record_impl>();
@@ -501,3 +519,4 @@ rpc_client::call_server_streaming_async(
     stream->end_of_stream();
     return stream;
 }
+

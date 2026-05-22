@@ -143,7 +143,7 @@ class CliArgs:
             f"auto_deps={'true' if self.auto_deps else 'false'}, "
             f"clean={'true' if self.clean else 'false'}, "
             f"out={self.output_dir}, "
-            f"udf_timeout={self.udf_timeout}, "
+            f"udf_timeout={self.udf_timeout}"
         )
 
     def to_debug_detail_lines(self) -> list[str]:

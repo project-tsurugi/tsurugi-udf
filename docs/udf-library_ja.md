@@ -187,6 +187,10 @@ BLOBクライアントを実行するgRPCサーバを Tsurugi と同一ホスト
 また、複数のUDFプラグインを配置する環境において、UDFプラグインに対応するgRPCサーバをそれぞれ異なるホストに配置する場合、ネットワーク構成によっては `grpc_server.endpoint` をUDFプラグインごとに設定したい場合があります。
 このため、 `grpc_server.endpoint` は Tsurugi本体の設定ファイルだけでなく、各UDFプラグインのプラグイン設定ファイルでも指定することができます。
 
+> [!IMPORTANT]
+> Tsurugi 1.11.0 以降、BLOB中継サービスが稼働するTsurugi上のgRPCサーバはデフォルトの設定では無効となっています。
+> BLOB中継サービスを利用するには、 Tsurugi 構成ファイル（`tsurugi.ini`）の `[grpc_server]` セクションの `enabled` パラメータを `true` に設定して Tsurugiを再起動してください。
+
 ## その他の機能
 
 ### ロギング

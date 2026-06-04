@@ -79,7 +79,7 @@ $ udf-plugin-builder --proto helloworld.proto
 $ udf-plugin-builder
 usage: udf-plugin-builder [-h] --proto PROTO_FILES [PROTO_FILES ...] [--build-dir BUILD_DIR]
                           [--grpc-plugin GRPC_PLUGIN] [-I INCLUDE] [--grpc-endpoint GRPC_ENDPOINT]
-                          [--grpc-transport GRPC_TRANSPORT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
+                          [--grpc-transport GRPC_TRANSPORT] [--udf-timeout UDF_TIMEOUT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
                           [--auto-deps | --no-auto-deps] [--secure] [--disable]
 udf-plugin-builder: error: the following arguments are required: --proto
 ```
@@ -92,6 +92,7 @@ udf-plugin-builder: error: the following arguments are required: --proto
 | `--output-dir` | No | `.` | 生成される `.so` と `.ini` ファイルを配置するディレクトリを指定します。 |
 | `--grpc-endpoint` | No | `dns:///localhost:50051` | gRPC サーバのエンドポイントを指定します（`.ini` に反映されます）。 |
 | `--grpc-transport` | No | `stream` | gRPC 通信方式を指定します（`.ini` に反映されます）。 |
+| `--udf-timeout` | No | なし | UDF 実装サーバーへの RPC 呼び出し timeout を秒単位で指定します（`.ini` に反映されます） |
 | `--secure` | No | `false` | セキュアな gRPC 接続を有効にします（`.ini` に反映されます）。 |
 | `--disable` | No | `false` | 生成される UDF を無効状態で出力します（`.ini` に反映されます）。 |
 | `--debug` | No | `false` | デバッグログを有効にします。 |
@@ -165,6 +166,7 @@ secure=false
 | `endpoint` | String | この UDF プラグインに対応する宛先 gRPC サーバのエンドポイント。デフォルト値は `udf-plugin-builder` の `--grpc-endpoint` オプションで指定した値。 | この項目を未指定にした場合、Tsurugi 構成ファイル（`tsurugi.ini`）- `[udf]` セクションの `endpoint` パラメータの値が使用されます。 |
 | `secure` | Boolean (true/false) | gRPC との通信にセキュアな通信路を利用するかどうか。| この項目を未指定にした場合、Tsurugi 構成ファイル (`tsurugi.ini`) - `[udf]` セクションの `secure` パラメータの値が使用されます。 |
 | `transport` | string | gRPCストリーミング通信の方式。デフォルト値は `stream` | |
+| `timeout` | No | なし | gRPC サーバへの RPC 呼び出しタイムアウト期間を秒単位で指定する。この項目を未指定にした場合、タイムアウト期間は設定されない |
 
 ### UDF プラグインとgRPCサーバの接続設定
 

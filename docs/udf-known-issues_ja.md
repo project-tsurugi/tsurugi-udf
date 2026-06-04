@@ -41,9 +41,3 @@ service Types {
 [@#0: BIGINT]
 VALUE_EVALUATION_EXCEPTION (SQL-02011: an error (undefined) occurred:[diagnostic(code=undefined, message='unexpected error occurred during expression evaluation:Multiple fields selected in oneof group 0')])
 ```
-
-### クライアントタイムアウト設定に未対応
-
-**問題:**
-
-現時点の Tsurugi UDF では、gRPC クライアントのタイムアウト設定に対応していません。

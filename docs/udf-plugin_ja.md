@@ -79,8 +79,8 @@ $ udf-plugin-builder --proto helloworld.proto
 $ udf-plugin-builder
 usage: udf-plugin-builder [-h] --proto PROTO_FILES [PROTO_FILES ...] [--build-dir BUILD_DIR]
                           [--grpc-plugin GRPC_PLUGIN] [-I INCLUDE] [--grpc-endpoint GRPC_ENDPOINT]
-                          [--grpc-transport GRPC_TRANSPORT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
-                          [--auto-deps | --no-auto-deps] [--secure] [--disable]
+                          [--grpc-transport GRPC_TRANSPORT] [--udf-timeout UDF_TIMEOUT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
+                          [--auto-deps | --no-auto-deps] [--secure] [--disable] [--grpc-server-endpoint GRPC_SERVER_ENDPOINT]
 udf-plugin-builder: error: the following arguments are required: --proto
 ```
 
@@ -92,6 +92,8 @@ udf-plugin-builder: error: the following arguments are required: --proto
 | `--output-dir` | No | `.` | 生成される `.so` と `.ini` ファイルを配置するディレクトリを指定します。 |
 | `--grpc-endpoint` | No | `dns:///localhost:50051` | gRPC サーバのエンドポイントを指定します（`.ini` に反映されます）。 |
 | `--grpc-transport` | No | `stream` | gRPC 通信方式を指定します（`.ini` に反映されます）。 |
+| `--udf-timeout` | No | なし | UDF 実装サーバーへの RPC 呼び出し timeout を秒単位で指定します（`.ini` に反映されます）。 |
+| `--grpc-server-endpoint` | No | なし | Tsurugi 側 gRPC サーバーのエンドポイントを指定します（`.ini` に反映されます）。 |
 | `--secure` | No | `false` | セキュアな gRPC 接続を有効にします（`.ini` に反映されます）。 |
 | `--disable` | No | `false` | 生成される UDF を無効状態で出力します（`.ini` に反映されます）。 |
 | `--debug` | No | `false` | デバッグログを有効にします。 |
@@ -136,12 +138,15 @@ $ udf-plugin-builder -I . -I /path/to/tsurugi-udf/proto --proto my.proto
 - プラグインライブラリファイル（`.so`）
 - プラグイン設定ファイル（`.ini`）
 - プロトコル定義ファイル（`.desc.pb`）
+- プラグインライブラリ参照ファイル（`deps/.so`）
 
 ### プラグインライブラリファイル（`.so`）
 
 Tsurugi が生成した UDF を実行するための拡張用共有ライブラリです。
 
 ファイル名は `.proto` ファイル名の先頭に `lib` を付与し、拡張子を `.so` に置換した `lib{name}.so` です。
+
+本ライブラリファイルは後述するプラグインライブラリ参照ファイル（`deps/.so`）との依存関係を持ちます。
 
 ### プラグイン設定ファイル（`.ini`）
 
@@ -159,20 +164,36 @@ endpoint=dns:///localhost:50051
 secure=false
 ```
 
+`udf` セクションの設定項目は以下の通りです。
+
 | パラメータ名 | 型 | 説明 | 備考 |
 | ---------- | ---- | ---- | ---- |
 | `enabled` | Boolean (true/false) | UDF プラグインの有効/無効を指定。デフォルト値は `true` | `false` に指定した場合、UDF プラグインが Tsurugi にデプロイされていても UDF は無効化されます。 |
 | `endpoint` | String | この UDF プラグインに対応する宛先 gRPC サーバのエンドポイント。デフォルト値は `udf-plugin-builder` の `--grpc-endpoint` オプションで指定した値。 | この項目を未指定にした場合、Tsurugi 構成ファイル（`tsurugi.ini`）- `[udf]` セクションの `endpoint` パラメータの値が使用されます。 |
 | `secure` | Boolean (true/false) | gRPC との通信にセキュアな通信路を利用するかどうか。| この項目を未指定にした場合、Tsurugi 構成ファイル (`tsurugi.ini`) - `[udf]` セクションの `secure` パラメータの値が使用されます。 |
 | `transport` | string | gRPCストリーミング通信の方式。デフォルト値は `stream` | |
+| `timeout` | Integer | gRPC サーバへの RPC 呼び出しタイムアウト期間を秒単位で指定する。この項目を未指定にした場合、タイムアウト期間は設定されません。 | |
 
-### UDF プラグインとgRPCサーバの接続設定
+オプションの指定によっては、以下のセクションやパラメータも含まれます。
+
+```ini
+[grpc_server]
+endpoint=dns:///localhost:40012
+```
+
+`grpc_server` セクションの設定項目は以下の通りです。
+
+| パラメータ名 | 型 | 説明 | 備考 |
+| ---------- | ---- | ---- | ---- |
+| `endpoint` | String | Tsurugi上で動作するBLOB中継サービスに対応する gRPC サーバーのエンドポイントを指定します。 | |
+
+#### UDF プラグインとgRPCサーバの接続設定
 
 生成した UDF プラグインは、プラグイン設定ファイルの `[udf]` セクションの `endpoint` パラメータ (以下 `udf.endpoint` と表記) で指定された宛先 gRPC サーバと接続して通信を行います。デフォルトは `dns:///localhost:50051` です。
 
 UDFを実行するgRPCサーバを Tsurugi と同一ホスト上で動作させる場合、かつgRPCサーバの接続ポートを上記デフォルト値に合わせて実行する場合は `udf.endpoint` はそのままの設定で問題ありませんが、gRPCサーバを Tsurugi と異なるホスト上で動作させる場合や接続ポートを変更する場合は、TsurugiがUDFを実行するgRPCサーバに接続できるように `udf.endpoint` を適切に設定してください。
 
-## プロトコル定義ファイル（`.desc.pb`）
+### プロトコル定義ファイル（`.desc.pb`）
 
 `.proto` ファイルの定義内容を保持するバイナリ形式のファイルです。
 Tsurugiの起動時にこのファイルに基づいて、UDFプラグイン全体で制約違反（RPC名の重複や message の多重定義など）のバリデーションが行われます。
@@ -196,11 +217,22 @@ $ udf-plugin-builder --proto a.proto b.proto
 [INFO]  - a_b.desc.pb
 ```
 
+### プラグインライブラリ参照ファイル（`deps/.so`）
+
+プラグインライブラリファイル（`.so`）に対応する、プラグインライブラリの実装を提供するための共有ライブラリファイルです。
+
+このファイルは `deps` ディレクトリに配置され、ファイル名は `lib{proto_file_name}_proto.so` です。`{proto_file_name}` は `udf-plugin-builder` の `--proto` オプションで指定した `.proto` ファイル名から拡張子を除いた部分です。
+
 ## UDF プラグインのデプロイ
 
 生成した UDF プラグインを Tsurugi にデプロイすることで、UDF が利用可能になります。
 
-UDF プラグインのデプロイは、Tsurugi が停止している状態で、UDF プラグインの構成ファイル（プラグインライブラリファイル（`.so`）、プラグイン設定ファイル（`.ini`）、プロトコル定義ファイル（`.desc.pb`））を Tsurugi のプラグイン配置ディレクトリに配置します。
+UDF プラグインのデプロイは、Tsurugi が停止している状態で、UDFプラグインを構成する以下のファイルを全て Tsurugi のプラグイン配置ディレクトリに配置します。
+
+- プラグインライブラリファイル（`.so`）
+- プラグイン設定ファイル（`.ini`）
+- プロトコル定義ファイル（`.desc.pb`）
+- プラグインライブラリ参照ファイル（`deps/.so`）
 
 プラグイン配置ディレクトリは、Tsurugi 構成ファイル（`tsurugi.ini`）の `[udf]` セクションにある `plugin_directory` パラメータで指定します。デフォルトでは `${TSURUGI_HOME}/var/plugins` です。
 

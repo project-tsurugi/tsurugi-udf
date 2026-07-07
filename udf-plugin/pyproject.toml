@@ -2,7 +2,7 @@
 
 [build-system]
 requires = [
-  "scikit-build-core>=0.11.6",
+  "scikit-build-core==0.11.6",
   "setuptools>=80.9.0",
   "wheel>=0.45.1",
   "pybind11>=3.0.0"
@@ -24,7 +24,7 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 dependencies = [
   "jinja2>=3.1.6",
-  "protobuf>=6.31.1"
+  "protobuf>=6.31.1,<7.0.0"
 ]
 
 [project.optional-dependencies]
@@ -39,7 +39,7 @@ udf-plugin-viewer = "tsurugi_udf.viewer.cli:main"
 
 [tool.scikit-build]
 build-dir = "build/{wheel_tag}"
-cmake.verbose = true
+build.verbose = true
 wheel.packages = [
   "tsurugi_udf",
   "tsurugi_udf.builder",

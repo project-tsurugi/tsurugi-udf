@@ -37,7 +37,7 @@ ______________________________________________________________________
 | **pip** | ≥ 24.0 | Python package manager |
 | **jinja2** | ≥ 3.1.6 | Template engine for code generation |
 | **pybind11** | ≥ 3.0.0 | C++/Python binding library |
-| **scikit-build-core** | ≥ 0.11.6 | CMake-based Python build tool |
+| **scikit-build-core** | 0.11.6 | CMake-based Python build tool |
 | **setuptools** | ≥ 80.9.0 | Python packaging library |
 | **wheel** | ≥ 0.45.1 | Python wheel package support |
 | **pytest** | ≥ 8.4.2 | Testing framework |

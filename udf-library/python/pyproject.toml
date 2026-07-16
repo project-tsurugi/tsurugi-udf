@@ -1,4 +1,5 @@
-#ruff format pyproject.toml
+# toml-sort -i pyproject.toml
+
 [build-system]
 requires = ["setuptools>=80.9.0", "wheel>=0.45.1", "protobuf>=4.0.0"]
 build-backend = "setuptools.build_meta"
@@ -14,8 +15,8 @@ dependencies = ["protobuf>=6.31.1"]
 
 [project.optional-dependencies]
 test = [
-    "pytest>=8.4.2",
-    "pytest-xdist>=3.8.0"
+  "pytest>=8.4.2",
+  "pytest-xdist>=3.8.0"
 ]
 
 [tool.pytest.ini_options]
@@ -25,11 +26,11 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = ["."]
 
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["tsurugidb*"]
 exclude = ["tests*"]
-
-[tool.setuptools]
-include-package-data = true
-zip-safe = false

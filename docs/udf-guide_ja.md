@@ -88,6 +88,8 @@ message HelloReply {
 以降の手順では「UDF のインターフェース定義」で作成した `helloworld.proto` が現在のディレクトリにあるものとします。
 まず、`grpc_tools.protoc` Python モジュールを使って `.proto` ファイルから gRPC 関連の Python ソースコードを生成します。[gRPC - Python Quickstart][python-quickstart] の例からは、ディレクトリパスのみを変更しています。
 
+Python 用のソースコード生成には grpcio-tools が必要です。インストール方法については、[tsurugi-udf/README.md](https://github.com/project-tsurugi/tsurugi-udf/blob/master/README.md) を参照してください。
+
 ```sh
 $ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. helloworld.proto
 ```

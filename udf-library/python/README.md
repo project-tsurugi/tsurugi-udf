@@ -37,16 +37,16 @@ The BlobRelayClient API is used to upload and download large BLOB/CLOB data.
 ## Installation
 
 ```bash
-pip install .
+python -m pip install .
 ```
+The required Python dependencies, including `grpcio` and `protobuf`, are installed automatically.
 
 ## Testing
 
 ```sh
 # install test dependencies before running tests (only needed once)
-pip install -e ".[test]"
-
-pytest
+python -m pip install -e ".[test]"
+python -m pytest
 ```
 
 ## Example

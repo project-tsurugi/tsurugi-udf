@@ -30,7 +30,7 @@ Python package dependencies are installed automatically by `pip` based on each m
 `grpcio-tools` is required to generate Python source code from Protocol Buffers definitions.
 
 ```sh
-python -m pip install "grpcio-tools==1.74.0"
+python -m pip install "grpcio-tools==1.82.1"
 ```
 
 It provides the `grpc_tools.protoc` command used to generate files such as `*_pb2.py` and `*_pb2_grpc.py`.

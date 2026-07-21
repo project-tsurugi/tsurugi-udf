@@ -34,12 +34,14 @@ jobs:
         run: |
           cd udf-library/python
           pip install .[test]
+          python -m pip check
           pytest -v
 
       - name: Test udf-plugin
         run: |
           cd udf-plugin
           pip install .[test]
+          python -m pip check
           pytest -v
 
       - name: Create_GitHub_Release

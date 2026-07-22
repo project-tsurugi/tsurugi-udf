@@ -32,17 +32,23 @@ jobs:
 
       - name: Test udf-library-python
         run: |
+          python -m venv /tmp/venv-udf-library
+          source /tmp/venv-udf-library/bin/activate
+
           cd udf-library/python
-          pip install .[test]
+          python -m pip install .[test]
           python -m pip check
-          pytest -v
+          python -m pytest -v
 
       - name: Test udf-plugin
         run: |
+          python -m venv /tmp/venv-udf-plugin
+          source /tmp/venv-udf-plugin/bin/activate
+
           cd udf-plugin
-          pip install .[test]
+          python -m pip install .[test]
           python -m pip check
-          pytest -v
+          python -m pytest -v
 
       - name: Create_GitHub_Release
         if: github.repository_owner == 'project-tsurugi' && contains(github.ref, '/tags/')

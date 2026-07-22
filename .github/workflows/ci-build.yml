@@ -35,6 +35,7 @@ jobs:
           python -m pip install virtualenv
       - name: Test udf-library-python
         run: |
+          rm -rf /tmp/venv-udf-library
           python -m virtualenv /tmp/venv-udf-library
 
           cd udf-library/python
@@ -44,6 +45,7 @@ jobs:
 
       - name: Test udf-plugin
         run: |
+          rm -rf /tmp/venv-udf-plugin
           python -m virtualenv /tmp/venv-udf-plugin
 
           cd udf-plugin

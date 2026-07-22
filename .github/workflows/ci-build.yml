@@ -30,17 +30,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Prepare Python virtualenv
+        run: |
+          python -m pip install virtualenv
       - name: Test udf-library-python
         run: |
+          rm -rf /tmp/venv-udf-library
+          python -m virtualenv /tmp/venv-udf-library
+
           cd udf-library/python
-          pip install .[test]
-          pytest -v
+          /tmp/venv-udf-library/bin/python -m pip install .[test]
+          /tmp/venv-udf-library/bin/python -m pip check
+          /tmp/venv-udf-library/bin/python -m pytest -v
 
       - name: Test udf-plugin
         run: |
+          rm -rf /tmp/venv-udf-plugin
+          python -m virtualenv /tmp/venv-udf-plugin
+
           cd udf-plugin
-          pip install .[test]
-          pytest -v
+          /tmp/venv-udf-plugin/bin/python -m pip install .[test]
+          /tmp/venv-udf-plugin/bin/python -m pip check
+          /tmp/venv-udf-plugin/bin/python -m pytest -v
 
       - name: Create_GitHub_Release
         if: github.repository_owner == 'project-tsurugi' && contains(github.ref, '/tags/')

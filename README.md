@@ -25,16 +25,6 @@ Python package dependencies are installed automatically by `pip` based on each m
 | **Python** | ≥ 3.10 | Python runtime |
 | **pip** | ≥ 24.0 | Python package installer |
 
-### Python UDF development
-
-`grpcio-tools` is required to generate Python source code from Protocol Buffers definitions.
-
-```sh
-python -m pip install "grpcio-tools==1.82.1"
-```
-
-It provides the `grpc_tools.protoc` command used to generate files such as `*_pb2.py` and `*_pb2_grpc.py`.
-
 ### Additional prerequisites for the UDF plugin toolchain
 
 The following components are required to build and use the [Tsurugi UDF plugin toolchain](udf-plugin/README.md).
@@ -61,10 +51,10 @@ python -m pip install ./udf-library/python
 
 #### UDF plugin toolchain
 
-Runtime dependencies:
+Installed dependencies:
 
-- `jinja2`
-- `protobuf`
+- `jinja2`: template engine used by the plugin toolchain
+- `protobuf`: Protocol Buffers runtime
 
 Build dependencies:
 
@@ -75,10 +65,11 @@ Build dependencies:
 
 #### UDF Python library
 
-Runtime dependencies:
+Installed dependencies:
 
-- `grpcio`
-- `protobuf`
+- `grpcio`: gRPC runtime
+- `grpcio-tools`: Python source-code generation from Protocol Buffers definitions
+- `protobuf`: Protocol Buffers runtime
 
 The authoritative dependency definitions and version constraints are maintained in each module's `pyproject.toml`.
 

@@ -13,19 +13,19 @@ class CliArgs:
     include: list[str] = field(default_factory=list)
     grpc_endpoint: str = "dns:///localhost:50051"
     grpc_server_endpoint: str | None = None
+    tsurugi_endpoint: str | None = None
     grpc_transport: str = "stream"
     udf_timeout: int | None = None
     output_dir: str | None = None
     debug: bool = False
     clean: bool = False
     auto_deps: bool = True
-    secure: bool = False
+    secure: str = "false"
     disable: bool = False
 
     @staticmethod
     def build_parser() -> argparse.ArgumentParser:
         p = argparse.ArgumentParser(description="protoc wrapper")
-
         p.add_argument(
             "--proto",
             dest="proto_files",
@@ -54,7 +54,7 @@ class CliArgs:
         p.add_argument(
             "--grpc-endpoint",
             default="dns:///localhost:50051",
-            help="gRPC server endpoint",
+            help="gRPC server endpoint (pipe-separated list is allowed)",
         )
         p.add_argument(
             "--grpc-transport",
@@ -91,8 +91,13 @@ class CliArgs:
         )
         p.add_argument(
             "--secure",
-            action="store_true",
-            help="Enable secure gRPC connection",
+            nargs="?",
+            const="true",
+            default="false",
+            help=(
+                "Secure gRPC setting. Specify true/false or a pipe-separated list. "
+                "If specified without a value, true is used."
+            ),
         )
         p.add_argument(
             "--disable",
@@ -104,6 +109,14 @@ class CliArgs:
             default=None,
             help="Tsurugi-side gRPC server endpoint written to [grpc_server].endpoint",
         )
+        p.add_argument(
+            "--tsurugi-endpoint",
+            default=None,
+            help=(
+                "Tsurugi gRPC server endpoint written to [udf].tsurugi_endpoint "
+                "(pipe-separated list is allowed)"
+            ),
+        )
         return p
 
     @classmethod
@@ -114,6 +127,12 @@ class CliArgs:
         if ns.udf_timeout is not None and ns.udf_timeout <= 0:
             parser.error("--udf-timeout must be a positive integer in seconds")
 
+        secure_values = ns.secure.split("|")
+        if any(value not in {"true", "false"} for value in secure_values):
+            parser.error(
+                "--secure must be 'true', 'false', or a pipe-separated list of them"
+            )
+
         return cls(
             proto_files=list(ns.proto_files),
             build_dir=ns.build_dir,
@@ -121,6 +140,7 @@ class CliArgs:
             include=list(ns.include),
             grpc_endpoint=ns.grpc_endpoint,
             grpc_server_endpoint=ns.grpc_server_endpoint,
+            tsurugi_endpoint=ns.tsurugi_endpoint,
             grpc_transport=ns.grpc_transport,
             udf_timeout=ns.udf_timeout,
             output_dir=ns.output_dir,
@@ -138,8 +158,9 @@ class CliArgs:
             f"includes={len(self.include)}, "
             f"build_dir={self.build_dir}, "
             f"grpc_server_endpoint={self.grpc_server_endpoint}, "
+            f"tsurugi_endpoint={self.tsurugi_endpoint}, "
             f"transport={self.grpc_transport}, "
-            f"secure={'true' if self.secure else 'false'}, "
+            f"secure={self.secure}, "
             f"auto_deps={'true' if self.auto_deps else 'false'}, "
             f"clean={'true' if self.clean else 'false'}, "
             f"out={self.output_dir}, "

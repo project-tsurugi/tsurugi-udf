@@ -13,7 +13,6 @@ class CliArgs:
     include: list[str] = field(default_factory=list)
     grpc_endpoint: str = "dns:///localhost:50051"
     grpc_server_endpoint: str | None = None
-    tsurugi_endpoint: str | None = None
     grpc_transport: str = "stream"
     udf_timeout: int | None = None
     output_dir: str | None = None
@@ -107,13 +106,8 @@ class CliArgs:
         p.add_argument(
             "--grpc-server-endpoint",
             default=None,
-            help="Tsurugi-side gRPC server endpoint written to [grpc_server].endpoint",
-        )
-        p.add_argument(
-            "--tsurugi-endpoint",
-            default=None,
             help=(
-                "Tsurugi gRPC server endpoint written to [udf].tsurugi_endpoint "
+                "Tsurugi-side gRPC server endpoint written to [grpc_server].endpoint "
                 "(pipe-separated list is allowed)"
             ),
         )
@@ -140,7 +134,6 @@ class CliArgs:
             include=list(ns.include),
             grpc_endpoint=ns.grpc_endpoint,
             grpc_server_endpoint=ns.grpc_server_endpoint,
-            tsurugi_endpoint=ns.tsurugi_endpoint,
             grpc_transport=ns.grpc_transport,
             udf_timeout=ns.udf_timeout,
             output_dir=ns.output_dir,
@@ -158,7 +151,6 @@ class CliArgs:
             f"includes={len(self.include)}, "
             f"build_dir={self.build_dir}, "
             f"grpc_server_endpoint={self.grpc_server_endpoint}, "
-            f"tsurugi_endpoint={self.tsurugi_endpoint}, "
             f"transport={self.grpc_transport}, "
             f"secure={self.secure}, "
             f"auto_deps={'true' if self.auto_deps else 'false'}, "

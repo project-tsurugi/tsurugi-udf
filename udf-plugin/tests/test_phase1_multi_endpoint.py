@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from google.protobuf.descriptor_pb2 import FileDescriptorSet
 import pytest
 
 from tsurugi_udf.builder.cli.args import CliArgs
 from tsurugi_udf.builder.core.write_ini import (
     _format_secure,
-    _resolve_tsurugi_endpoints,
+    write_ini_files_for_rpc_libs,
 )
 
 
@@ -38,40 +39,61 @@ def test_multi_endpoint_options_are_preserved() -> None:
             "dns:///udf0:50051|dns:///udf1:50051",
             "--secure",
             "false|true",
-            "--tsurugi-endpoint",
+            "--grpc-server-endpoint",
             "dns:///tsurugi0:40012|dns:///tsurugi1:40012",
         ]
     )
     assert args.grpc_endpoint == "dns:///udf0:50051|dns:///udf1:50051"
     assert args.secure == "false|true"
-    assert args.tsurugi_endpoint == "dns:///tsurugi0:40012|dns:///tsurugi1:40012"
-
-
-def test_legacy_endpoint_is_copied_to_new_setting() -> None:
-    new_endpoint, legacy_endpoint = _resolve_tsurugi_endpoints(
-        grpc_server_endpoint="dns:///tsurugi:40012",
-        tsurugi_endpoint=None,
+    assert (
+        args.grpc_server_endpoint
+        == "dns:///tsurugi0:40012|dns:///tsurugi1:40012"
     )
-    assert new_endpoint == "dns:///tsurugi:40012"
-    assert legacy_endpoint == "dns:///tsurugi:40012"
 
 
-def test_new_multi_endpoint_uses_first_value_for_legacy_setting() -> None:
-    new_endpoint, legacy_endpoint = _resolve_tsurugi_endpoints(
-        grpc_server_endpoint=None,
-        tsurugi_endpoint="dns:///tsurugi0:40012|dns:///tsurugi1:40012",
+def test_removed_tsurugi_endpoint_option_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        CliArgs.from_cli(
+            [
+                "--proto",
+                "sample.proto",
+                "--tsurugi-endpoint",
+                "dns:///tsurugi0:40012|dns:///tsurugi1:40012",
+            ]
+        )
+
+
+def test_grpc_server_multi_endpoint_is_written_as_is(tmp_path, monkeypatch) -> None:
+    lib_dir = tmp_path / "lib"
+    ini_dir = tmp_path / "ini"
+    lib_dir.mkdir()
+    so_name = "libsample.so"
+    (lib_dir / so_name).touch()
+
+    monkeypatch.setattr(
+        "tsurugi_udf.builder.core.write_ini.collect_rpc_so_report",
+        lambda _: {so_name: object()},
     )
-    assert new_endpoint == "dns:///tsurugi0:40012|dns:///tsurugi1:40012"
-    assert legacy_endpoint == "dns:///tsurugi0:40012"
 
-
-def test_explicit_legacy_and_new_endpoints_are_kept_separately() -> None:
-    new_endpoint, legacy_endpoint = _resolve_tsurugi_endpoints(
-        grpc_server_endpoint="dns:///legacy:40012",
-        tsurugi_endpoint="dns:///tsurugi0:40012|dns:///tsurugi1:40012",
+    outputs = write_ini_files_for_rpc_libs(
+        FileDescriptorSet(),
+        lib_dir=lib_dir,
+        ini_dir=ini_dir,
+        endpoint="dns:///udf0:50051|dns:///udf1:50051",
+        grpc_server_endpoint="dns:///tsurugi0:40012|dns:///tsurugi1:40012",
+        transport="stream",
+        secure="false|true",
     )
-    assert new_endpoint == "dns:///tsurugi0:40012|dns:///tsurugi1:40012"
-    assert legacy_endpoint == "dns:///legacy:40012"
+    ini_text = outputs[so_name].read_text(encoding="utf-8")
+
+    assert "endpoint=dns:///udf0:50051|dns:///udf1:50051" in ini_text
+    assert "secure=false|true" in ini_text
+    assert (
+        "[grpc_server]\n"
+        "endpoint=dns:///tsurugi0:40012|dns:///tsurugi1:40012"
+        in ini_text
+    )
+    assert "tsurugi_endpoint=" not in ini_text
 
 
 def test_format_secure_keeps_backward_compatible_bool_input() -> None:

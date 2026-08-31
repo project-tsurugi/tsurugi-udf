@@ -81,7 +81,7 @@ usage: udf-plugin-builder [-h] --proto PROTO_FILES [PROTO_FILES ...] [--build-di
                           [--grpc-plugin GRPC_PLUGIN] [-I INCLUDE] [--grpc-endpoint GRPC_ENDPOINT]
                           [--grpc-transport GRPC_TRANSPORT] [--udf-timeout UDF_TIMEOUT] [--output-dir OUTPUT_DIR] [--debug] [--clean]
                           [--auto-deps | --no-auto-deps] [--secure [SECURE]] [--disable]
-                          [--grpc-server-endpoint GRPC_SERVER_ENDPOINT] [--tsurugi-endpoint TSURUGI_ENDPOINT]
+                          [--grpc-server-endpoint GRPC_SERVER_ENDPOINT]
 udf-plugin-builder: error: the following arguments are required: --proto
 ```
 
@@ -91,12 +91,11 @@ udf-plugin-builder: error: the following arguments are required: --proto
 | `-I`, `--include` | No |なし | `.proto` の `import` 解決に使用する include パスを指定します。**オプション自体を複数回指定可能です（1回につき1ディレクトリ）。** <br>例:<br> -I /path/to/dir_a -I /path/to/dir_b |
 | `--build-dir` | No | `tmp/` | ビルドで使用する一時ディレクトリを指定します。 |
 | `--output-dir` | No | `.` | 生成される `.so` と `.ini` ファイルを配置するディレクトリを指定します。 |
-| `--grpc-endpoint` | No | `dns:///localhost:50051` | UDF 実装サーバーの gRPC エンドポイントを指定します。パイプ文字 `|` 区切りで複数指定できます（`.ini` の `[udf].endpoint` に反映されます）。シェルから複数指定する場合は値をクォートしてください。 |
+| `--grpc-endpoint` | No | `dns:///localhost:50051` | UDF 実装サーバーの gRPC エンドポイントを指定します。パイプ文字 `\|` 区切りで複数指定できます（`.ini` の `[udf].endpoint` に反映されます）。シェルから複数指定する場合は値をクォートしてください。 |
 | `--grpc-transport` | No | `stream` | gRPC 通信方式を指定します（`.ini` に反映されます）。 |
 | `--udf-timeout` | No | なし | UDF 実装サーバーへの RPC 呼び出し timeout を秒単位で指定します（`.ini` に反映されます）。 |
-| `--grpc-server-endpoint` | No | なし | 従来形式の Tsurugi 側 gRPC サーバーのエンドポイントを指定します。後方互換のため `.ini` の `[grpc_server].endpoint` に出力され、`--tsurugi-endpoint` が未指定の場合は `[udf].tsurugi_endpoint` にも同じ値が出力されます。 |
-| `--tsurugi-endpoint` | No | なし | UDF 実装サーバーから見た Tsurugi 側 gRPC サーバーのエンドポイントを指定します。パイプ文字 `|` 区切りで複数指定できます（`.ini` の `[udf].tsurugi_endpoint` に反映されます）。`--grpc-server-endpoint` が未指定の場合、後方互換用の `[grpc_server].endpoint` には先頭の値が出力されます。 |
-| `--secure` | No | `false` | gRPC 通信でセキュアな通信路を利用するかを指定します。値を省略して `--secure` のみ指定した場合は `true` となります。`true` / `false`、またはパイプ文字 `|` 区切りの複数値を指定できます（`.ini` の `[udf].secure` に反映されます）。 |
+| `--grpc-server-endpoint` | No | なし | UDF 実装サーバーから見た Tsurugi 側 gRPC サーバーのエンドポイントを指定します。パイプ文字 `\|` 区切りで複数指定できます（`.ini` の `[grpc_server].endpoint` に反映されます）。シェルから複数指定する場合は値をクォートしてください。 |
+| `--secure` | No | `false` | gRPC 通信でセキュアな通信路を利用するかを指定します。値を省略して `--secure` のみ指定した場合は `true` となります。`true` / `false`、またはパイプ文字 `\|` 区切りの複数値を指定できます（`.ini` の `[udf].secure` に反映されます）。 |
 | `--disable` | No | `false` | 生成される UDF を無効状態で出力します（`.ini` に反映されます）。 |
 | `--debug` | No | `false` | デバッグログを有効にします。 |
 | `--clean` | No | `false` | ビルド前に`--build_dir`で指定した一時ディレクトリを削除します。 |
@@ -112,7 +111,7 @@ $ udf-plugin-builder \
     --proto my.proto \
     --grpc-endpoint 'dns:///udf0:50051|dns:///udf1:50051' \
     --secure 'false|true' \
-    --tsurugi-endpoint 'dns:///tsurugi0:40012|dns:///tsurugi1:40012'
+    --grpc-server-endpoint 'dns:///tsurugi0:40012|dns:///tsurugi1:40012'
 ```
 
 この指定では、プラグイン設定ファイルに複数値がそのまま出力されます。
@@ -120,8 +119,7 @@ $ udf-plugin-builder \
 > [!NOTE]
 >
 > `udf-plugin-builder` は複数値をプラグイン設定ファイルへ出力します。
-> `endpoint`、`secure`、`tsurugi_endpoint` の対応関係、個数の整合性、および複数 UDF 実装サーバーへの振り分けは Jogasaki 側で解釈・処理されます。
-> 複数エンドポイントを実行時に利用するには、これらの設定に対応した Jogasaki が必要です。
+> `endpoint`、`secure`、`[grpc_server].endpoint` は、指定した複数値がプラグイン設定ファイルへそのまま出力されます。
 
 ### `.proto` の制約とバリデーションエラー
 
@@ -195,11 +193,10 @@ secure=false
 enabled=true
 endpoint=dns:///udf0:50051|dns:///udf1:50051
 secure=false|true
-tsurugi_endpoint=dns:///tsurugi0:40012|dns:///tsurugi1:40012
 transport=stream
 
 [grpc_server]
-endpoint=dns:///tsurugi0:40012
+endpoint=dns:///tsurugi0:40012|dns:///tsurugi1:40012
 ```
 
 `udf` セクションの設定項目は以下の通りです。
@@ -207,17 +204,13 @@ endpoint=dns:///tsurugi0:40012
 | パラメータ名 | 型 | 説明 | 備考 |
 | ---------- | ---- | ---- | ---- |
 | `enabled` | Boolean (true/false) | UDF プラグインの有効/無効を指定。デフォルト値は `true` | `false` に指定した場合、UDF プラグインが Tsurugi にデプロイされていても UDF は無効化されます。 |
-| `endpoint` | String (list) | この UDF プラグインに対応する宛先 gRPC サーバーのエンドポイント。パイプ文字 `|` で区切ることで複数指定できます。デフォルト値は `udf-plugin-builder` の `--grpc-endpoint` オプションで指定した値です。 | この項目を未指定にした場合、Tsurugi 構成ファイル（`tsurugi.ini`）- `[udf]` セクションの `endpoint` パラメータの値が使用されます。複数指定時の振り分けは Jogasaki 側で処理されます。 |
-| `secure` | Boolean (list) | gRPC との通信にセキュアな通信路を利用するかどうか。パイプ文字 `|` で区切って複数指定できます。単一の値を指定した場合は、すべての `endpoint` に対して同じ値として扱います。 | この項目を未指定にした場合、Tsurugi 構成ファイル (`tsurugi.ini`) - `[udf]` セクションの `secure` パラメータの値が使用されます。複数指定時の対応関係や個数の検証は Jogasaki 側で行われます。 |
-| `tsurugi_endpoint` | String (list) | 宛先 gRPC サーバーから見た、この Tsurugi の gRPC サーバーの URI。パイプ文字 `|` で区切って複数指定できます。単一の値を指定した場合は、すべての `endpoint` に対して同じ値として扱います。 | `udf-plugin-builder` の `--tsurugi-endpoint` で指定します。複数指定時の対応関係や個数の検証は Jogasaki 側で行われます。 |
+| `endpoint` | String (list) | この UDF プラグインに対応する宛先 gRPC サーバーのエンドポイント。パイプ文字 `\|` で区切ることで複数指定できます。デフォルト値は `udf-plugin-builder` の `--grpc-endpoint` オプションで指定した値です。 | この項目を未指定にした場合、Tsurugi 構成ファイル（`tsurugi.ini`）- `[udf]` セクションの `endpoint` パラメータの値が使用されます。 |
+| `secure` | Boolean (list) | gRPC との通信にセキュアな通信路を利用するかどうか。パイプ文字 `\|` で区切って複数指定できます。単一の値を指定した場合は、すべての `endpoint` に対して同じ値として扱います。 | この項目を未指定にした場合、Tsurugi 構成ファイル (`tsurugi.ini`) - `[udf]` セクションの `secure` パラメータの値が使用されます。 |
 | `transport` | string | gRPCストリーミング通信の方式。デフォルト値は `stream` | |
 | `timeout` | Integer | gRPC サーバへの RPC 呼び出しタイムアウト期間を秒単位で指定する。この項目を未指定にした場合、タイムアウト期間は設定されません。 | |
 
-> [!NOTE]
->
-> `[udf].tsurugi_endpoint` を含む複数エンドポイント設定を実行時に利用するには、対応した Jogasaki が必要です。
 
-オプションの指定によっては、後方互換のため以下のセクションやパラメータも含まれます。
+`--grpc-server-endpoint` を指定した場合は、以下のセクションやパラメータも含まれます。
 
 ```ini
 [grpc_server]
@@ -228,22 +221,7 @@ endpoint=dns:///localhost:40012
 
 | パラメータ名 | 型 | 説明 | 備考 |
 | ---------- | ---- | ---- | ---- |
-| `endpoint` | String | 従来形式の Tsurugi 側 gRPC サーバーのエンドポイントを指定します。 | 後方互換のため生成されます。`--tsurugi-endpoint` のみを複数指定した場合は、その先頭の値が使用されます。 |
-
-#### 新旧 Tsurugi エンドポイント設定の互換性
-
-`[udf].tsurugi_endpoint` の追加後も、従来の `[grpc_server].endpoint` は後方互換のため生成されます。
-
-`udf-plugin-builder` のオプションと生成される設定値の関係は以下の通りです。
-
-| 指定 | `[udf].tsurugi_endpoint` | `[grpc_server].endpoint` |
-| ---- | ---- | ---- |
-| どちらも未指定 | 出力しない | 出力しない |
-| `--grpc-server-endpoint X` のみ | `X` | `X` |
-| `--tsurugi-endpoint 'A|B'` のみ | `A|B` | `A` |
-| `--grpc-server-endpoint X` と `--tsurugi-endpoint 'A|B'` の両方 | `A|B` | `X` |
-
-この互換設定は、旧形式の `[grpc_server].endpoint` を利用する Jogasaki と、新形式の `[udf].tsurugi_endpoint` を利用する Jogasaki の移行期間を想定したものです。
+| `endpoint` | String (list) | UDF 実装サーバーから見た Tsurugi 側 gRPC サーバーのエンドポイント。パイプ文字 `\|` で区切って複数指定できます。単一の値を指定した場合は、すべての `[udf].endpoint` に対して同じ値として扱います。 | `udf-plugin-builder` の `--grpc-server-endpoint` で指定します。 |
 
 #### UDF プラグインとgRPCサーバの接続設定
 

@@ -268,7 +268,6 @@ def main(argv: list[str] | None = None) -> None:
                 ini_dir=paths.INI,
                 endpoint=args.grpc_endpoint,
                 grpc_server_endpoint=args.grpc_server_endpoint,
-                tsurugi_endpoint=args.tsurugi_endpoint,
                 transport=args.grpc_transport,
                 secure=args.secure,
                 enabled=not args.disable,

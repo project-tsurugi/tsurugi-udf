@@ -147,7 +147,9 @@ Tsurugi UDF では BLOB や CLOB を軽量な参照として gRPC メッセー�
 
 gRPC サービスからは、Tsurugi が提供する専用のクライアントライブラリを利用して、BLOB や CLOB のデータを読み書きできます。
 
-詳細については [udf-library (for Python)] の「BLOB / CLOB データの取り扱い」セクションを参照してください。
+BLOB / CLOB を利用するには、Tsurugi 側で BLOB中継サービスを提供する gRPC サーバを有効にする必要があります。
+
+詳細については [udf-library (for Python)] の [BLOB クライアント](./udf-library_ja.md#blob-クライアント) セクション、および [udf-plugin] の [UDF から BLOB / CLOB を利用する場合の設定](./udf-plugin_ja.md#udf-から-blob--clob-を利用する場合の設定) セクションを参照してください。
 
 ## UDF ドキュメント
 

@@ -190,6 +190,9 @@ BLOBクライアントを実行するgRPCサーバを Tsurugi と同一ホスト
 > [!IMPORTANT]
 > Tsurugi 1.11.0 以降、BLOB中継サービスが稼働するTsurugi上のgRPCサーバはデフォルトの設定では無効となっています。
 > BLOB中継サービスを利用するには、 Tsurugi 構成ファイル（`tsurugi.ini`）の `[grpc_server]` セクションの `enabled` パラメータを `true` に設定して Tsurugiを再起動してください。
+>
+> Tsurugi側の設定項目については [udf-plugin - UDF から BLOB / CLOB を利用する場合の設定](./udf-plugin_ja.md#udf-から-blob--clob-を利用する場合の設定) を、
+> Tsurugi における BLOB / CLOB の扱い全般については [BLOB (GA version) Usage and Notes (ja)](https://github.com/project-tsurugi/tsurugidb/discussions/232) を参照してください。
 
 ## その他の機能
 

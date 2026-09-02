@@ -287,6 +287,46 @@ UDF プラグインのデプロイは、Tsurugi が停止している状態で�
   - 例えば、`a.proto`、を指定して生成した `a.desc.pb` を配置した後に `b.proto` を追加で指定して生成した `a_b.desc.pb` を配置した場合、Tsurugi の起動時に両方のファイルを読み込まれますが、`a.proto` 内のサービス定義は二重に存在する状態となるため、RPC名が重複する不正なバリデーションエラーが発生します。この場合、構成変更前の `a.desc.pb` をプラグイン配置ディレクトリから削除した後に Tsurugi を起動するすることで正しい状態になります。
 - 不整合を伴う一部ファイルの配置漏れなどプラグイン構成ファイルを正しく配置していない場合、Tsurugiが不正な起動エラーとなる場合やバリデーション処理が正常に動作しないといった問題が発生する可能性があります。
 
+## Tsurugi の設定
+
+UDF の利用にあたって、Tsurugi 構成ファイル（`tsurugi.ini`）で設定が必要になる項目について説明します。
+すべての設定項目については [tsurugidb - Configuration file parameters](https://github.com/project-tsurugi/tsurugidb/blob/master/docs/config-parameters.md) を参照してください。
+
+### `[udf]` セクション
+
+| パラメータ名 | デフォルト値 | 説明 |
+| ---------- | ---------- | ---- |
+| `plugin_directory` | `${TSURUGI_HOME}/var/plugins` | プラグイン配置ディレクトリ。Tsurugi の起動時にこのディレクトリを走査して UDF プラグインを読み込みます。 |
+| `endpoint` | `dns:///localhost:50051` | UDF 実装サーバーの gRPC エンドポイント。プラグイン設定ファイルで `[udf].endpoint` を指定しなかった場合に使用されます。 |
+| `secure` | `false` | gRPC 通信でセキュアな通信路を利用するかどうか。プラグイン設定ファイルで `[udf].secure` を指定しなかった場合に使用されます。 |
+| `timeout` | なし（タイムアウトなし） | UDF 実装サーバーへの RPC 呼び出しタイムアウトを秒単位で指定します。 |
+
+### UDF から BLOB / CLOB を利用する場合の設定
+
+UDF で BLOB / CLOB を読み書きする場合、UDF 実装サーバーは [BLOB クライアント](./udf-library_ja.md#blob-クライアント) から Tsurugi に組み込まれた BLOB中継サービスへ gRPC で接続します。
+このため、BLOB中継サービスを提供する Tsurugi 側の gRPC サーバを有効にする必要があります。
+
+> [!IMPORTANT]
+> Tsurugi 1.11.0 以降、初期設定では `[grpc_server]` セクションの `enabled` が `false` であるため、BLOB中継サービスを利用できません。
+> UDF から BLOB / CLOB を利用する場合は、`tsurugi.ini` で `enabled` を `true` に設定して Tsurugi を再起動してください。
+
+`[grpc_server]` セクションの主な設定項目は以下の通りです。
+
+| パラメータ名 | デフォルト値 | 説明 |
+| ---------- | ---------- | ---- |
+| `enabled` | `false` | BLOB中継サービスを提供する gRPC サーバを起動するかどうか。UDF から BLOB / CLOB を利用する場合は `true` を指定します。 |
+| `listen_address` | `0.0.0.0:52345` | gRPC サーバの待ち受けアドレス。変更した場合は `endpoint` も合わせて設定してください。 |
+| `endpoint` | `dns:///localhost:52345` | BLOB クライアントから見た BLOB中継サービスのエンドポイント。UDF 実装サーバーを Tsurugi と異なるホストで動作させる場合は、ネットワーク構成に応じて設定してください。プラグイン設定ファイルで `[grpc_server].endpoint` を指定した場合はその値が優先されます。 |
+| `secure` | `false` | BLOB中継サービスのエンドポイントで TLS を有効にするかどうか。`true` を指定した場合は `fullchain_crt` と `server_key` の指定も必要です。 |
+
+`[blob_relay]` セクションは BLOB中継サービス自体の動作設定で、デフォルト値は `enabled=true` です。通常は変更する必要はありませんが、`false` に変更すると `[grpc_server].enabled` が `true` でも BLOB中継サービスは利用できません。
+
+Tsurugi Docker イメージでは `[grpc_server].enabled` がデフォルトで `true` です。BLOB中継サービスの待ち受けポート `52345` をホスト側にマッピングしてコンテナを起動してください。
+
+BLOB 転送モードや BLOB / CLOB のライフサイクルなど、Tsurugi における BLOB / CLOB の扱い全般については以下を参照してください。
+
+- [BLOB (GA version) Usage and Notes (ja)](https://github.com/project-tsurugi/tsurugidb/discussions/232)
+
 ## `udf-plugin-viewer`
 
 `udf-plugin-viewer` は生成した UDF プラグインのメタデータを表示するツールです。

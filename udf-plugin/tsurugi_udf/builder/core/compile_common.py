@@ -22,7 +22,15 @@ def compile_common_objects(
         obj = (obj_dir / src.name).with_suffix(".o")
         obj.parent.mkdir(parents=True, exist_ok=True)
 
-        cmd = [cxx, "-fPIC", "-c", str(src), "-o", str(obj)]
+        cmd = [
+            cxx,
+            "-fPIC",
+            "-fvisibility=hidden",
+            "-c",
+            str(src),
+            "-o",
+            str(obj),
+        ]
         for inc in include_dirs:
             cmd.append(f"-I{inc}")
         cmd += extra

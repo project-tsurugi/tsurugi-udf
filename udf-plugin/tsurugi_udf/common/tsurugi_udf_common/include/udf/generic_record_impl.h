@@ -15,10 +15,12 @@
  */
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -129,6 +131,35 @@ private:
 template<class>
 struct always_false : std::false_type {};
 
+class generic_record_stream_state final {
+public:
+
+    void push(std::unique_ptr<generic_record_impl> record);
+    void end_of_stream();
+    void close();
+    void set_on_close(std::function<void()> handler);
+    void set_worker(std::thread worker);
+
+    generic_record_stream::status_type try_next(generic_record& record);
+    generic_record_stream::status_type next(
+        generic_record& record,
+        std::optional<std::chrono::milliseconds> timeout
+    );
+
+private:
+
+    generic_record_stream::status_type extract_record_from_queue_unlocked(generic_record& record);
+
+    std::queue<std::unique_ptr<generic_record_impl>> queue_;
+    bool closed_{false};
+    bool eos_{false};
+    std::function<void()> on_close_{};
+    std::thread worker_{};
+
+    std::mutex mutex_;
+    std::condition_variable cv_;
+};
+
 class generic_record_stream_impl final : public generic_record_stream {
 public:
 
@@ -143,6 +174,7 @@ public:
 
     void push(std::unique_ptr<generic_record_impl> record);
     void end_of_stream();
+    [[nodiscard]] std::shared_ptr<generic_record_stream_state> shared_state() const noexcept;
     void close() override;
 
     status_type try_next(generic_record& record) override;
@@ -151,14 +183,7 @@ public:
 
 private:
 
-    status_type extract_record_from_queue_unlocked(generic_record& record);
-
-    std::queue<std::unique_ptr<generic_record_impl>> queue_;
-    bool closed_{false};
-    bool eos_{false};
-
-    std::mutex mutex_;
-    std::condition_variable cv_;
+    std::shared_ptr<generic_record_stream_state> state_;
 };
 
 std::ostream& operator<<(std::ostream& os, generic_record_impl const& record);

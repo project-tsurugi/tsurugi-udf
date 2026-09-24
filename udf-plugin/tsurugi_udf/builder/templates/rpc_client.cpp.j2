@@ -443,10 +443,16 @@ rpc_client::call_server_streaming_async(
             return stream;
         }
 
-        auto* stub = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_.get();
-        auto* out_stream = stream.get();
-        std::thread(
-            [generic_client_context = std::move(generic_client_context),
+        auto stub = {{ pkg.package_name | replace('.', '_') }}_{{ svc.service_name }}_stub_;
+        auto shared_context = std::shared_ptr<plugin::udf::generic_client_context>(std::move(generic_client_context));
+        auto out_stream = stream->shared_state();
+        out_stream->set_on_close([weak_context = std::weak_ptr<plugin::udf::generic_client_context>(shared_context)] {
+            if(auto context = weak_context.lock()) {
+                context->grpc_context().TryCancel();
+            }
+        });
+        out_stream->set_worker(std::thread(
+            [generic_client_context = std::move(shared_context),
              stub,
              req = std::move(req),
              out_stream]() mutable {
@@ -499,7 +505,7 @@ rpc_client::call_server_streaming_async(
 
                 out_stream->end_of_stream();
             }
-        ).detach();
+        ));
 
         return stream;
     }
@@ -519,4 +525,3 @@ rpc_client::call_server_streaming_async(
     stream->end_of_stream();
     return stream;
 }
-

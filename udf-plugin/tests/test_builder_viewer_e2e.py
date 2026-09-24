@@ -173,6 +173,23 @@ def assert_plugins_dlopenable(tmp_path: Path, plugin_sos: list[Path]) -> None:
         f"stderr:\n{result.stderr}"
     )
 
+    for plugin_so in plugin_sos:
+        symbols = subprocess.run(
+            ["nm", "-D", "-C", "--defined-only", str(plugin_so)],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        assert symbols.returncode == 0, (
+            "failed to inspect generated plugin symbols\n"
+            f"plugin: {plugin_so}\n"
+            f"stdout:\n{symbols.stdout}\n"
+            f"stderr:\n{symbols.stderr}"
+        )
+        assert "plugin::udf::generic_record_stream_impl" not in symbols.stdout
+        assert "plugin::udf::generic_record_stream_state::" not in symbols.stdout
+
 
 def list_visible_udf_functions(tmp_path: Path, plugin_sos: list[Path]) -> set[str]:
     checker = build_list_functions_checker(tmp_path)

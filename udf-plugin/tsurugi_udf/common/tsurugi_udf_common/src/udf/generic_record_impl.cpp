@@ -281,32 +281,16 @@ bool generic_record_cursor_impl::current_is_null() const {
     return std::holds_alternative<std::monostate>(values_[index_]);
 }
 
-generic_record_stream_impl::generic_record_stream_impl() = default;
+generic_record_stream_impl::generic_record_stream_impl() : state_(std::make_shared<generic_record_stream_state>()) {}
 generic_record_stream_impl::~generic_record_stream_impl() { close(); }
 
-generic_record_stream_impl::generic_record_stream_impl(generic_record_stream_impl&& other) noexcept {
-    {
-        std::lock_guard lk(other.mutex_);
-        queue_ = std::move(other.queue_);
-        closed_ = other.closed_;
-        eos_ = other.eos_;
-        other.closed_ = true;
-        other.eos_ = true;
-    }
-    other.cv_.notify_all();
-}
+generic_record_stream_impl::generic_record_stream_impl(generic_record_stream_impl&& other) noexcept
+    : state_(std::move(other.state_)) {}
 
 generic_record_stream_impl& generic_record_stream_impl::operator=(generic_record_stream_impl&& other) noexcept {
     if(this == &other) { return *this; }
-    {
-        std::scoped_lock lk(mutex_, other.mutex_);
-        queue_ = std::move(other.queue_);
-        closed_ = other.closed_;
-        eos_ = other.eos_;
-        other.closed_ = true;
-        other.eos_ = true;
-    }
-    other.cv_.notify_all();
+    close();
+    state_ = std::move(other.state_);
     return *this;
 }
 
@@ -316,7 +300,7 @@ void generic_record_impl::assign_from(generic_record_impl&& other) noexcept {
     other.reset();
 }
 
-void generic_record_stream_impl::push(std::unique_ptr<generic_record_impl> record) {
+void generic_record_stream_state::push(std::unique_ptr<generic_record_impl> record) {
     {
         std::lock_guard lk(mutex_);
         if(closed_ || eos_) { return; }
@@ -325,59 +309,97 @@ void generic_record_stream_impl::push(std::unique_ptr<generic_record_impl> recor
     cv_.notify_one();
 }
 
-void generic_record_stream_impl::end_of_stream() {
+void generic_record_stream_state::end_of_stream() {
     {
         std::lock_guard lk(mutex_);
         eos_ = true;
+        on_close_ = nullptr;
     }
     cv_.notify_all();
 }
 
-void generic_record_stream_impl::close() {
+void generic_record_stream_state::close() {
+    std::function<void()> on_close;
     {
         std::lock_guard lk(mutex_);
+        if(closed_) { return; }
         closed_ = true;
         eos_ = true;
         std::queue<std::unique_ptr<generic_record_impl>> empty;
         queue_.swap(empty);
+        on_close = std::move(on_close_);
     }
+    if(on_close) { on_close(); }
     cv_.notify_all();
 }
 
-generic_record_stream::status_type generic_record_stream_impl::extract_record_from_queue_unlocked(generic_record& record
+void generic_record_stream_state::set_on_close(std::function<void()> handler) {
+    std::lock_guard lk(mutex_);
+    if(closed_ || eos_) { return; }
+    on_close_ = std::move(handler);
+}
+
+generic_record_stream::status_type generic_record_stream_state::extract_record_from_queue_unlocked(generic_record& record
 ) {
-    if(queue_.empty()) { return status_type::end_of_stream; }
+    if(queue_.empty()) { return generic_record_stream::status_type::end_of_stream; }
 
     auto rec = std::move(queue_.front());
     queue_.pop();
 
     if(auto* impl = dynamic_cast<generic_record_impl*>(&record)) {
         impl->assign_from(std::move(*rec));
-        return impl->error() ? status_type::error : status_type::ok;
+        return impl->error() ? generic_record_stream::status_type::error : generic_record_stream::status_type::ok;
     }
-    return status_type::error;
+    return generic_record_stream::status_type::error;
 }
 
-generic_record_stream::status_type generic_record_stream_impl::try_next(generic_record& record) {
+generic_record_stream::status_type generic_record_stream_state::try_next(generic_record& record) {
     std::lock_guard lk(mutex_);
     if(! queue_.empty()) { return extract_record_from_queue_unlocked(record); }
-    if(eos_) { return status_type::end_of_stream; }
-    return status_type::not_ready;
+    if(eos_) { return generic_record_stream::status_type::end_of_stream; }
+    return generic_record_stream::status_type::not_ready;
 }
 
 generic_record_stream::status_type
-generic_record_stream_impl::next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) {
+generic_record_stream_state::next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) {
     std::unique_lock lk(mutex_);
     auto pred = [&] { return ! queue_.empty() || eos_ || closed_; };
 
     if(timeout) {
-        if(! cv_.wait_for(lk, *timeout, pred)) { return status_type::not_ready; }
+        if(! cv_.wait_for(lk, *timeout, pred)) { return generic_record_stream::status_type::not_ready; }
     } else {
         cv_.wait(lk, pred);
     }
 
     if(! queue_.empty()) { return extract_record_from_queue_unlocked(record); }
-    return status_type::end_of_stream;
+    return generic_record_stream::status_type::end_of_stream;
+}
+
+void generic_record_stream_impl::push(std::unique_ptr<generic_record_impl> record) {
+    if(state_) { state_->push(std::move(record)); }
+}
+
+void generic_record_stream_impl::end_of_stream() {
+    if(state_) { state_->end_of_stream(); }
+}
+
+std::shared_ptr<generic_record_stream_state> generic_record_stream_impl::shared_state() const noexcept {
+    return state_;
+}
+
+void generic_record_stream_impl::close() {
+    if(state_) { state_->close(); }
+}
+
+generic_record_stream::status_type generic_record_stream_impl::try_next(generic_record& record) {
+    if(! state_) { return status_type::end_of_stream; }
+    return state_->try_next(record);
+}
+
+generic_record_stream::status_type
+generic_record_stream_impl::next(generic_record& record, std::optional<std::chrono::milliseconds> timeout) {
+    if(! state_) { return status_type::end_of_stream; }
+    return state_->next(record, timeout);
 }
 
 }  // namespace plugin::udf

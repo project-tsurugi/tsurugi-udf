@@ -451,7 +451,7 @@ rpc_client::call_server_streaming_async(
                 context->grpc_context().TryCancel();
             }
         });
-        std::thread(
+        out_stream->set_worker(std::thread(
             [generic_client_context = std::move(shared_context),
              stub,
              req = std::move(req),
@@ -505,7 +505,7 @@ rpc_client::call_server_streaming_async(
 
                 out_stream->end_of_stream();
             }
-        ).detach();
+        ));
 
         return stream;
     }

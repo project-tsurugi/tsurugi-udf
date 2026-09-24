@@ -170,6 +170,7 @@ int main(int argc, char** argv) {
         return 8;
     }
 
+    // close() cancels and joins the client worker before returning, making the later dlclose safe.
     stream.reset();
 
     if(! service.wait_cancelled(std::chrono::seconds(5))) {

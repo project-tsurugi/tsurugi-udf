@@ -35,7 +35,7 @@ def pkg_config_flags(*packages: str) -> list[str]:
     return result.stdout.split()
 
 
-def test_stream_close_callback_runs_once(tmp_path: Path) -> None:
+def test_stream_close_callback_runs_once_and_waits_for_worker(tmp_path: Path) -> None:
     source = tmp_path / "stream_close_callback.cpp"
     source.write_text(
         r'''
@@ -43,6 +43,8 @@ def test_stream_close_callback_runs_once(tmp_path: Path) -> None:
 
 #include <atomic>
 #include <chrono>
+#include <future>
+#include <thread>
 
 int main() {
     plugin::udf::generic_record_stream_impl stream;
@@ -50,18 +52,54 @@ int main() {
     if(!state) { return 1; }
 
     std::atomic<int> close_count{0};
-    state->set_on_close([&close_count] {
+    std::promise<void> close_started;
+    state->set_on_close([&close_count, &close_started] {
         close_count.fetch_add(1);
+        close_started.set_value();
     });
 
-    stream.close();
+    std::promise<void> worker_started;
+    std::promise<void> allow_worker_finish;
+    auto allow_worker_finish_future = allow_worker_finish.get_future();
+    state->set_worker(std::thread(
+        [&worker_started, allow_worker_finish_future = std::move(allow_worker_finish_future)]() mutable {
+            worker_started.set_value();
+            allow_worker_finish_future.wait();
+        }
+    ));
+    if(worker_started.get_future().wait_for(std::chrono::seconds{1}) != std::future_status::ready) { return 2; }
+
+    std::promise<void> close_returned;
+    auto close_returned_future = close_returned.get_future();
+    std::thread closer([&stream, &close_returned] {
+        stream.close();
+        close_returned.set_value();
+    });
+
+    if(close_started.get_future().wait_for(std::chrono::seconds{1}) != std::future_status::ready) {
+        allow_worker_finish.set_value();
+        closer.join();
+        return 3;
+    }
+    if(close_returned_future.wait_for(std::chrono::milliseconds{0}) == std::future_status::ready) {
+        allow_worker_finish.set_value();
+        closer.join();
+        return 4;
+    }
+
+    allow_worker_finish.set_value();
+    if(close_returned_future.wait_for(std::chrono::seconds{1}) != std::future_status::ready) {
+        closer.join();
+        return 5;
+    }
+    closer.join();
     stream.close();
 
-    if(close_count.load() != 1) { return 2; }
+    if(close_count.load() != 1) { return 6; }
 
     plugin::udf::generic_record_impl record;
     auto status = stream.next(record, std::chrono::milliseconds{0});
-    if(status != plugin::udf::generic_record_stream::status_type::end_of_stream) { return 3; }
+    if(status != plugin::udf::generic_record_stream::status_type::end_of_stream) { return 7; }
 
     return 0;
 }
@@ -103,6 +141,7 @@ int main() {
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
+        timeout=5,
     )
     assert result.returncode == 0, (
         "C++ stream close callback test failed\n"

@@ -20,6 +20,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -137,6 +138,7 @@ public:
     void end_of_stream();
     void close();
     void set_on_close(std::function<void()> handler);
+    void set_worker(std::thread worker);
 
     generic_record_stream::status_type try_next(generic_record& record);
     generic_record_stream::status_type next(
@@ -152,6 +154,7 @@ private:
     bool closed_{false};
     bool eos_{false};
     std::function<void()> on_close_{};
+    std::thread worker_{};
 
     std::mutex mutex_;
     std::condition_variable cv_;

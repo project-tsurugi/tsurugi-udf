@@ -320,6 +320,7 @@ void generic_record_stream_state::end_of_stream() {
 
 void generic_record_stream_state::close() {
     std::function<void()> on_close;
+    std::thread worker;
     {
         std::lock_guard lk(mutex_);
         if(closed_) { return; }
@@ -328,15 +329,22 @@ void generic_record_stream_state::close() {
         std::queue<std::unique_ptr<generic_record_impl>> empty;
         queue_.swap(empty);
         on_close = std::move(on_close_);
+        worker = std::move(worker_);
     }
     if(on_close) { on_close(); }
     cv_.notify_all();
+    if(worker.joinable()) { worker.join(); }
 }
 
 void generic_record_stream_state::set_on_close(std::function<void()> handler) {
     std::lock_guard lk(mutex_);
     if(closed_ || eos_) { return; }
     on_close_ = std::move(handler);
+}
+
+void generic_record_stream_state::set_worker(std::thread worker) {
+    std::lock_guard lk(mutex_);
+    worker_ = std::move(worker);
 }
 
 generic_record_stream::status_type generic_record_stream_state::extract_record_from_queue_unlocked(generic_record& record

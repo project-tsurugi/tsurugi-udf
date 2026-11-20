@@ -40,6 +40,12 @@ The following components are required to build and use the [Tsurugi UDF plugin t
 | **ninja** | ≥ 1.10.1 | Build backend for CMake |
 | **nlohmann_json** | ≥ 3.10.5 | JSON library |
 
+> [!IMPORTANT]
+> A UDF plugin is dynamically linked against the gRPC, Protocol Buffers, and C++ standard libraries of the build environment, and is loaded into the Tsurugi server process.
+> Build UDF plugins on the same OS (distribution and version) as the Tsurugi server, with the same versions of gRPC and Protocol Buffers that the Tsurugi server uses.
+> The versions in the table above are the minimum versions for the toolchain; a newer version cannot be used if it differs from the one used by the Tsurugi server.
+> See [udf-plugin (ja)](docs/udf-plugin_ja.md) for details.
+
 ### Python dependencies installed automatically
 
 Install each module with `pip`:

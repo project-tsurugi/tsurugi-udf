@@ -25,6 +25,11 @@ Tsurugi UDF が提供する各ツールは 以下の Python 実行環境が必�
 
 Tsurugi のセットアップ手順については [Tsurugi Getting Started](https://github.com/project-tsurugi/tsurugidb/blob/master/docs/getting-started_ja.md) などを参照してください。
 
+> [!IMPORTANT]
+> UDF プラグインは、Tsurugi を実行する環境と同じ OS で、Tsurugi と同じバージョンの gRPC と Protocol Buffers を使ってビルドする必要があります。
+> 異なる環境でビルドした UDF プラグインは、Tsurugi の起動時に読み込めません。
+> 詳細は [udf-plugin - UDF プラグインのビルド環境に関する注意事項](./udf-plugin_ja.md#udf-プラグインのビルド環境に関する注意事項) を参照してください。
+
 > [!NOTE]
 > UDF から BLOB / CLOB を利用する場合、Tsurugi 構成ファイル（`tsurugi.ini`）で BLOB中継サービスを提供する gRPC サーバを有効にする必要があります。
 > 詳細は [udf-plugin - Tsurugi の設定](./udf-plugin_ja.md#tsurugi-の設定) を参照してください。

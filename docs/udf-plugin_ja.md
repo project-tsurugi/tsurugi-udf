@@ -287,6 +287,20 @@ UDF プラグインのデプロイは、Tsurugi が停止している状態で�
   - 例えば、`a.proto`、を指定して生成した `a.desc.pb` を配置した後に `b.proto` を追加で指定して生成した `a_b.desc.pb` を配置した場合、Tsurugi の起動時に両方のファイルを読み込まれますが、`a.proto` 内のサービス定義は二重に存在する状態となるため、RPC名が重複する不正なバリデーションエラーが発生します。この場合、構成変更前の `a.desc.pb` をプラグイン配置ディレクトリから削除した後に Tsurugi を起動するすることで正しい状態になります。
 - 不整合を伴う一部ファイルの配置漏れなどプラグイン構成ファイルを正しく配置していない場合、Tsurugiが不正な起動エラーとなる場合やバリデーション処理が正常に動作しないといった問題が発生する可能性があります。
 
+### UDF プラグインのビルド環境に関する注意事項
+
+UDF プラグインは、ビルド環境の gRPC、Protocol Buffers、C++ 標準ライブラリに動的リンクされ、Tsurugi のプロセスに読み込まれます。
+このため、UDF プラグインは Tsurugi の実行環境と同じ OS で、Tsurugi と同じバージョンの gRPC と Protocol Buffers を使ってビルドする必要があります。
+例えば Ubuntu 22.04 ベースの Tsurugi Docker イメージに Ubuntu 24.04 でビルドした UDF プラグインを配置した場合、ビルドは成功しますが Tsurugi はその UDF プラグインを読み込めません。
+
+この場合、Tsurugi は起動しますが、起動時に以下のようなログが出力され、その UDF プラグインに含まれる UDF は登録されません。SQL から UDF を呼び出すと `function_not_found` のエラーになります。
+
+```
+[udf] FAIL status=dlopen_failed file=/usr/lib/tsurugi/var/plugins/libhelloworld.so detail=libprotobuf.so.32: cannot open shared object file: No such file or directory
+```
+
+不足している共有ライブラリを Tsurugi の実行環境に追加しても解決しません。Tsurugi の実行環境に合わせた環境で UDF プラグインをビルドし直してください。
+
 ## Tsurugi の設定
 
 UDF の利用にあたって、Tsurugi 構成ファイル（`tsurugi.ini`）で設定が必要になる項目について説明します。
